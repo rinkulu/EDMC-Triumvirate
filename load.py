@@ -31,7 +31,8 @@ from modules import (
     message_label,
     patrol,
     release,
-    bgs
+    bgs,
+    biopatrol
 )
 from modules.debug import Debug
 from modules.lib import http
@@ -240,17 +241,19 @@ def plugin_app(parent):
     this.patrol = patrol.PatrolModule(table, 2)
     this.bgs_module = bgs.BGS()
     this.colonisation_tracker = DeliveryTracker()
+    this.biopatrol = biopatrol.BioPatrol(frame, 3)
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
         this.bgs_module,
         this.canonn_rt_api,
-        this.colonisation_tracker
+        this.colonisation_tracker,
+        this.biopatrol
     ]
 
     # лейбл, в котором содержится текст из вывода модулей
-    this.message_label = message_label.MessageLabel(rows, row=3)
+    this.message_label = message_label.MessageLabel(rows, row=4)
 
     for mod in context.modules:
         mod.on_start(context.plugin_dir)
