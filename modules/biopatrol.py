@@ -436,11 +436,8 @@ class BioPatrol(tk.Frame, Module):
                                 "signalCount": 0,
                                 "signals": []
                             }
-
-                coords = self.data[self.pos]["coords"]
-                self.__update_data_coords(coords)
+                self.__update_data(entry)
                 self.save_data()
-
                 self.signals_in_system.clear()
 
     def on_dashboard_entry(self, cmdr, is_beta, entry):
