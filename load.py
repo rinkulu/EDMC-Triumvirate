@@ -245,7 +245,6 @@ def plugin_app(parent):
     this.modules = [
         rel,
         this.patrol,
-        this.systems_module,
         this.bgs_module,
         this.canonn_rt_api,
         this.colonisation_tracker,
@@ -309,6 +308,9 @@ class JournalEntryProcessor(thread.Thread):
         # capture some stats when we launch
         # not read for that yet
         startup_stats(cmdr)
+
+        if entry.get("event") == "FSDJump":
+            this.systems_module.add_system(entry)
 
         # отключено, потому что API не работает, а логи засоряются
         #if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
