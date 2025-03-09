@@ -329,7 +329,7 @@ class BioPatrol(tk.Frame, Module):
             json.dump(self.__bio_found, f, ensure_ascii=False)
 
 
-    def process_genus_bio(self, genus, bioname, planet, report=False):
+    def process_genus_bio(self, genus, bioname, planet, report=False, entry_region=None):
         region = None
         priority = 1
         if bioname in self.__raw_data["bio"]:
@@ -337,6 +337,10 @@ class BioPatrol(tk.Frame, Module):
             if planet in locations:
                 region = locations[planet]["region"]
                 priority = locations[planet]["priority"]
+
+        # We may know the region from CodexEntry event
+        if entry_region is not None:
+            region = entry_region
 
         if report is True:
             url_params = {
@@ -376,7 +380,7 @@ class BioPatrol(tk.Frame, Module):
 
 
     def on_journal_entry(self, entry: JournalEntry):
-        required_events = ["Location", "FSDJump", "ScanOrganic", "SAASignalsFound", "FSSBodySignals", "FSSAllBodiesFound"]
+        required_events = ["Location", "FSDJump", "ScanOrganic", "SAASignalsFound", "FSSBodySignals", "FSSAllBodiesFound", "CodexEntry"]
         event = entry.data["event"]
         if event not in required_events:
             return
@@ -398,6 +402,29 @@ class BioPatrol(tk.Frame, Module):
 
                 # update data
                 self.process_genus_bio(genus, bioname, self.body, report=True)
+
+                self.save_data()
+                self.__update_data(entry)
+
+            elif event == "CodexEntry":
+                if entry.data["SubCategory"] != "$Codex_SubCategory_Organic_Structures;":
+                    return
+
+                if self.body is None:
+                    return
+
+                bioname = codex_to_english_variants.get(entry.data["Name"], entry.data["Name"])
+                region = entry.data["Region_Localised"]
+
+                # HACK -- CodexEntry does not have 'Genus' key
+                genus = bioname.split()[0]
+                self.set_status(f"Scanned {bioname} at {self.body}")
+
+                if bioname not in self.__bio_found[self.body]["signals"]:
+                    self.__bio_found[self.body]["signals"].append(bioname)
+
+                # update data
+                self.process_genus_bio(genus, bioname, self.body, report=True, entry_region=region)
 
                 self.save_data()
                 self.__update_data(entry)
