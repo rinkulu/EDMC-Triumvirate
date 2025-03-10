@@ -29,6 +29,13 @@ class SubmoduleMeta(ABCMeta):
 class Submodule(ABC, metaclass=SubmoduleMeta):
     core: 'BGSCore'
 
+    def on_journal_entry(self, entry: dict):
+        """
+        Вызывается при появлении новой записи в логах.
+        В отличие от Module.on_journal_entry, принимает запись "как есть"
+        и должен полагаться на данные контекста для получения дополнительной информации.
+        """
+
 
 def init_submodules(core: 'BGSCore'):
     # НЕ ТРОГАТЬ
