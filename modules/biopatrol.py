@@ -359,20 +359,22 @@ class BioPatrol(tk.Frame, Module):
             if planet not in data["locations"]:
                 continue
 
+            remove_planet = False
             # only one species per genus allowed
             species_genus = species.split()[0]
             if genus == species_genus and bioname != species:
                 debug(f">> Removing {species} prediction for {planet} - matching genus has been found")
-                if planet in data["locations"]:
-                    del data["locations"][planet]
+                remove_planet = True
 
             # found all signals, clear planet from lists
             signals_found = len(self.__bio_found[planet]["signals"])
             signals_count = self.__bio_found[planet]["signalCount"]
             if signals_found == signals_count:
                 debug(f">> Removing {species} prediction for {planet} - all {signals_count} signals discovered")
-                if planet in data["locations"]:
-                    del data["locations"][planet]
+                remove_planet = True
+
+            if remove_planet is True:
+                del data["locations"][planet]
 
             # new codex entry detected, remove all from region
             if priority > 1:
