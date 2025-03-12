@@ -9,6 +9,7 @@ from threading import Lock
 from time import sleep
 from typing import Callable, Any
 
+from .debug import debug
 from modules.lib.module import Module
 from modules.lib.journal import JournalEntry, Coords
 from modules.patrol.patrol_module import copyclip
@@ -353,30 +354,46 @@ class BioPatrol(tk.Frame, Module):
             url = f'{URL_GOOGLE}/1FAIpQLSfp4rPNSOVf5V-LYLEUXCKomDBaHo92lPwfp9YJDrml2QGUQQ/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
+        debug(f"Found {bioname} (genus: {genus}) at {planet} (priority: {priority})")
         for species, data in self.__raw_data["bio"].items():
-            if planet in data["locations"]:
-                # remove all "region new" from the list
-                removed = {k: v for k, v in data["locations"].items() if v["region"] == region}
-                for k, v in removed.items():
-                    print(f"Found {bioname} at region {region}, removing {k} from the list")
+            if planet not in data["locations"]:
+                continue
 
-                data["locations"] = {k: v for k, v in data["locations"].items() if v["region"] != region}
-
-                for body, body_data in data["locations"].items():
-                    # This is not a galactic new anymore, mark as region new
-                    if priority == 3:
-                        body_data["priority"] == 2
-
-                # everything has been found, clean up
+            # only one species per genus allowed
+            species_genus = species.split()[0]
+            if genus == species_genus and bioname != species:
+                debug(f">> Removing {species} prediction for {planet} - matching genus has been found")
                 if planet in data["locations"]:
-                    if len(self.__bio_found[planet]["signals"]) == self.__bio_found[planet]["signalCount"]:
-                        del data["locations"][planet]
-                    else:
-                        # something left to find, clear all with matching genus
-                        species_genus = species.split()[0]
+                    del data["locations"][planet]
 
-                        if genus == species_genus and bioname != species:
-                            del data["locations"][planet]
+            # found all signals, clear planet from lists
+            signals_found = len(self.__bio_found[planet]["signals"])
+            signals_count = self.__bio_found[planet]["signalCount"]
+            if signals_found == signals_count:
+                debug(f">> Removing {species} prediction for {planet} - all {signals_count} signals discovered")
+                if planet in data["locations"]:
+                    del data["locations"][planet]
+
+            # new codex entry detected, remove all from region
+            if priority > 1:
+                data_locations_new = {}
+                for k, v in data["locations"].items():
+                    if species == bioname and v["region"] == region:
+                        debug(f">> Removing {species} prediction for {k} - new codex entry in region {region}")
+                        continue
+
+                    data_locations_new[k] = v
+
+                data["locations"] = data_locations_new
+
+            # new galactic entry detected
+            if priority > 2:
+                for k, v in data["locations"].items():
+                    if species == bioname:
+                        if v["region"] != region:
+                            debug(f'>> Changing {species} prediction for {k} - found in {region}, downgrading priority in {v["region"]}')
+                            v["priority"] = 2
+                            continue
 
 
     def on_journal_entry(self, entry: JournalEntry):
