@@ -1,7 +1,9 @@
+import csv
+import requests
 from queue import Queue
 from threading import Lock
 
-from context import PluginContext
+from context import GameState, PluginContext
 from modules.legacy import GoogleReporter
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
@@ -16,12 +18,57 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class FilterUpdater(Thread):
+    REFRESH_TIME = 30 * 60  # s
+    INFLUENCE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMyLFfN86QHQ5nMgEk8ZNhQPC00ie5am_MoUUoBpD6WpbEyJAGRWsFinMB9xOP8DpMhXz1i-OOUpto/pub?gid=1142599011&single=true&output=csv"  # noqa: E501
+    ADDITIONAL_SYSTEMS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMyLFfN86QHQ5nMgEk8ZNhQPC00ie5am_MoUUoBpD6WpbEyJAGRWsFinMB9xOP8DpMhXz1i-OOUpto/pub?gid=626235075&single=true&output=csv"  # noqa: E501
+
     def __init__(self, filter_instance: 'Filter'):
         self._filter = filter_instance
         super().__init__(name="Triumvirate.BGSFilterUpdater")
 
     def do_run(self):
-        pass
+        while True:
+            try:
+                influence_res = requests.get(self.INFLUENCE_URL)
+                influence_res.raise_for_status()
+                systems_res = requests.get(self.ADDITIONAL_SYSTEMS_URL)
+                systems_res.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error("Couldn't get the BGS systems data. Exception info:", exc_info=e)
+                self.sleep(self.REFRESH_TIME)
+                continue
+
+            influence_data = self.parse_inf_data(influence_res)
+            if influence_data is None:
+                self.sleep(self.REFRESH_TIME)
+                continue
+
+            additional_systems = systems_res.text.splitlines()
+            self._filter._on_data_update(influence_data, additional_systems)
+            self.sleep(self.REFRESH_TIME)
+
+    def parse_inf_data(self, response: requests.Response) -> dict[str, dict[str, float]] | None:
+        try:
+            reader = csv.reader(response.text.splitlines())
+            next(reader)        # пропускаем заголовки
+        except StopIteration:
+            PluginContext.logger.error(f"Received BGS systems data is empty. Retrying in {self.REFRESH_TIME} seconds.")
+            return None
+        except Exception as e:
+            PluginContext.logger.error(
+                "An unexpected error occurred while processing received BGS data. "
+                f"Retrying in {self.REFRESH_TIME} seconds. Exception info:", exc_info=e
+            )
+            return None
+
+        influence_data = dict()
+        for row in reader:
+            faction, system, state, influence = tuple(row)
+            if faction not in influence_data:
+                influence_data[faction] = {}
+            influence_data[faction][system] = float(influence.replace(',', '.'))
+
+        return influence_data
 
 
 class Filter:
@@ -111,16 +158,40 @@ class Filter:
                 return
             GoogleReporter(url, params).start()
 
-    def report_expansion(self, faction: str, system: str, inf: float):
-        pass
+    def report_expansion(self, faction: str, system: str, inf: float, state: str):
+        url = "https://docs.google.com/forms/d/e/1FAIpQLSckFHxXulCEnxJKNS7XmY4TKrzM2eE1akxfv5XxvWdwijOzJw/formResponse?usp=pp_url"
+        params = {
+            "entry.1327463036": GameState.cmdr,
+            "entry.481092930": faction,
+            "entry.1293773018": system,
+            "entry.932945455": inf * 100,
+            "entry.319473982": state
+        }
+        GoogleReporter(url, params).start()
 
     def report_retreat(self, faction: str, system: str):
-        pass
+        url = "https://docs.google.com/forms/d/e/1FAIpQLSckFHxXulCEnxJKNS7XmY4TKrzM2eE1akxfv5XxvWdwijOzJw/formResponse?usp=pp_url"
+        params = {
+            "entry.1327463036": GameState.cmdr,
+            "entry.481092930": faction,
+            "entry.1293773018": system,
+            "entry.932945455": 0,
+            "entry.319473982": "Retreated"
+        }
+        GoogleReporter(url, params).start()
 
-    def report_inf_change(self, faction: str, system: str, inf: float):
-        pass
+    def report_inf_change(self, faction: str, system: str, inf: float, state: str):
+        url = "https://docs.google.com/forms/d/e/1FAIpQLSckFHxXulCEnxJKNS7XmY4TKrzM2eE1akxfv5XxvWdwijOzJw/formResponse?usp=pp_url"
+        params = {
+            "entry.1327463036": GameState.cmdr,
+            "entry.481092930": faction,
+            "entry.1293773018": system,
+            "entry.932945455": inf,
+            "entry.319473982": state
+        }
+        GoogleReporter(url, params).start()
 
-    def _on_tracked_update(self, data: dict[str, dict[str, float]], additional_systems: list[str]):
+    def _on_data_update(self, data: dict[str, dict[str, float]], additional_systems: list[str]):
         with self.__threadlock:
             self._data = data
             self._additional_systems = additional_systems
