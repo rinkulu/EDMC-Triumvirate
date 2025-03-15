@@ -233,6 +233,14 @@ class BGSCore(Module):
         self.filter = Filter()
         submodule_base.init_submodules(self)
         self.submodules = submodule_base.get_submodules()
+        if self.submodules:
+            PluginContext.logger.info(
+                f"{len(self.submodules)} submodules initiated: " + ', '.join(s.__class__.__qualname__ for s in self.submodules)
+            )
+        else:
+            PluginContext.logger.error("No submodules found. Disabling the BGS module.")
+            self.enabled = False
+            PluginContext.notifier.send(_translate("BGS module encountered an error during initialization and was disabled."), 0)
 
     def on_journal_entry(self, entry: JournalEntry):
         if entry.data.get("event") in ("FSDJump", "Location"):
