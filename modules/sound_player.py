@@ -4,7 +4,7 @@
 
 import os
 
-from .playsound import playsound
+from .lib.thirdparty.playsound import playsound
 from .lib.thread import Thread
 
 
