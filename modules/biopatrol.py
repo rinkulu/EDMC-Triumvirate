@@ -662,7 +662,7 @@ class BioPatrol(tk.Frame, Module):
         if len(self.data) == 0:
             self.set_status("Либо все виды найдены, либо что-то сломалось.")
         else:
-            self.pos = next((i for i, bio in enumerate(self.data) if bio["species"] == self.selected_bio), 0)
+            self.pos = 0
             self.show()
 
 
