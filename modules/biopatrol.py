@@ -375,6 +375,7 @@ class BioPatrol(tk.Frame, Module):
 
             if remove_planet is True:
                 del data["locations"][planet]
+                self.pos = 0
 
             # new codex entry detected, remove all from region
             if priority > 1:
@@ -462,6 +463,7 @@ class BioPatrol(tk.Frame, Module):
                     if bodyName in data["locations"] and species.split()[0] not in genuses:
                         del data["locations"][bodyName]
                         self.__update_data(entry)
+                        self.pos = 0
                 self.save_data()
 
             elif event == "FSSBodySignals":
@@ -491,6 +493,7 @@ class BioPatrol(tk.Frame, Module):
                             del species_data["locations"][planet]
 
                 self.__update_data(entry)
+                self.pos = 0
                 self.save_data()
                 self.signals_in_system.clear()
 
@@ -662,7 +665,7 @@ class BioPatrol(tk.Frame, Module):
         if len(self.data) == 0:
             self.set_status("Либо все виды найдены, либо что-то сломалось.")
         else:
-            self.pos = 0
+            self.pos = next((i for i, bio in enumerate(self.data) if bio["species"] == self.selected_bio), 0)
             self.show()
 
 
