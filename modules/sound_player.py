@@ -2,18 +2,26 @@
 Проигрыватель звуковых файлов.
 """
 
-import os
-
-from .lib.thirdparty.playsound import playsound
-from .lib.thread import Thread
+from context import PluginContext
+from modules.lib.thirdparty.playsound import playsound
 
 
-class Player(Thread):
-    def __init__(self, plugin_dir, sounds):
-        super().__init__()
-        self.sounds = sounds
-        self.plugin_dir = plugin_dir
+class Player:
+    DEFAULT_SOUNDS_LOCATION = PluginContext.plugin_dir / "sounds"
+    USER_CUSTOM_SOUNDS_LOCATION = PluginContext.plugin_dir / "userdata" / "sounds"
 
-    def run(self):
-        for soundfile in self.sounds:
-            playsound(os.path.join(self.plugin_dir, soundfile))
+    def play_info(self, block: bool = False):
+        playsound(self.DEFAULT_SOUNDS_LOCATION / "info.wav", block)
+
+    def play_success(self, block: bool = False):
+        playsound(self.DEFAULT_SOUNDS_LOCATION / "success.wav", block)
+
+    def play_warning(self, block: bool = False):
+        playsound(self.DEFAULT_SOUNDS_LOCATION / "warning.wav", block)
+
+    def play_error(self, block: bool = False):
+        playsound(self.DEFAULT_SOUNDS_LOCATION / "error.wav", block)
+
+    def play(self, name: str, block: bool = False):
+        path = self.USER_CUSTOM_SOUNDS_LOCATION / name
+        playsound(path, block)

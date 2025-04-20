@@ -12,6 +12,7 @@ from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
+from modules.sound_player import Player
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
 from modules.lib import thread
@@ -23,6 +24,8 @@ from config import config as edmc_config        # type: ignore
 
 def init_version():
     Debug.setup(PluginContext.logger)
+    PluginContext.sound_player = Player()
+
     # очистка устаревших ключей конфигурации
     edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
     edmc_config.delete("Triumvirate.Canonn", suppress=True)

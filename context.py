@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from modules.patrol import PatrolModule
     from modules.exploring.visualizer import Visualizer
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
+    from modules.sound_player import Player
 
 
 class TranslateFunc(Protocol):
@@ -66,6 +67,7 @@ class PluginContext:
     _tr_template: TranslateFunc     = None
     journal_processor: 'JournalProcessor'   = None
     notifier: 'Notifier'            = None
+    sound_player: 'Player'          = None
 
     # модули
     bgs_module: 'BGS'               = None
