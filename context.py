@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, IntFlag, auto
 from semantic_version import Version
-from typing import Protocol, TYPE_CHECKING
-from pathlib import Path
+from typing import TYPE_CHECKING, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
@@ -12,20 +11,22 @@ from modules.lib.module import get_active_modules
 if TYPE_CHECKING:
     # им можно, они тут для аннотаций типов и в рантайме не импортируются
     import logging
+    from pathlib import Path
     from queue import Queue
+
     from journal_processor import JournalProcessor
-    from modules.lib.module import Module
-    from modules.notifier import Notifier
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
     from modules.colonisation import DeliveryTracker
-    from modules.fc_tracker import FC_Tracker
-    from modules.systems import SystemsModule
-    from modules.squadron import Squadron_Tracker
-    from modules.patrol import PatrolModule
-    from modules.exploring.visualizer import Visualizer
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
+    from modules.exploring.visualizer import Visualizer
+    from modules.fc_tracker import FC_Tracker
+    from modules.lib.module import Module
+    from modules.notifier import Notifier
+    from modules.patrol import PatrolModule
     from modules.sound_player import Player
+    from modules.squadron import Squadron_Tracker
+    from modules.systems import SystemsModule
 
 
 class TranslateFunc(Protocol):
