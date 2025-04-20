@@ -4,6 +4,7 @@
 Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
 """
 
+import importlib
 import json
 import os
 import logging
@@ -212,8 +213,8 @@ class Updater:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
 
-        saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
-        self.local_version = Version(saved_version or "0.0.0")
+        self._local_settings_module = importlib.import_module("settings")
+        self.local_version = Version(self._local_settings_module.version)
 
 
     def start_update_cycle(self, _check_now: bool = False):
@@ -242,15 +243,6 @@ class Updater:
         if self.release_type == ReleaseType._DEVELOPMENT:
             logger.info("Release type is Development, stopping the updating process.")
             self.stop_update_cycle()
-            self.__use_local_version()
-            return
-
-        if self.local_version == Version("0.0.0"):
-            # первый запуск плагина после обновления до 1.12.0
-            logger.info((
-                "No saved local version info found. "
-                "Assuming 1.12.0 or higher is installed for the first time, stopping the updating process."
-            ))
             self.__use_local_version()
             return
 
@@ -343,15 +335,17 @@ class Updater:
         except FileNotFoundError:
             logger.warning("Directory `userdata` not found, skipping.")
 
-        # сносим старую версию и копируем на её место новую, удаляем временные файлы
+        # сносим старую версию и копируем на её место новую, удаляем временные файлы, обновляем импорт настроек
         logger.info("Replacing plugin files...")
         shutil.rmtree(context.plugin_dir, ignore_errors=True)
         shutil.copytree(new_ver_path, context.plugin_dir, dirs_exist_ok=True)
         shutil.rmtree(tempdir)
+        importlib.reload(self._local_settings_module)
 
         # обновляем запись о локальной версии
-        edmc_config.set(self.LOCAL_VERSION_KEY, str(tag))
         self.local_version = tag
+        if (settings_ver := Version(self._local_settings_module.version)) != tag:
+            logger.warning(f"New settings.version ({settings_ver}) doesn't match the tag ({tag}).")
         logger.info(f"Done. Local version set to {tag}.")
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
@@ -378,6 +372,10 @@ class Updater:
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
+            if not Path(context.plugin_dir, "settings.py").exists():
+                logger.error("`settings.py` module not found. Aborting.")
+                context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
+                return
 
             # сначала инициализируем контекст версии уже созданными объектами
             from context import PluginContext as VersionContext
@@ -387,18 +385,7 @@ class Updater:
             VersionContext._tr_template = _Translation.translate
             VersionContext._event_queue = context.event_queue
 
-            version_mismatch = False
             context.plugin_version = VersionContext.plugin_version
-            if self.local_version != context.plugin_version:
-                logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
-                edmc_config.set(self.LOCAL_VERSION_KEY, str(context.plugin_version))
-                self.local_version = context.plugin_version
-                logger.warning(f"Local version set to {context.plugin_version}.")
-                version_mismatch = True
-                if "dev" in context.plugin_version.prerelease:
-                    logger.info("Local version is of development release type, changing Updater settings.")
-                    edmc_config.set(context.updater.RELEASE_TYPE_KEY, ReleaseType._DEVELOPMENT)
-                    context.updater.release_type = ReleaseType._DEVELOPMENT
 
             # и лишь теперь мы можем стартовать саму версию
             import plugin_init
@@ -422,8 +409,6 @@ class Updater:
 
             context.plugin_loaded = True
             logger.info("Local version configured, running.")
-            if version_mismatch:
-                context.updater.restart_update_cycle()
 
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует

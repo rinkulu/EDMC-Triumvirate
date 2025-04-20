@@ -30,6 +30,7 @@ def init_version():
     # edmc_config.delete("Triumvirate.CanonnDebug", suppress=True)
     # edmc_config.delete("Triumvirate.DisableAutoUpdate", suppress=True)
     # edmc_config.delete("Triumvirate.RemoveBackup", suppress=True)
+    # edmc_config.delete("Triumvirate.Updater.LocalVersion", supress=True)
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
