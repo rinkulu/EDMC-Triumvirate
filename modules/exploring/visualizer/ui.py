@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, PhotoImage
-from pathlib import Path
 from typing import Callable, Any
 
 from context import PluginContext
@@ -113,7 +112,7 @@ class _IconButton(tk.Frame):
         self.category = category
         self.__callback = callback
 
-        icons_path = Path(PluginContext.plugin_dir, "icons")
+        icons_path = PluginContext.plugin_dir / "icons"
         self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
         self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 

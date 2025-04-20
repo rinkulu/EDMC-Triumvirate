@@ -55,7 +55,7 @@ class BasicContext:
     edmc_version: Version           = appversion() if callable(appversion) else Version(appversion)
     plugin_loaded: bool             = False
     plugin_version: Version         = None
-    plugin_dir: str                 = None
+    plugin_dir: Path                = None
 
     updater: "Updater"              = None
     event_queue: Queue[dict]        = Queue()
@@ -95,7 +95,7 @@ class _Translation:
             logger.debug(f"Unsupported system language ({sys_lang}).")
             cls.system_language = sys_lang
 
-        translations_dir = Path(context.plugin_dir) / "translations"
+        translations_dir = context.plugin_dir / "translations"
         if not translations_dir.exists():
             logger.error("Couldn't find the directory with the translation files.")
             return
@@ -555,12 +555,12 @@ def plugin_start(plugin_dir):
     raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
 
-def plugin_start3(plugin_dir: str) -> str:
+def plugin_start3(plugin_dir_str: str) -> str:
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
-    context.plugin_dir = plugin_dir
+    context.plugin_dir = Path(plugin_dir_str)
     _Translation.setup()
     _Translation.update_active_language(edmc_config.get_str("language"))
 

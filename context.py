@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum, IntFlag, auto
 from semantic_version import Version
 from typing import Protocol, TYPE_CHECKING
+from pathlib import Path
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
@@ -57,7 +58,7 @@ class PluginContext:
     plugin_version: Version         = Version(settings.version)
     client_version: str             = f"{plugin_name}.{plugin_version}"
     edmc_version: Version           = None
-    plugin_dir: str                 = None
+    plugin_dir: 'Path'              = None
 
     # объекты
     logger: 'logging.Logger'        = None
