@@ -123,7 +123,7 @@ class FactionTracker(Submodule):
                 if (status := system_conflict["Status"]) == "":
                     status = "finished"
                 match conflict_type := system_conflict["WarType"]:
-                    case "war", "civilwar": conflict_type = "War"
+                    case "war" | "civilwar": conflict_type = "War"
                     case "election": conflict_type = "Election"
                     case _:
                         PluginContext.logger.warning(f"Unknown conflict type: {conflict_type}. Raw entry: {entry}")
