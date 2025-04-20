@@ -1,5 +1,4 @@
 import tkinter as tk
-from pathlib import Path
 from PIL import Image, ImageTk
 
 from context import PluginContext
@@ -52,10 +51,10 @@ class _Message(tk.Frame):
     @classmethod
     def _set_images(cls):
         size = int(14 * (tk._default_root.winfo_screenheight() / 1080))
-        image = Image.open(Path(PluginContext.plugin_dir) / 'icons' / 'cross.png')
+        image = Image.open(PluginContext.plugin_dir / 'icons' / 'cross.png')
         image = image.resize((size, size))
         cls._cross_image = ImageTk.PhotoImage(image)
-        image_white = Image.open(Path(PluginContext.plugin_dir) / "icons" / "cross_white.png")
+        image_white = Image.open(PluginContext.plugin_dir / "icons" / "cross_white.png")
         image_white = image_white.resize((size, size))
         cls._cross_image_white = ImageTk.PhotoImage(image_white)
 
