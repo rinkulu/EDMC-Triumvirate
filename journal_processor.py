@@ -3,7 +3,7 @@ from threading import Thread
 from time import sleep
 
 import settings
-from context import Flags, Flags2, GameState, PluginContext
+from context import GameState, PluginContext
 from modules import legacy
 from modules.lib import thread
 from modules.lib.journal import JournalEntry
@@ -188,13 +188,9 @@ class JournalProcessor(Thread):
         GameState.gravity = entry.get("Gravity")
 
         if (flags := entry.get("Flags")) is not None:
-            GameState.flags_raw     = flags
-            GameState.in_ship       = flags & Flags.IN_MAIN_SHIP
-            GameState.in_fighter    = flags & Flags.IN_FIGHTER
-            GameState.in_srv        = flags & Flags.IN_SRV
+            GameState.flags.update(flags)
         if (flags2 := entry.get("Flags2")) is not None:
-            GameState.flags2_raw    = flags2
-            GameState.on_foot       = flags2 & Flags2.ON_FOOT
+            GameState.flags2.update(flags2)
 
 
     def on_cmdr_data(self, data: dict, is_beta: bool):

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import Enum, IntFlag, auto
+from enum import Enum
 from semantic_version import Version
 from typing import TYPE_CHECKING, Protocol
 
@@ -87,55 +87,6 @@ class PluginContext:
         return get_active_modules()
 
 
-@dataclass
-class GameState:
-    """
-    Хранит текущее состояние игры, включая полную репрезентацию status.json.
-    """
-    # параметры
-    cmdr: str                   = None
-    squadron: str               = None
-    legacy_sqid: str            = None
-
-    odyssey: bool               = None
-    game_in_beta: bool          = None
-    pips: list[int, int, int]   = None
-    firegroup: int              = None
-    gui_focus: 'GuiFocus'       = None
-    fuel_main: float            = None
-    fuel_reservoir: float       = None
-    cargo: int                  = None
-    legal_state: 'LegalState'   = None
-    balance: int                = None
-    destination: str            = None
-
-    system: str                 = None
-    system_address: int         = None
-    pending_jump_system: str    = None
-    station: str                = None
-    body_name: str              = None
-    latitude: float             = None
-    longitude: float            = None
-    altitude: int               = None
-    heading: int                = None
-    planet_radius: float        = None
-
-    # пешие параметры
-    oxygen: float               = None      # (0.0 .. 1.0)
-    health: float               = None      # (0.0 .. 1.0)
-    temperature: int            = None      # в кельвинах
-    selected_weapon: str        = None
-    gravity: float              = None
-
-    # флаги
-    flags_raw: int              = None
-    flags2_raw: int             = None
-    in_ship: bool               = None
-    in_fighter: bool            = None
-    in_srv: bool                = None
-    on_foot: bool               = None
-
-
 # вспомогательные классы
 
 class LegalState(str, Enum):
@@ -163,59 +114,122 @@ class GuiFocus(int, Enum):
     CODEX               = 11
 
 
-class Flags(IntFlag):
-    DOCKED                  = auto()
-    LANDED                  = auto()
-    LANDING_GEAR_DOWN       = auto()
-    SHIELDS_UP              = auto()
-    SUPERCRUISE             = auto()
-    FLIGHT_ASSIST_OFF       = auto()
-    HARDPOINTS_DEPLOYED     = auto()
-    IN_WING                 = auto()
-    LIGHTS_ON               = auto()
-    CARGO_SCOOP_DEPLOYED    = auto()
-    SILENT_RUNNING          = auto()
-    SCOOPING_FUEL           = auto()
-    SRV_HANDBRAKE           = auto()
-    SRV_TURRET_VIEW         = auto()
-    SRV_TURRET_RETRACKED    = auto()
-    SRV_DRIVE_ASSIST        = auto()
-    FSD_MASS_LOCKED         = auto()
-    FSD_CHARGING            = auto()
-    FSD_COOLDOWN            = auto()
-    LOW_FUEL                = auto()    # <25%
-    OVERHEATING             = auto()    # >100%
-    HAS_LAT_LONG            = auto()
-    IS_IN_DANGER            = auto()
-    BEING_INTERDICTED       = auto()
-    IN_MAIN_SHIP            = auto()
-    IN_FIGHTER              = auto()
-    IN_SRV                  = auto()
-    HUD_IN_ANALYSIS_MODE    = auto()
-    NIGHT_VISION            = auto()
-    ALT_FROM_AVERAGE_RADIUS = auto()
-    FSD_JUMP                = auto()
-    SRV_HIGH_BEAM           = auto()
+class _FlagsBase:
+    def __init__(self):
+        self._raw = 0
+
+    def update(self, val: int):
+        self._raw = val
 
 
-class Flags2(IntFlag):
-    ON_FOOT                 = auto()
-    IN_TAXI                 = auto()    # или в десантном шаттле
-    IN_MULTICREW            = auto()    # т.е. в чужом корабле
-    ON_FOOT_IN_STATION      = auto()
-    ON_FOOT_ON_PLANET       = auto()
-    AIM_DOWN_SIGHT          = auto()
-    LOW_OXYGEN              = auto()
-    LOW_HEALTH              = auto()
-    COLD                    = auto()
-    HOT                     = auto()
-    VERY_COLD               = auto()
-    VERY_HOT                = auto()
-    GLIDE_MODE              = auto()
-    ON_FOOT_IN_HANGAR       = auto()
-    ON_FOOT_SOCIAL_SPACE    = auto()
-    ON_FOOT_EXTERIOR        = auto()
-    BREATHABLE_ATMOSPHERE   = auto()
-    TELEPRESENCE_MULTICREW  = auto()
-    PHYSICAL_MULTICREW      = auto()
-    FSD_HYPERDRIVE_CHARGING = auto()
+class _Flag:
+    def __init__(self, value):
+        self.value = value
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self.value
+        return bool(instance._raw & self.value)
+
+
+class Flags(_FlagsBase):
+    DOCKED                  = _Flag(1 << 0)
+    LANDED                  = _Flag(1 << 1)
+    LANDING_GEAR_DOWN       = _Flag(1 << 2)
+    SHIELDS_UP              = _Flag(1 << 3)
+    SUPERCRUISE             = _Flag(1 << 4)
+    FLIGHT_ASSIST_OFF       = _Flag(1 << 5)
+    HARDPOINTS_DEPLOYED     = _Flag(1 << 6)
+    IN_WING                 = _Flag(1 << 7)
+    LIGHTS_ON               = _Flag(1 << 8)
+    CARGO_SCOOP_DEPLOYED    = _Flag(1 << 9)
+    SILENT_RUNNING          = _Flag(1 << 10)
+    SCOOPING_FUEL           = _Flag(1 << 11)
+    SRV_HANDBRAKE           = _Flag(1 << 12)
+    SRV_TURRET_VIEW         = _Flag(1 << 13)
+    SRV_TURRET_RETRACKED    = _Flag(1 << 14)
+    SRV_DRIVE_ASSIST        = _Flag(1 << 15)
+    FSD_MASS_LOCKED         = _Flag(1 << 16)
+    FSD_CHARGING            = _Flag(1 << 17)
+    FSD_COOLDOWN            = _Flag(1 << 18)
+    LOW_FUEL                = _Flag(1 << 19)    # <25%
+    OVERHEATING             = _Flag(1 << 20)    # >100%
+    HAS_LAT_LONG            = _Flag(1 << 21)
+    IS_IN_DANGER            = _Flag(1 << 22)
+    BEING_INTERDICTED       = _Flag(1 << 23)
+    IN_MAIN_SHIP            = _Flag(1 << 24)
+    IN_FIGHTER              = _Flag(1 << 25)
+    IN_SRV                  = _Flag(1 << 26)
+    HUD_IN_ANALYSIS_MODE    = _Flag(1 << 27)
+    NIGHT_VISION            = _Flag(1 << 28)
+    ALT_FROM_AVERAGE_RADIUS = _Flag(1 << 29)
+    FSD_JUMP                = _Flag(1 << 30)
+    SRV_HIGH_BEAM           = _Flag(1 << 31)
+
+
+class Flags2(_FlagsBase):
+    ON_FOOT                 = _Flag(1 << 0)
+    IN_TAXI                 = _Flag(1 << 1)     # или в десантном шаттле
+    IN_MULTICREW            = _Flag(1 << 2)     # т.е. в чужом корабле
+    ON_FOOT_IN_STATION      = _Flag(1 << 3)
+    ON_FOOT_ON_PLANET       = _Flag(1 << 4)
+    AIM_DOWN_SIGHT          = _Flag(1 << 5)
+    LOW_OXYGEN              = _Flag(1 << 6)
+    LOW_HEALTH              = _Flag(1 << 7)
+    COLD                    = _Flag(1 << 8)
+    HOT                     = _Flag(1 << 9)
+    VERY_COLD               = _Flag(1 << 10)
+    VERY_HOT                = _Flag(1 << 11)
+    GLIDE_MODE              = _Flag(1 << 12)
+    ON_FOOT_IN_HANGAR       = _Flag(1 << 13)
+    ON_FOOT_SOCIAL_SPACE    = _Flag(1 << 14)
+    ON_FOOT_EXTERIOR        = _Flag(1 << 15)
+    BREATHABLE_ATMOSPHERE   = _Flag(1 << 16)
+    TELEPRESENCE_MULTICREW  = _Flag(1 << 17)
+    PHYSICAL_MULTICREW      = _Flag(1 << 18)
+    FSD_HYPERDRIVE_CHARGING = _Flag(1 << 19)
+
+
+@dataclass
+class GameState:
+    """
+    Хранит текущее состояние игры, включая полную репрезентацию status.json.
+    """
+    # параметры
+    cmdr: str                   = None
+    squadron: str               = None
+    legacy_sqid: str            = None
+
+    odyssey: bool               = None
+    game_in_beta: bool          = None
+    pips: list[int, int, int]   = None
+    firegroup: int              = None
+    gui_focus: GuiFocus         = None
+    fuel_main: float            = None
+    fuel_reservoir: float       = None
+    cargo: int                  = None
+    legal_state: LegalState     = None
+    balance: int                = None
+    destination: str            = None
+
+    system: str                 = None
+    system_address: int         = None
+    pending_jump_system: str    = None
+    station: str                = None
+    body_name: str              = None
+    latitude: float             = None
+    longitude: float            = None
+    altitude: int               = None
+    heading: int                = None
+    planet_radius: float        = None
+
+    # пешие параметры
+    oxygen: float               = None      # (0.0 .. 1.0)
+    health: float               = None      # (0.0 .. 1.0)
+    temperature: int            = None      # в кельвинах
+    selected_weapon: str        = None
+    gravity: float              = None
+
+    # флаги
+    flags = Flags()
+    flags2 = Flags2()
