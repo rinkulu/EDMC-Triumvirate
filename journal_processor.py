@@ -1,23 +1,29 @@
 from queue import Queue
+from threading import Thread
+from time import sleep
 
 import settings
-from context import PluginContext, GameState, Flags, Flags2
+from context import Flags, Flags2, GameState, PluginContext
 from modules import legacy
+from modules.lib import thread
 from modules.lib.journal import JournalEntry
-from modules.lib.thread import Thread
 
+
+# Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,
+# чтобы избежать остановки обработчика до того, как он закончит разбирать очередь.
 
 class JournalProcessor(Thread):
     def __init__(self):
         super().__init__(name="Triumvirate journal entry processor")
         self.queue: Queue = PluginContext._event_queue
         self._startup = True
+        self._stop = False
 
 
-    def do_run(self):
-        while True:
+    def run(self):
+        while not self._stop:
             if self.queue.empty():
-                self.sleep(1)
+                sleep(1)
                 continue
             try:
                 entry = self.queue.get(block=False)
@@ -28,6 +34,8 @@ class JournalProcessor(Thread):
                         self.on_dashboard_entry(*entry["data"])
                     case "cmdr_data":
                         self.on_cmdr_data(*entry["data"])
+                    case "plugin_stop":
+                        self.on_plugin_stop()
                     case _:
                         raise ValueError("unknown entry type")
             except Exception as e:
@@ -193,3 +201,14 @@ class JournalProcessor(Thread):
         GameState.game_in_beta = is_beta
         for mod in PluginContext.active_modules:
             mod.on_cmdr_data(data, is_beta)
+
+
+    def on_plugin_stop(self):
+        PluginContext.logger.info("Stopping the plugin.")
+        for mod in PluginContext.active_modules:
+            try:
+                mod.on_close()
+            except Exception as e:
+                PluginContext.logger.error(f"Exception in module {mod} on shutdown.", exc_info=e)
+        thread.Thread.stop_all()
+        self._stop = True
