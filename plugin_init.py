@@ -15,7 +15,6 @@ from modules.squadron import Squadron_Tracker
 from modules.sound_player import Player
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
-from modules.lib import thread
 from modules.lib.module import Module
 
 import myNotebook as nb                         # type: ignore
@@ -110,7 +109,5 @@ def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
-    PluginContext.logger.debug("Stopping the plugin.")
-    for mod in PluginContext.active_modules:
-        mod.on_close()
-    thread.Thread.stop_all()
+    PluginContext.logger.debug("Sending 'plugin_stop' event to the journal processor.")
+    PluginContext._event_queue.put({"type": "plugin_stop"})

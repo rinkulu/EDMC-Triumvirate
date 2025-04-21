@@ -190,7 +190,7 @@ class FactionTracker(Submodule):
             row[7] = int(row[7]) if row[7] else None    # conflict_score
             row[8] = int(row[8]) if row[8] else None    # conflict_score_enemy
             row[9] = row[9] or None                     # conflict_stake
-            row[10] = row[10] or None                     # conflict_stake_enemy
+            row[10] = row[10] or None                   # conflict_stake_enemy
             return row
 
         with self._threadlock:
