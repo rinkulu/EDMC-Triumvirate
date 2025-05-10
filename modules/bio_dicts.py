@@ -203,6 +203,7 @@ codex_to_english_variants = {
     "$Codex_Ent_Cactoid_02_D_Name;": "Cactoida Lapis - Turquoise",                   # entry 2330214
     "$Codex_Ent_Cactoid_02_N_Name;": "Cactoida Lapis - Sage",                        # entry 2330215
     "$Codex_Ent_Cactoid_03_O_Name;": "Cactoida Vermis - Grey",                       # entry 2330301
+    "$Codex_Ent_Cactoid_03_A_Name;": "Cactoida Vermis - Green",                      # entry 2330403
     "$Codex_Ent_Cactoid_03_F_Name;": "Cactoida Vermis - Yellow",                     # entry 2330304
     "$Codex_Ent_Cactoid_03_G_Name;": "Cactoida Vermis - Teal",                       # entry 2330305
     "$Codex_Ent_Cactoid_03_M_Name;": "Cactoida Vermis - Amethyst",                   # entry 2330307
@@ -213,7 +214,6 @@ codex_to_english_variants = {
     "$Codex_Ent_Cactoid_03_D_Name;": "Cactoida Vermis - Turquoise",                  # entry 2330314
     "$Codex_Ent_Cactoid_03_N_Name;": "Cactoida Vermis - Sage",                       # entry 2330315
     "$Codex_Ent_Cactoid_04_A_Name;": "Cactoida Pullulanta - Green",                  # entry 2330403
-    "$Codex_Ent_Cactoid_03_A_Name;": "Cactoida Pullulanta - Green",                  # entry 2330403
     "$Codex_Ent_Cactoid_04_F_Name;": "Cactoida Pullulanta - Yellow",                 # entry 2330404
     "$Codex_Ent_Cactoid_04_G_Name;": "Cactoida Pullulanta - Teal",                   # entry 2330405
     "$Codex_Ent_Cactoid_04_M_Name;": "Cactoida Pullulanta - Amethyst",               # entry 2330407
