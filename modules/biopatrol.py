@@ -474,6 +474,7 @@ class BioPatrol(tk.Frame, Module):
 
             elif event == "FSSAllBodiesFound":
                 planets_to_remove = set()
+                reset = False
 
                 for species, species_data in self.__raw_data["bio"].items():
                     for planet, planet_data in species_data["locations"].items():
@@ -488,12 +489,14 @@ class BioPatrol(tk.Frame, Module):
                         "signalCount": 0,
                         "signals": []
                     }
+                    reset = True
                     for species, species_data in self.__raw_data["bio"].items():
                         if planet in species_data["locations"]:
                             del species_data["locations"][planet]
 
                 self.__update_data(entry)
-                self.pos = 0
+                if reset:
+                    self.pos = 0
                 self.save_data()
                 self.signals_in_system.clear()
 
