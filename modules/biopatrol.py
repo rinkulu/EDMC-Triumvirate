@@ -290,6 +290,18 @@ class BioPatrol(tk.Frame, Module):
 
             for k, v in self.__bio_found.items():
                 planet = k
+
+                for species, data in self.__raw_data["bio"].items():
+                    if planet not in data["locations"]:
+                        continue
+
+                    species_genus = species.split()[0]
+                    known_genuses = self.__bio_found[planet]["genuses"]
+
+                    if known_genuses is not None and species_genus not in known_genuses:
+                        debug(f">> Removing {species} prediction for {planet} - genus has been ruled out by DSS")
+                        del data["locations"][planet]
+
                 for bioname in v["signals"]:
                     genus = bioname.split()[0]
                     self.process_genus_bio(genus, bioname, planet)
@@ -403,8 +415,12 @@ class BioPatrol(tk.Frame, Module):
         if body not in self.__bio_found:
             self.__bio_found[body] = {
               "signalCount" : signal_count,
-              "signals" : []
+              "signals" : [],
+              "genuses" : None
             }
+
+    def biofound_set_genuses(self, body, genuses):
+        self.__bio_found[body]["genuses"] = genuses
 
     def biofound_add_signal(self, body, signal):
         if signal not in self.__bio_found[body]["signals"]:
@@ -464,6 +480,7 @@ class BioPatrol(tk.Frame, Module):
                 bodyName = entry.data["BodyName"]
 
                 self.biofound_init_body(bodyName, len(genuses))
+                self.biofound_set_genuses(bodyName, genuses)
 
                 for species, data in self.__raw_data["bio"].items():
                     if bodyName in data["locations"] and species.split()[0] not in genuses:
