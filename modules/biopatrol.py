@@ -477,6 +477,7 @@ class BioPatrol(tk.Frame, Module):
                 for signal in entry.data.get("Signals", []):
                     if signal["Type"] == "$SAA_SignalType_Biological;":
                         self.signals_in_system[name] = signal["Count"]
+                        self.biofound_init_body(name, signal["Count"])
 
             elif event == "FSSAllBodiesFound":
                 planets_to_remove = set()
