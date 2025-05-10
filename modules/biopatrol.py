@@ -399,6 +399,18 @@ class BioPatrol(tk.Frame, Module):
                             continue
 
 
+    def biofound_init_body(self, body, signal_count=None):
+        if body not in self.__bio_found:
+            self.__bio_found[body] = {
+              "signalCount" : signal_count,
+              "signals" : []
+            }
+
+    def biofound_add_signal(self, body, signal):
+        if signal not in self.__bio_found[body]["signals"]:
+            self.__bio_found[body]["signals"].append(signal)
+
+
     def on_journal_entry(self, entry: JournalEntry):
         required_events = ["Location", "FSDJump", "ScanOrganic", "SAASignalsFound", "FSSBodySignals", "FSSAllBodiesFound", "CodexEntry"]
         event = entry.data["event"]
@@ -417,8 +429,7 @@ class BioPatrol(tk.Frame, Module):
                 bioname = codex_to_english_variants.get(entry.data["Variant"], entry.data["Variant"])
                 self.set_status(f"Scanned {bioname} at {self.body}")
 
-                if bioname not in self.__bio_found[self.body]["signals"]:
-                    self.__bio_found[self.body]["signals"].append(bioname)
+                self.biofound_add_signal(self.body, bioname)
 
                 # update data
                 self.process_genus_bio(genus, bioname, self.body, report=True)
@@ -440,8 +451,7 @@ class BioPatrol(tk.Frame, Module):
                 genus = bioname.split()[0]
                 self.set_status(f"Scanned {bioname} at {self.body}")
 
-                if bioname not in self.__bio_found[self.body]["signals"]:
-                    self.__bio_found[self.body]["signals"].append(bioname)
+                self.biofound_add_signal(self.body, bioname)
 
                 # update data
                 self.process_genus_bio(genus, bioname, self.body, report=True, entry_region=region)
@@ -453,11 +463,7 @@ class BioPatrol(tk.Frame, Module):
                 genuses = [codex_to_english_genuses.get(i["Genus"], i["Genus"]) for i in entry.data["Genuses"]]
                 bodyName = entry.data["BodyName"]
 
-                if bodyName not in self.__bio_found:
-                    self.__bio_found[bodyName] = {
-                        "signalCount": len(genuses),
-                        "signals": []
-                    }
+                self.biofound_init_body(bodyName, len(genuses))
 
                 for species, data in self.__raw_data["bio"].items():
                     if bodyName in data["locations"] and species.split()[0] not in genuses:
@@ -485,10 +491,7 @@ class BioPatrol(tk.Frame, Module):
                             planets_to_remove.add(planet)
 
                 for planet in planets_to_remove:
-                    self.__bio_found[planet] = {
-                        "signalCount": 0,
-                        "signals": []
-                    }
+                    self.biofound_init_body(planet, 0)
                     reset = True
                     for species, species_data in self.__raw_data["bio"].items():
                         if planet in species_data["locations"]:
@@ -731,10 +734,7 @@ class BioPatrol(tk.Frame, Module):
         for species, data in self.__raw_data["bio"].items():
             if planet in data["locations"]:
                 del data["locations"][planet]
-                self.__bio_found[planet] = {
-                    "signalCount": 0,
-                    "signals": []
-                }
+                self.biofound_init_body(planet, 0)
 
                 self.__update_data_coords(coords)
                 self.save_data()
