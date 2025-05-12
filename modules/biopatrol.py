@@ -296,7 +296,7 @@ class BioPatrol(tk.Frame, Module):
                         continue
 
                     species_genus = species.split()[0]
-                    known_genuses = self.__bio_found[planet]["genuses"]
+                    known_genuses = self.__bio_found[planet].get("genuses", [])
 
                     if known_genuses is not None and species_genus not in known_genuses:
                         debug(f">> Removing {species} prediction for {planet} - genus has been ruled out by DSS")
