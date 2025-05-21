@@ -61,7 +61,7 @@ class JournalProcessor(Thread):
             new_cmdr = entry["Name"]
         elif entry["event"] == "LoadGame":
             new_cmdr = entry["Commander"]
-        elif GameState.cmdr is None and cmdr:
+        elif GameState.cmdr is None and cmdr:   # доверимся данным EDMC
             new_cmdr = cmdr
 
         if new_cmdr != GameState.cmdr:
@@ -81,6 +81,9 @@ class JournalProcessor(Thread):
             # ивенты, возможные лишь в Одиссее
             elif entry["event"] in settings.odyssey_events:
                 GameState.odyssey = True
+
+        if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
+            PluginContext.systems_module.add_system(entry)
 
         # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
         if (
@@ -125,7 +128,6 @@ class JournalProcessor(Thread):
         if entry.get("event") == "FSDJump":
             GameState.body_name = None
             GameState.pending_jump_system = None
-            PluginContext.systems_module.add_system(entry)
 
         # TODO: наверняка можно сделать лучше
         x, y, z = None, None, None
