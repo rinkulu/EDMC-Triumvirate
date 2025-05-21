@@ -29,9 +29,10 @@ class CanonnCodexPOI(Module):
             self.destination_system = entry.data.get("StarSystem")
         elif event == "FSDJump":
             if (system := entry.data["StarSystem"]) == self.destination_system:
+                # в противном случае это, скорее всего, таргоидский перехват, и мы всё ещё в старой системе
                 self.fetch_data(system)
             self.destination_system = None
-        elif event == "Location":
+        elif event in ("Location", "CarrierJump"):
             self.fetch_data(entry.data["StarSystem"])
 
 

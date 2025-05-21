@@ -493,7 +493,7 @@ class CodexTypes(Frame):
             debug("Looking for POI data in {}".format(system))
             poiTypes(system, cmdr, self.getdata).start()
 
-        if entry.get("event") in ("Location", "StartUp", "FSDJump"):
+        if entry.get("event") in ("Location", "StartUp", "FSDJump", "CarrierJump"):
             if entry.get("SystemAllegiance") in ("Thargoid", "Guardian"):
                 self.merge_poi(entry.get("SystemAllegiance"), "{} Controlled".format(entry.get("SystemAllegiance")), "")
 
