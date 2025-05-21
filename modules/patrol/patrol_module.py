@@ -309,7 +309,7 @@ class PatrolModule(Frame, Module):
         same_system = (
             nearest_system.upper() == entry.system.upper() if nearest_system else False
         )
-        if event in {"Location", "FSDJump", "StartUp"}:
+        if event in {"Location", "FSDJump", "CarrierJump", "StartUp"}:
             debug(f"Refreshing Patrol ({event})")
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:

@@ -76,7 +76,7 @@ class FactionTracker(Submodule):
         self._updater.start()
 
     def on_journal_entry(self, entry: dict):
-        if entry["event"] not in ("Location", "FSDJump"):
+        if entry["event"] not in ("Location", "FSDJump", "CarrierJump"):
             return
         if not self.data:
             PluginContext.logger.debug(

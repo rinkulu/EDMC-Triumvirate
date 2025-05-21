@@ -85,7 +85,7 @@ class JournalProcessor(Thread):
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
             PluginContext.systems_module.add_system(entry)
 
-        # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
+        # иногда ивент прыжка приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
         if (
             "SystemAddress" in entry
             and GameState.system_address != entry["SystemAddress"]
@@ -103,7 +103,7 @@ class JournalProcessor(Thread):
                         GameState.pending_jump_system, entry["SystemAddress"], entry
                     ))
             else:
-                # мы уже прыгнули, но FSDJump в логах пока не получили
+                # мы уже прыгнули, но FSDJump/CarrierJump в логах пока не получили
                 GameState.system_address = entry["SystemAddress"]
                 GameState.system = GameState.pending_jump_system or system
                 PluginContext.logger.debug(
@@ -125,7 +125,7 @@ class JournalProcessor(Thread):
                 ))
             GameState.system = system
 
-        if entry.get("event") == "FSDJump":
+        if entry.get("event") in ("FSDJump", "CarrierJump"):
             GameState.body_name = None
             GameState.pending_jump_system = None
 
