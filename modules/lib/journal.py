@@ -9,6 +9,9 @@ class Coords:
         yield self.y
         yield self.z
 
+    def __str__(self):
+        return '[' + ', '.join(map(str, self)) + ']'
+
 
 class JournalEntry:
     def __init__(
@@ -20,9 +23,7 @@ class JournalEntry:
         station: str,
         data: dict,
         state: dict,
-        x: float,
-        y: float,
-        z: float,
+        coords: Coords
     ):
         self.cmdr = cmdr
         self.is_beta = is_beta
@@ -31,7 +32,7 @@ class JournalEntry:
         self.station = station
         self.data = data
         self.state = state
-        self.coords = Coords(x, y, z)
+        self.coords = coords
 
     def as_dict(self):
         return {
