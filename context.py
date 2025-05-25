@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
     from modules.exploring.visualizer import Visualizer
     from modules.fc_tracker import FC_Tracker
+    from modules.lib.journal import Coords
     from modules.lib.module import Module
     from modules.notifier import Notifier
     from modules.patrol import PatrolModule
@@ -214,7 +215,9 @@ class GameState:
 
     system: str                 = None
     system_address: int         = None
+    system_coords: 'Coords'     = None
     pending_jump_system: str    = None
+    pending_jump_system_id: int = None
     station: str                = None
     body_name: str              = None
     latitude: float             = None

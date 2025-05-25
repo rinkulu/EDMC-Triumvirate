@@ -43,12 +43,12 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     frame = tk.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
     PluginContext.notifier = Notifier(frame, 3)    # его надо инициализировать первым, но маппить в самый низ
-    PluginContext.exp_visualizer = Visualizer(frame, 0)
-    PluginContext.patrol_module = PatrolModule(frame, 1)
-    PluginContext.fc_tracker = FC_Tracker(frame, 2)
+    PluginContext.systems_module = SystemsModule(frame, 0)
+    PluginContext.exp_visualizer = Visualizer(frame, 1)
+    PluginContext.patrol_module = PatrolModule(frame, 2)
+    PluginContext.fc_tracker = FC_Tracker(frame, 3)
 
     # эти модули не имеют UI, но стартуем их здесь же
-    PluginContext.systems_module = SystemsModule()
     PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
