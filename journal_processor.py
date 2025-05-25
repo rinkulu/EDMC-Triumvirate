@@ -2,11 +2,10 @@ from queue import Queue
 from threading import Thread
 from time import sleep
 
-import settings
 from context import GameState, PluginContext
 from modules import legacy
 from modules.lib import thread
-from modules.lib.journal import JournalEntry
+from modules.lib.journal import Coords, JournalEntry
 
 
 # Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,
@@ -55,7 +54,9 @@ class JournalProcessor(Thread):
     def on_journal_entry(self, cmdr: str | None, is_beta: bool, system: str | None, station: str | None, entry: dict, state: dict):
         GameState.game_in_beta = is_beta
         GameState.station = station
+        GameState.odyssey = state["Odyssey"]
 
+        # ПРОВЕРКА КОМАНДИРА
         new_cmdr = GameState.cmdr
         if entry["event"] == "Commander":
             new_cmdr = entry["Name"]
@@ -70,72 +71,86 @@ class JournalProcessor(Thread):
             GameState.squadron, GameState.legacy_sqid = legacy.fetch_squadron()
             PluginContext.logger.debug(f"Squadron set to {GameState.squadron}, SQID set to {GameState.legacy_sqid}.")
 
+        # РЕПОРТ ВЕРСИИ ПЛАГИНА ПРИ ЗАПУСКЕ
         if self._startup and GameState.cmdr is not None:
             PluginContext.logger.debug("Reporting the plugin version.")
             legacy.report_version()
             self._startup = False
 
-        if GameState.odyssey is None:
-            if entry["event"] == "LoadGame":        # ВАЖНО: Fileheader даёт Odyssey=true и в Горизонтах тоже
-                GameState.odyssey = entry.get("Odyssey", False)
-            # ивенты, возможные лишь в Одиссее
-            elif entry["event"] in settings.odyssey_events:
-                GameState.odyssey = True
-
+        # ПРОВЕРКА ЛОКАЦИИ
+        # Комплексная тема, тут может быть несколько сценариев.
+        # 1) Обычный вход в игру или прыжок
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
-            PluginContext.systems_module.add_system(entry)
-
-        # иногда ивент прыжка приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
-        if (
-            "SystemAddress" in entry
-            and GameState.system_address != entry["SystemAddress"]
-            and entry["event"] not in ("NavRoute", "FSDTarget")
-        ):
-            PluginContext.logger.debug(
-                "Detected SystemAddress mismatch: current {}, from entry {}.".format(
-                    GameState.system_address, entry["SystemAddress"]
-                ))
-            if entry["event"] == "StartJump":
-                # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
-                GameState.pending_jump_system = entry.get("StarSystem")
-                PluginContext.logger.debug(
-                    "StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(
-                        GameState.pending_jump_system, entry["SystemAddress"], entry
-                    ))
-            else:
-                # мы уже прыгнули, но FSDJump/CarrierJump в логах пока не получили
-                GameState.system_address = entry["SystemAddress"]
-                GameState.system = GameState.pending_jump_system or system
-                PluginContext.logger.debug(
-                    "We jumped to another system; system_address set to {}, system set to {}.".format(
-                        GameState.system_address, GameState.system
-                    ))
-
-        # а ещё нас могут дёрнуть таргоиды, поэтому мы окажемся в той же системе, из которой прыгали.
-        if (
-            entry.get("event") == "FSDJump"
-            and entry["StarSystem"] != GameState.pending_jump_system
-        ):
-            PluginContext.logger.debug("Detected misjump; are we hyperdicted? Leaving system_address unchanged.")
-
-        if GameState.system != system and system is not None and GameState.pending_jump_system is None:
-            PluginContext.logger.debug(
-                "GameState.system was {}, but EDMC reported {}. No pending jump detected. Changing system to {}.".format(
-                    GameState.system, system, system
-                ))
-            GameState.system = system
-
-        if entry.get("event") in ("FSDJump", "CarrierJump"):
-            GameState.body_name = None
+            PluginContext.systems_module.cache_system(entry)
+            GameState.system = entry["StarSystem"]
+            GameState.system_address = entry["SystemAddress"]
+            GameState.system_coords = Coords(*entry["StarPos"])
             GameState.pending_jump_system = None
+            GameState.pending_jump_system_id = None
+            PluginContext.logger.debug(
+                f"{entry['event']} detected. Location change: "
+                f"system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."
+            )
+            PluginContext.systems_module.hide_coords_warning()
 
-        # TODO: наверняка можно сделать лучше
-        x, y, z = None, None, None
-        if GameState.system:
-            val = PluginContext.systems_module.get_system_coords(GameState.system)
-            if val is not None:
-                x, y, z = val
+        # 2) Игрок запустил плагин после входа в игру, и у нас ничего нет. Придётся полагаться на данные EDMC
+        elif entry["event"] == "StartUp":
+            PluginContext.logger.debug("Seems like the game is already running. Using EDMC's location data.")
+            GameState.system = state.get("SystemName")
+            GameState.system_address = state.get("SystemAddress")
+            GameState.system_coords = Coords(*state["StarPos"]) if "StarPos" in state else None
+            if GameState.system_coords is None:
+                PluginContext.logger.debug("EDMC didn't provide us with the coordinates, showing user warning.")
+                PluginContext.systems_module.show_coords_warning()
+            PluginContext.logger.debug(
+                f"Location change: system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."
+            )
 
+        # 3) Готовящийся прыжок - мы всё ещё в старой системе
+        elif entry["event"] == "StartJump" and entry["JumpType"] == "Hyperspace":
+            GameState.pending_jump_system = entry.get("StarSystem")
+            GameState.pending_jump_system_id = entry.get("SystemAddress")
+            PluginContext.logger.debug(
+                f"Jump initiated, pending system set to {GameState.pending_jump_system} (id {entry['SystemAddress']})."
+            )
+
+        # 4) Прыжок совершён, но FSD/CarrierJump ещё не было, а данные из новой системы уже пошли (обычно это FSSSignalDiscovered)
+        elif (
+            "SystemAddress" in entry
+            and entry["SystemAddress"] != GameState.system_address
+            and entry["event"] not in ("NavRoute", "FSDTarget", "CarrierBuy", "CarrierJumpRequest", "CarrierLocation")
+        ):
+            PluginContext.logger.debug("Detected SystemAddress mismatch.")
+            if (system_id := entry["SystemAddress"]) == GameState.pending_jump_system_id:
+                GameState.system = GameState.pending_jump_system
+                GameState.system_address = GameState.pending_jump_system_id
+                GameState.system_coords = PluginContext.systems_module.get_system_coords(GameState.system_address)
+                PluginContext.logger.debug(
+                    f"New id ({system_id}) corresponds with the pending jump. Current system set to {GameState.system}, "
+                    f"coords = {GameState.system_coords}."
+                )
+                # pending-и сохраним до ивента прыжка, там сбросим
+            else:
+                # прыгнули не пойми куда??
+                PluginContext.logger.warning(
+                    f"Unexpected misjump: new system id ({system_id}) doesn't match the pending one "
+                    f"({GameState.pending_jump_system_id}). Attempting to fetch the system name and coords..."
+                )
+                new_system = PluginContext.systems_module.get_system_name(system_id)
+                new_coords = PluginContext.systems_module.get_system_coords(system_id)
+                if None not in (new_system, new_coords):
+                    GameState.system = new_system
+                    GameState.system_address = system_id
+                    GameState.system_coords = new_coords
+                    PluginContext.logger.warning(f"System changed to {new_system}, coords: {new_coords}.")
+                else:
+                    # в кэше данных не нашлось, вытянуть с интернетов тоже не вышло
+                    PluginContext.logger.warning("No info on the new system id found. Keeping the old system for now.")
+            if GameState.system_coords is None:
+                PluginContext.logger.debug("System coordinates unknown, showing user warning.")
+                PluginContext.systems_module.show_coords_warning()
+
+        # ПЕРЕДАЧА ДАННЫХ МОДУЛЯМ
         # Как видно, после перехода на GameState - JournalEntry как таковой стал не нужен.
         # TODO: отказ от него будет долгим и болезненным, но надо.
         journal_entry = JournalEntry(
@@ -146,7 +161,7 @@ class JournalProcessor(Thread):
             station=GameState.station,
             data=entry,
             state=state,
-            x=x, y=y, z=z
+            coords=GameState.system_coords
         )
 
         if entry["event"] in ('SendText', 'RecieveText'):
@@ -208,5 +223,6 @@ class JournalProcessor(Thread):
                 mod.on_close()
             except Exception as e:
                 PluginContext.logger.error(f"Exception in module {mod} on shutdown.", exc_info=e)
+        PluginContext.systems_module.on_close()
         thread.Thread.stop_all()
         self._stop = True
