@@ -57,7 +57,7 @@ class HDDetector:
 
     def __init__(self):
         self.departure_system: str          = None
-        self.destination_system: str        = None
+        self.destination_system_id: int     = None
         self.departure_timestamp: datetime  = None
         self.status = self.SAFE
         self._timer: Timer | None = None
@@ -69,7 +69,7 @@ class HDDetector:
 
         if event == "StartJump" and entry["JumpType"] == "Hyperspace":
             self.departure_system = journalEntry.system
-            self.destination_system = entry["StarSystem"]
+            self.destination_system_id = entry["SystemAddress"]
             self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
 
         elif event == "FSDJump":
@@ -112,21 +112,26 @@ class HDDetector:
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
 
         x, y, z    = journalEntry.coords
-        dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system)
-
-        url = f"{canonn_cloud_url_europe_west}/postHDDetected"
-        params = {
-            "cmdr": journalEntry.cmdr,
-            "system": journalEntry.system,
-            "timestamp": journalEntry.data["timestamp"],
-            "x": x, "y": y, "z": z,
-            "destination": self.destination_system,
-            "dx": dx, "dy": dy, "dz": dz,
-            "client": PluginContext.client_version,
-            "odyssey": GameState.odyssey,
-            "hostile": self.status == self.HOSTILE
-        }
-        CanonnReporter(url, params).start()
+        dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system_id)
+        if None in (x, y, z):
+            PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
+        elif None in (dx, dy, dz):
+            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords.")
+        else:
+            url = f"{canonn_cloud_url_europe_west}/postHDDetected"
+            params = {
+                "cmdr": journalEntry.cmdr,
+                "system": journalEntry.system,
+                "timestamp": journalEntry.data["timestamp"],
+                "x": x, "y": y, "z": z,
+                # если есть координаты - есть и название, можно на None не проверять
+                "destination": PluginContext.systems_module.get_system_name(self.destination_system_id),
+                "dx": dx, "dy": dy, "dz": dz,
+                "client": PluginContext.client_version,
+                "odyssey": GameState.odyssey,
+                "hostile": (self.status == self.HOSTILE)
+            }
+            CanonnReporter(url, params).start()
 
         # сбрасываем состояние до следующего перехвата
         self.status = self.SAFE
