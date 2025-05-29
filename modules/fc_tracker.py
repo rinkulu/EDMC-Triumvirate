@@ -84,7 +84,8 @@ class FCData:
         return result
 
     def reset(self):
-        map(lambda f: setattr(self, f.name, f.default), fields(self))
+        for f in fields(self):
+            setattr(self, f.name, f.default)
 
 
 ##############
@@ -228,7 +229,7 @@ class FCModuleFrame(tk.Frame):
         label.grid(row=0, column=0, sticky="NWSE")
 
         button = nb.Button(frame, text=_translate("I don't have a fleet carrier"))
-        button_dark = tk.Label(frame, text=_translate("I don't have a fleet carrier"))
+        button_dark = tk.Label(frame, fg="white", text=_translate("I don't have a fleet carrier"))
         grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
         theme.register_alternate(
             (button, button_dark, button_dark),
@@ -271,7 +272,7 @@ class FCModuleFrame(tk.Frame):
         label.grid(row=0, column=0, sticky="NWSE")
 
         button = nb.Button(frame, command=self.hide, text=_translate("Close"))
-        button_dark = tk.Label(frame, text=_translate("Close"))
+        button_dark = tk.Label(frame, fg="white", text=_translate("Close"))
         grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
         theme.register_alternate(
             (button, button_dark, button_dark),
