@@ -27,7 +27,7 @@ class SystemsModule(tk.Frame):
         self._row = row
         self._message = tk.Label(self, text=_translate("<SYSTEMS_MODULE_NO_COORDS_WARNING>"))
         self._message.pack(side="left")
-        self._cache = sqlite3.connect(PluginContext.plugin_dir / "userdata" / "cache.db")
+        self._cache = sqlite3.connect(PluginContext.plugin_dir / "userdata" / "cache.db", check_same_thread=False)
         self._cache.execute("CREATE TABLE IF NOT EXISTS systems (id INTEGER PRIMARY KEY, name TEXT, x REAL, y REAL, z REAL)")
         self._cache.execute("CREATE INDEX IF NOT EXISTS idx_systems_name ON systems(name)")
         self._cache.commit()

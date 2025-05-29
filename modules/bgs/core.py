@@ -89,7 +89,7 @@ class BGSCore(Module):
 
     def __init__(self):
         self.filter = Filter()
-        self.database = sqlite3.connect(self.DB_PATH)
+        self.database = sqlite3.connect(self.DB_PATH, check_same_thread=False)
         submodule_base.init_submodules(self)
         self.submodules = submodule_base.get_submodules()
         if self.submodules:
