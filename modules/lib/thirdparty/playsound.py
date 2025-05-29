@@ -1,3 +1,6 @@
+# flake8: noqa
+# isort: off
+
 class PlaysoundException(Exception):
     pass
 

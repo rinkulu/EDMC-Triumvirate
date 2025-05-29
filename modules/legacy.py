@@ -4,16 +4,12 @@ import requests
 import traceback
 import webbrowser
 from contextlib import closing
-from math import sqrt, pow
+from math import pow, sqrt
+from urllib.parse import quote_plus
 
-from context import PluginContext, GameState
-from .debug import debug, error
-from .lib.thread import BasicThread
-
-try:    # py3
-    from urllib.parse import quote_plus
-except ImportError:     # py2
-    from urllib import quote_plus
+from context import GameState, PluginContext
+from modules.debug import debug, error
+from modules.lib.thread import BasicThread
 
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'

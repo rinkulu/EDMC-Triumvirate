@@ -1,13 +1,17 @@
-import tkinter as tk
 import logging
-import myNotebook as nb         # type: ignore
+import tkinter as tk
 from sys import _getframe
-from .lib.conf import config
 
-# Подключение функции перевода
+import myNotebook as nb  # type: ignore
+
+from modules.lib.conf import config
+
+
+# isort: off
 import functools
 from context import PluginContext
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 class Debug:

@@ -2,11 +2,14 @@ import json
 import requests
 import tkinter as tk
 import traceback
-from dataclasses import dataclass, fields, asdict
-from datetime import datetime, UTC
+from dataclasses import asdict, dataclass, fields
+from datetime import UTC, datetime
 from enum import Enum
 from tkinter import ttk
-from typing import Callable, Any
+from typing import Any, Callable
+
+import myNotebook as nb  # type: ignore
+from theme import theme  # type: ignore
 
 from context import GameState
 from modules.debug import debug, error, warning
@@ -16,13 +19,12 @@ from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread
 
-import myNotebook as nb             # type: ignore
-from theme import theme             # type: ignore
 
-# Подключение функции перевода
+# isort: off
 import functools
 from context import PluginContext
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 # Эксперимент: декоратор для UI методов, чтобы везде tk.after не пихать

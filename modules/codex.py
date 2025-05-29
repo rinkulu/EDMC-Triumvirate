@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-import myNotebook as nb         # type: ignore
 import os
 import requests
 import threading
-import traceback
-from modules.debug import debug, error
-from .lib.conf import config
-from math import sqrt, pow
-from urllib.parse import quote_plus, unquote
-from tkinter import Frame
 import tkinter as tk
-from settings import edsm_url, canonn_cloud_url_us_central
+import traceback
+from math import pow, sqrt
+from tkinter import Frame
+from urllib.parse import quote_plus, unquote
+
+import myNotebook as nb  # type: ignore
+
 from context import GameState
+from modules.debug import debug, error
+from modules.lib.conf import config
+from settings import canonn_cloud_url_us_central, edsm_url
+
 
 nvl = lambda a, b: a or b
 

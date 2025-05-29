@@ -1,9 +1,10 @@
-from enum import Enum
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from enum import Enum
+
 from context import GameState, PluginContext
 from modules.bgs.submodule_base import Submodule
 from modules.legacy import URL_GOOGLE
-from datetime import datetime, timedelta, UTC
 
 
 class MissionStatus(str, Enum):

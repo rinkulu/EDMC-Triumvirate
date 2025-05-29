@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Protocol
 import settings
 from modules.lib.module import get_active_modules
 
+
 if TYPE_CHECKING:
     # им можно, они тут для аннотаций типов и в рантайме не импортируются
     import logging

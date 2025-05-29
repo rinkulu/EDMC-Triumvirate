@@ -3,13 +3,14 @@
 """
 from datetime import datetime
 
-import settings
-from l10n import Locale         # type: ignore
+from l10n import Locale  # type: ignore
 
+import settings
 from context import PluginContext
 from modules.debug import debug
 from modules.lib.spreadsheet import Spreadsheet
 from modules.patrol.patrol import build_patrol
+
 
 EXCLUDE = {"Basta", "Hide", "Cancel"}
 

@@ -1,6 +1,7 @@
-import re
 import json
+import re
 from pathlib import Path
+
 
 base_dir = Path(".").resolve()
 translations_dir = Path(".").resolve() / "translations"

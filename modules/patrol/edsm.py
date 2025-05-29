@@ -5,6 +5,7 @@ from settings import edsm_poi_url
 
 from .patrol import build_patrol
 
+
 types = {
     "minorPOI": "Minor Point of Interest",
     "planetaryNebula": "Planetary Nebula",

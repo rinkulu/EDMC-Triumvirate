@@ -1,12 +1,14 @@
-from context import PluginContext, GameState
-from modules.legacy import GoogleReporter
+from context import GameState, PluginContext
 from modules.debug import debug
+from modules.legacy import GoogleReporter
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 
-# функция перевода
+
+# isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 class DeliveryTracker(Module):

@@ -1,20 +1,16 @@
-
-#coding=utf-8
-
+import re
+import requests
+import threading
 import tkinter as tk
 from tkinter import Frame
- 
-import uuid
-from ttkHyperlinkLabel import HyperlinkLabel
-import requests
-import json
-import re
+
 import myNotebook as nb
-from .lib.conf import config
-#from config import config
-import threading
-from .debug import debug
-from .debug import debug,error
+from ttkHyperlinkLabel import HyperlinkLabel
+
+from modules.debug import debug
+from modules.lib.conf import config
+
+
 '''
 { "timestamp":"2019-04-29T19:27:30Z", 
 "event":"ShipTargeted", 
