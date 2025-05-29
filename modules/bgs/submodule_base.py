@@ -36,6 +36,11 @@ class Submodule(ABC, metaclass=SubmoduleMeta):
         и должен полагаться на данные контекста для получения дополнительной информации.
         """
 
+    def on_close(self):
+        """
+        Вызывается при завершении работы EMDC.
+        """
+
 
 def init_submodules(core: 'BGSCore'):
     # НЕ ТРОГАТЬ

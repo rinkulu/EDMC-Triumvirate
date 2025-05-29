@@ -1,4 +1,5 @@
 import requests
+import sqlite3
 from queue import Queue
 from threading import Lock
 from typing import Any, Callable
@@ -55,9 +56,9 @@ class Filter:
 
     def dispatch_bgs_report(
         self,
-        affected_systems: list[str],
         url: str,
-        params: dict
+        params: dict,
+        affected_systems: list[str],
     ):
         if not self._data:
             PluginContext.logger.debug(
@@ -83,9 +84,11 @@ class Filter:
 
 class BGSCore(Module):
     localized_name = _translate("BGS module")
+    DB_PATH = PluginContext.plugin_dir / "userdata" / "BGSdata.db"
 
     def __init__(self):
         self.filter = Filter()
+        self.database = sqlite3.connect(self.DB_PATH)
         submodule_base.init_submodules(self)
         self.submodules = submodule_base.get_submodules()
         if self.submodules:
@@ -97,6 +100,11 @@ class BGSCore(Module):
             self.enabled = False
             PluginContext.notifier.send(_translate("BGS module encountered an error during initialization and was disabled."), 0)
 
+    def on_close(self):
+        for mod in self.submodules:
+            mod.on_close()
+        self.database.close()
+
     def on_journal_entry(self, entry: JournalEntry):
         for subm in self.submodules:
             try:
@@ -106,3 +114,9 @@ class BGSCore(Module):
                     f"Exception in BGS submodule {subm} while processing a journal entry:",
                     exc_info=e
                 )
+
+    def send_data(self, url: str, params: dict, affected_systems: list[str]):
+        """
+        Небольшая прослойка для субмодулей, чтобы им не обращаться напрямую к фильтру.
+        """
+        self.filter.dispatch_bgs_report(url, params, affected_systems)
