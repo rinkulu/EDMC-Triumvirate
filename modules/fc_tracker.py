@@ -179,7 +179,7 @@ class SettingsFrame(tk.Frame):
         )
         self.disable_access_warnings_checkbox.pack(side="top", fill="x")
 
-        self.no_fc_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
+        self.no_fc_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
         self.fc_info_frame = FCInfoFrame(self, config)
         self.info_missing_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
         self.access_warning_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
