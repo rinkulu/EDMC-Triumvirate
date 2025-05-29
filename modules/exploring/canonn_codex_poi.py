@@ -1,14 +1,16 @@
 import requests
 
-from context import PluginContext, GameState
-from settings import poi_categories, canonn_cloud_url_us_central
+from context import GameState, PluginContext
 from modules.debug import debug, warning
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
+from settings import canonn_cloud_url_us_central, poi_categories
 
-# Подключение функции перевода
+
+# isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 class CanonnCodexPOI(Module):

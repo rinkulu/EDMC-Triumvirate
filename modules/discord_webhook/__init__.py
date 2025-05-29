@@ -1,4 +1,3 @@
-__all__ = ["DiscordWebhook",
-           "DiscordEmbed"]
-
-from .webhook import (DiscordWebhook, DiscordEmbed)
+# isort: off
+from .webhook import DiscordEmbed, DiscordWebhook
+__all__ = ["DiscordWebhook", "DiscordEmbed"]

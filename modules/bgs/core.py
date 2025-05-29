@@ -12,6 +12,7 @@ from modules.lib.thread import Thread
 
 from . import submodule_base
 
+
 # isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)

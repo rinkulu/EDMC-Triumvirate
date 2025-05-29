@@ -1,24 +1,24 @@
 import tkinter as tk
 from tkinter import ttk
 
+import myNotebook as nb  # type: ignore
+from config import config as edmc_config  # type: ignore
+
 from context import PluginContext
 from journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.colonisation import DeliveryTracker
 from modules.debug import Debug
-from modules.fc_tracker import FC_Tracker
-from modules.notifier import Notifier
-from modules.patrol import PatrolModule
-from modules.systems import SystemsModule
-from modules.squadron import Squadron_Tracker
-from modules.sound_player import Player
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
+from modules.fc_tracker import FC_Tracker
 from modules.lib.module import Module
-
-import myNotebook as nb                         # type: ignore
-from config import config as edmc_config        # type: ignore
+from modules.notifier import Notifier
+from modules.patrol import PatrolModule
+from modules.sound_player import Player
+from modules.squadron import Squadron_Tracker
+from modules.systems import SystemsModule
 
 
 def init_version():

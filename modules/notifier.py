@@ -1,11 +1,11 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 
+import myNotebook as nb  # type: ignore
+from theme import theme  # type: ignore
+
 from context import PluginContext
 from modules.lib.timer import Timer
-
-from theme import theme         # type: ignore
-import myNotebook as nb         # type: ignore
 
 
 class _Message(tk.Frame):

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import font as tk_font
 
-from theme import theme         # type: ignore
+from theme import theme  # type: ignore
 
 
 class Table(tk.Frame):

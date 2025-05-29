@@ -4,11 +4,11 @@
 Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
 """
 
+import functools
 import importlib
 import json
-import os
 import logging
-import functools
+import os
 import requests
 import shutil
 import tempfile
@@ -24,12 +24,12 @@ from time import sleep
 from tkinter import ttk
 from typing import Callable
 
-from l10n import Locale                             # type: ignore
-import myNotebook as nb                             # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel        # type: ignore
-from config import appname, appversion              # type: ignore
-from config import config as edmc_config            # type: ignore
-from theme import theme                             # type: ignore
+import myNotebook as nb  # type: ignore
+from config import appname, appversion  # type: ignore
+from config import config as edmc_config  # type: ignore
+from l10n import Locale  # type: ignore
+from theme import theme  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 
 # Дефолтная конфигурация логгера. Требование EDMC

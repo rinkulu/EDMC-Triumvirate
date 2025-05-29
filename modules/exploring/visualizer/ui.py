@@ -1,19 +1,22 @@
 import tkinter as tk
-from tkinter import ttk, PhotoImage
-from typing import Callable, Any
+from tkinter import PhotoImage, ttk
+from typing import Any, Callable
+
+import myNotebook as nb  # type: ignore
+from theme import theme  # type: ignore
 
 from context import PluginContext
-from settings import poi_categories as CATEGORIES
-from .table import Table
-from ._dataitem import _DataItem
 from modules.debug import debug
+from settings import poi_categories as CATEGORIES
 
-import myNotebook as nb             # type: ignore
-from theme import theme             # type: ignore
+from ._dataitem import _DataItem
+from .table import Table
 
-# Подключение функции перевода
+
+# isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 categories_localized = {

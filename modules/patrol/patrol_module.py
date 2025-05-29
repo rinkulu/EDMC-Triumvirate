@@ -16,28 +16,29 @@
 import json
 import math
 import os
+import requests
 import threading
 import tkinter as tk
 from tkinter import Frame
 from urllib.parse import quote_plus
 
-import requests
+import myNotebook as nb  # type: ignore
+from l10n import Locale  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
-import myNotebook as nb                         # type: ignore
-from l10n import Locale                         # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel    # type: ignore
 import settings
+from context import GameState, PluginContext
+from modules.lib.conf import base_config, config
+from modules.lib.journal import JournalEntry
+from modules.lib.module import Module
+from modules.lib.thread import Thread, ThreadExit
 
-from context import PluginContext, GameState
+from .bgs import BGSTasksOverride, new_bgs_patrol
 from .canonn import CanonnPatrols
-from .patrol import build_patrol
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
-from .bgs import BGSTasksOverride, new_bgs_patrol
-from ..lib.conf import config, base_config
-from ..lib.thread import Thread, ThreadExit
-from ..lib.journal import JournalEntry
-from ..lib.module import Module
+from .patrol import build_patrol
+
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 

@@ -10,6 +10,7 @@ from modules.bgs.submodule_base import Submodule
 from modules.legacy import GoogleReporter
 from modules.lib.thread import Thread
 
+
 FactionState = Literal['Present', 'Pending retreat', 'Retreated', 'Conflict']
 ConflictType = Literal['War', 'Election']
 ConflictStatus = Literal['active', 'pending', 'finished']
@@ -75,6 +76,7 @@ class FactionTracker(Submodule):
         self._updater = FactionDataFetcher(self.on_data_update)
         self._updater.start()
 
+
     def on_journal_entry(self, entry: dict):
         if entry["event"] not in ("Location", "FSDJump", "CarrierJump"):
             return
@@ -85,6 +87,7 @@ class FactionTracker(Submodule):
             self.system_check_queue.put(entry)
             return
         self.check_system_factions(entry)
+
 
     def check_system_factions(self, entry: dict):
         with self._threadlock:
@@ -162,6 +165,7 @@ class FactionTracker(Submodule):
                 self.data[faction][system] = new_data
                 self.report_faction_data_change(new_data)
 
+
     def report_faction_data_change(self, new_data: FactionSystemData):
         url = "https://docs.google.com/forms/d/e/1FAIpQLSe04qEfF-Pj8bOcsYktryMQNaoO9ft0orOhSb3E6M_Jw2R_qQ/formResponse?usp=pp_url"
         params = {
@@ -179,6 +183,7 @@ class FactionTracker(Submodule):
             "entry.1471364504": new_data.conflict_stake_enemy
         }
         GoogleReporter(url, params).start()
+
 
     def on_data_update(self, new_data: list[list[str]]):
         def clean_row(row: list[str]):

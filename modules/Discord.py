@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-try:
-    from .discord_webhook import DiscordWebhook, DiscordEmbed
-except ImportError:
-    from discord_webhook import DiscordWebhook, DiscordEmbed
-from .debug import debug
 import datetime
-
 import time
 
 from context import GameState
+from modules.debug import debug
+from modules.discord_webhook import DiscordEmbed, DiscordWebhook
+
 
 # this = sys.modules[__name__]
 contentlist = {

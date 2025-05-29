@@ -1,9 +1,11 @@
 from abc import ABC, ABCMeta, abstractmethod
-from typing import Type, TypeVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, TypeVar
+
 
 if TYPE_CHECKING:
     # для аннотаций типов
     import tkinter as tk
+
     from modules.lib.journal import JournalEntry
 
 

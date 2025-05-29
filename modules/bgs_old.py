@@ -1,22 +1,26 @@
-import requests, json, os, sqlite3, re, threading
+import json
+import os
+import re
+import requests
+import sqlite3
+import threading
 import tkinter as tk
-
-from datetime import datetime, timezone
 from collections import deque
-from tkinter import font, ttk, filedialog
-from shutil import copyfile
+from datetime import datetime, timezone
 from PIL import Image, ImageTk
 from semantic_version import Version
-
-from context import PluginContext, GameState
-from .debug import debug, error, info
-from .lib.journal import JournalEntry
-from .lib.module import Module
-from .lib.conf import config as plugin_config
-from .lib.thread import Thread, BasicThread
-from .legacy import GoogleReporter, URL_GOOGLE
+from shutil import copyfile
+from tkinter import filedialog, font, ttk
 
 import myNotebook as nb
+
+from context import GameState, PluginContext
+from modules.debug import debug, error, info
+from modules.legacy import URL_GOOGLE, GoogleReporter
+from modules.lib.conf import config as plugin_config
+from modules.lib.journal import JournalEntry
+from modules.lib.module import Module
+from modules.lib.thread import BasicThread, Thread
 
 
 class _SoundGroup:

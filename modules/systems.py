@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from context import PluginContext
 from modules.lib.journal import Coords
 
+
 # функция перевода
 # isort: off
 import functools
