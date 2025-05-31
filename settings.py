@@ -143,7 +143,7 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения Казаков#4700 или на почтовый адрес help@cec.org"""
 
-version = "1.11.1-beta.1.evilbio-1"
+version = "1.11.1-beta.1.evilbio-2"
 
 try:
     from settings_local import *
