@@ -740,7 +740,7 @@ class BioPatrol(tk.Frame, Module):
         coords = self.data[self.pos]["coords"]
 
         if planet not in self.__bio_found:
-            self.set_status("Сначала просканируйте планету с помощью DSS.")
+            self.set_status(f"Сначала просканируйте {planet} с помощью DSS.")
             self.after(3000, self.show)
             return
 
@@ -752,7 +752,7 @@ class BioPatrol(tk.Frame, Module):
                 self.__update_data_coords(coords)
                 self.save_data()
 
-                self.set_status("Планета {planet} удалена из списка.")
+                self.set_status(f"Планета {planet} удалена из списка.")
                 self.after(3000, self.show)
 
 
