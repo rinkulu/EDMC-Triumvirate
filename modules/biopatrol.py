@@ -201,8 +201,8 @@ class BioPatrol(tk.Frame, Module):
         self.copy_button.bind('<Button-1>', self.__copy)
         theme.button_bind(self.copy_button_dark, self.__copy)
 
-        self.delete_button = nb.Button(self.buttons_frame, text="На планете нет биосигналов!", padding=(10, 0))
-        self.delete_button_dark = tk.Label(self.buttons_frame, text="На планете нет биосигналов!", fg="white", padx=10)
+        self.delete_button = nb.Button(self.buttons_frame, text="Я здесь уже был!", padding=(10, 0))
+        self.delete_button_dark = tk.Label(self.buttons_frame, text="Я здесь уже был!", fg="white", padx=10)
         theme.register_alternate(
             (self.delete_button, self.delete_button_dark, self.delete_button_dark),
             {"column": 1, "row": 0, "sticky": "EW"}
@@ -741,11 +741,6 @@ class BioPatrol(tk.Frame, Module):
 
         if planet not in self.__bio_found:
             self.set_status("Сначала просканируйте планету с помощью DSS.")
-            self.after(3000, self.show)
-            return
-
-        if self.__bio_found[planet].get("signalCount", 0) != 0:
-            self.set_status("На планете есть биосигналы.")
             self.after(3000, self.show)
             return
 
