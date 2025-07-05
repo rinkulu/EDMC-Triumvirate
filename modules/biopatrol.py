@@ -506,6 +506,11 @@ class BioPatrol(tk.Frame, Module):
                             continue
 
                         if planet not in self.signals_in_system:
+                            if planet in self.__bio_found:
+                                signalCount = self.__bio_found[planet].get("signalCount", 0)
+                                if signalCount > 0:
+                                    debug(f'>> Planet {planet} has been kept: visited earlier, had {signalCount} signals')
+
                             planets_to_remove.add(planet)
 
                 for planet in planets_to_remove:
