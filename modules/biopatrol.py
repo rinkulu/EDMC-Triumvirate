@@ -509,7 +509,8 @@ class BioPatrol(tk.Frame, Module):
                             if planet in self.__bio_found:
                                 signalCount = self.__bio_found[planet].get("signalCount", 0)
                                 if signalCount > 0:
-                                    debug(f'>> Planet {planet} has been kept: visited earlier, had {signalCount} signals')
+                                    debug(f'>> Planet {planet} has been kept: has {signalCount} signals')
+                                    continue
 
                             planets_to_remove.add(planet)
 
