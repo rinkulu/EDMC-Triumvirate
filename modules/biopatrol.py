@@ -343,6 +343,13 @@ class BioPatrol(tk.Frame, Module):
 
 
     def process_genus_bio(self, genus, bioname, planet, report=False, entry_region=None):
+        # sanity check
+        for codex_name, english_name in codex_to_english_variants.items():
+            if bioname in (codex_name, english_name):
+                break
+        else:
+            debug(f'>> Warning: {bioname} is not in dictionary')
+
         region = None
         priority = 1
         if bioname in self.__raw_data["bio"]:
