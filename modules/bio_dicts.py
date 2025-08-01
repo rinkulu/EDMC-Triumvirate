@@ -17,6 +17,13 @@ codex_to_english_genuses = {
 }
 
 codex_to_english_variants = {
+    # Horizons
+    "$Codex_Ent_Seed_Name;": "Roseum Brain Tree",                                   # entry 2100201
+    "$Codex_Ent_Cone_Name;": "Bark Mounds",                                         # entry 2100301
+    "$Codex_Ent_SphereABCD_02_Name;": "Puniceum Anemone",                           # entry 2100403
+    "$Codex_Ent_SphereEFGH_02_Name;": "Prasinum Bioluminescent Anemone",            # entry 2100407
+    "$Codex_Ent_Vents_Name;": "Amphora Plant",                                      # entry 2101400
+
     "$Codex_Ent_Aleoids_01_B_Name;": "Aleoida Arcus - Yellow",                       # entry 2310101
     "$Codex_Ent_Aleoids_01_A_Name;": "Aleoida Arcus - Green",                        # entry 2310102
     "$Codex_Ent_Aleoids_01_F_Name;": "Aleoida Arcus - Teal",                         # entry 2310103
@@ -48,6 +55,7 @@ codex_to_english_variants = {
     "$Codex_Ent_Aleoids_03_L_Name;": "Aleoida Spica - Lime",                         # entry 2310306
     "$Codex_Ent_Aleoids_03_T_Name;": "Aleoida Spica - Sage",                         # entry 2310307
     "$Codex_Ent_Aleoids_03_TTS_Name;": "Aleoida Spica - Mauve",                      # entry 2310308
+    "$Codex_Ent_Aleoids_03_Y_Name;": "Aleoida Spica - Amethyst",                     # entry 2310310
     "$Codex_Ent_Aleoids_03_D_Name;": "Aleoida Spica - Indigo",                       # entry 2310312
     "$Codex_Ent_Aleoids_03_N_Name;": "Aleoida Spica - Ocher",                        # entry 2310313
     "$Codex_Ent_Aleoids_04_B_Name;": "Aleoida Laminiae - Yellow",                    # entry 2310401
