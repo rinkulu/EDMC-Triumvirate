@@ -501,6 +501,7 @@ class BioPatrol(tk.Frame, Module):
                 reset = False
 
                 for species, species_data in self.__raw_data["bio"].items():
+                    debug(f'>> FSSAllBodiesFound: checking {species}')
                     for planet, planet_data in species_data["locations"].items():
                         if planet_data["system"] != entry.data["SystemName"]:
                             continue
@@ -509,10 +510,13 @@ class BioPatrol(tk.Frame, Module):
                             if planet in self.__bio_found:
                                 signalCount = self.__bio_found[planet].get("signalCount", 0)
                                 if signalCount > 0:
-                                    debug(f'>> Planet {planet} has been kept: has {signalCount} signals')
+                                    debug(f'>> Keeping {planet}: has {signalCount} signals')
                                     continue
 
+                                debug(f'>> Removing {planet}: known to have no signals')
+
                             planets_to_remove.add(planet)
+                            debug(f'>> Removing {planet}: has no signals')
 
                 for planet in planets_to_remove:
                     self.biofound_init_body(planet, 0)
