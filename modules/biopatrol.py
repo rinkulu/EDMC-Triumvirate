@@ -412,7 +412,6 @@ class BioPatrol(tk.Frame, Module):
             if predictions_updated is None:
                 return
 
-            self.save_data()
             self._enabled = True
 
             if not self.__bio_found:
