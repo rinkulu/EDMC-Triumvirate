@@ -1,3 +1,5 @@
+import os
+import re
 import gzip
 import json
 import tkinter as tk
@@ -102,6 +104,19 @@ class RegionFilterWindow(tk.Toplevel):
         self.callback(config)
 
 
+class BioPatrolJournalEntry:
+    def __init__(
+        self,
+        system:     str,
+        data:       dict,
+        coords:     Coords,
+        body:       str,
+    ):
+        self.system = system
+        self.data = data
+        self.coords = coords
+
+
 class BioPatrol(tk.Frame, Module):
     FILENAME_RAW = 'bio.json.gz'
     FILENAME_FLAT = 'bio-flat.json'
@@ -122,7 +137,10 @@ class BioPatrol(tk.Frame, Module):
         self.__selected_bio = ""
         self.pinned_bio: str = None
         self.cmdr = None
+        # dict: (id64, bodyId) -> bodyName
+        self.bodies = {}
         self.signals_in_system = {}
+        self.__live_data = False
 
         self.IMG_PREV = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "left_arrow.gif"))
         self.IMG_NEXT = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "right_arrow.gif"))
@@ -247,13 +265,65 @@ class BioPatrol(tk.Frame, Module):
         self.grid(column=0, row=gridrow, sticky="NWSE")
 
 
+    def process_logs(self):
+        pattern = re.compile(r"^Journal\.20\d\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|[3][01])T(?:[01][0-9]|2[0-3])(?:[0-5][0-9]){2}\.\d\d\.log$")    # noqa: E501
+        logsdir = Path.home() / "Saved Games/Frontier Developments/Elite Dangerous"
+        logs = [
+            logfile
+            for logfile in logsdir.iterdir()
+            if (
+                logfile.is_file()
+                and re.match(pattern, logfile.name) is not None
+            )
+        ]
+
+        class BioPatrolJournalProcessor:
+            def __init__(self, logs: list[Path], patrol: BioPatrol):
+                super().__init__()
+                self.logs = logs
+                self.patrol = patrol
+
+            def run(self):
+                coords = Coords(0, 0, 0)
+                system = ""
+                body = None
+                for file in logs:
+                    self.patrol.set_status(f"Выпрямляем логи: {os.path.basename(file)}...")
+                    with open(file, 'r', encoding="utf-8") as f:
+                        lines = f.readlines()
+                    for line in lines:
+                        data = json.loads(line)
+                        if "StarPos" in data:
+                            coords = Coords(x=data["StarPos"][0], y=data["StarPos"][1], z=data["StarPos"][2])
+                        if data["event"] == "Location":
+                            system = data["StarSystem"]
+                            body = data.get("Body", None)
+                        elif data["event"] == "FSDJump":
+                            system = data["StarSystem"]
+                            body = None
+                        elif data["event"] == "Disembark":
+                            body = data["Body"]
+                        elif data["event"] == "Embark":
+                            body = None
+                        entry = BioPatrolJournalEntry(
+                            system=system,
+                            data=data,
+                            coords=coords,
+                            body=body
+                        )
+                        self.patrol.on_historic_entry(entry)
+
+        BioPatrolJournalProcessor(logs, self).run()
+
+        del self.bodies
+
+
     def open_discoveries(self):
         try:
             with open(Path(self.plugin_dir, "data", self.FILENAME_BIO), 'r') as f:
-                return json.load(f)
+                self.__bio_found = json.load(f)
         except Exception:
-            self.set_status(f"Файл с находками не найден или повреждён (data/{self.FILENAME_BIO})")
-            return {}
+            self.__bio_found = {}
 
 
     def open_predictions(self):
@@ -325,7 +395,7 @@ class BioPatrol(tk.Frame, Module):
                     break
 
             self.body = None
-            self.__bio_found = self.open_discoveries()
+            self.open_discoveries()
 
                 # {
                 #   "signalCount": 5
@@ -342,11 +412,17 @@ class BioPatrol(tk.Frame, Module):
             if predictions_updated is None:
                 return
 
-            if predictions_updated == True:
-                self.cleanup_predictions()
-
-            self.set_status("Данные импортированы.\nТребуется прыжок или перезапуск игры.")
+            self.save_data()
             self._enabled = True
+
+            if not self.__bio_found:
+                self.process_logs()
+
+            self.cleanup_predictions()
+
+        self.__live_data = True
+        self.save_data()
+        self.set_status("Данные импортированы.\nТребуется прыжок или перезапуск игры.")
 
 
     def process_archive_data(self, raw_data: dict):
@@ -374,6 +450,9 @@ class BioPatrol(tk.Frame, Module):
 
 
     def save_data(self):
+        if not self.__live_data:
+            return
+
         with open(Path(self.plugin_dir, "data", self.FILENAME_FLAT), 'w') as f:
             json.dump(self.__raw_data, f, ensure_ascii=False)
 
@@ -401,7 +480,7 @@ class BioPatrol(tk.Frame, Module):
         if entry_region is not None:
             region = entry_region
 
-        if report is True:
+        if report is True and self.__live_data:
             url_params = {
                 "entry.1220081267": self.cmdr,
                 "entry.82601913": region,
@@ -475,106 +554,152 @@ class BioPatrol(tk.Frame, Module):
             self.__bio_found[body]["signals"].append(signal)
 
 
+    def get_current_body(self, key):
+        if self.__live_data:
+            return self.body
+        else:
+            return self.bodies.get(key, None)
+
+
+    def store_current_body(self, entry, name):
+        if not self.__live_data:
+            self.bodies[(entry.data["SystemAddress"], entry.data["BodyID"])] = name
+
+
+    def on_historic_entry(self, entry: BioPatrolJournalEntry):
+        self.process_entry(entry)
+
+
     def on_journal_entry(self, entry: JournalEntry):
+        with self.__threadlock:
+            self.process_entry(entry)
+
+
+    def process_entry(self, entry):
         required_events = ["Location", "FSDJump", "ScanOrganic", "SAASignalsFound", "FSSBodySignals", "FSSAllBodiesFound", "CodexEntry"]
+        if not self.__live_data:
+            required_events += ["ApproachBody", "Touchdown", "Disembark"]
+
         event = entry.data["event"]
         if event not in required_events:
             return
 
-        with self.__threadlock:
-            if not self._enabled:       # на случай, если попытка чтения данных завершилась ошибкой
+        if not self._enabled:       # на случай, если попытка чтения данных завершилась ошибкой
+            return
+
+        if event in ("Location", "FSDJump"):
+            self.__update_data_wrap(entry)
+
+            if event == "Location":
+                self.store_current_body(entry, entry.data["Body"])
+
+        elif event == "ScanOrganic":
+            body = self.get_current_body((entry.data["SystemAddress"], entry.data["Body"]))
+
+            genus = codex_to_english_genuses.get(entry.data["Genus"], entry.data["Genus"])
+            if "Variant" not in entry.data:
                 return
 
-            if event in ("Location", "FSDJump"):
-                self.__update_data(entry)
+            bioname = codex_to_english_variants.get(entry.data["Variant"], entry.data["Variant"])
+            if self.__live_data:
+                self.set_status(f"Scanned {bioname} at {body}")
 
-            elif event == "ScanOrganic":
-                genus = codex_to_english_genuses.get(entry.data["Genus"], entry.data["Genus"])
-                bioname = codex_to_english_variants.get(entry.data["Variant"], entry.data["Variant"])
-                self.set_status(f"Scanned {bioname} at {self.body}")
+            self.biofound_init_body(body)
+            self.biofound_add_signal(body, bioname)
 
-                self.biofound_add_signal(self.body, bioname)
+            # update data
+            self.process_genus_bio(genus, bioname, body, report=True)
 
-                # update data
-                self.process_genus_bio(genus, bioname, self.body, report=True)
+            self.save_data()
+            self.__update_data_wrap(entry)
 
-                self.save_data()
-                self.__update_data(entry)
+        elif event == "CodexEntry":
+            if "BodyID" not in entry.data:
+                return
 
-            elif event == "CodexEntry":
-                if entry.data["SubCategory"] != "$Codex_SubCategory_Organic_Structures;":
-                    return
+            if entry.data["SubCategory"] != "$Codex_SubCategory_Organic_Structures;":
+                return
 
-                if self.body is None:
-                    return
+            body = self.get_current_body((entry.data["SystemAddress"], entry.data["BodyID"]))
+            if body is None:
+                return
 
-                bioname = codex_to_english_variants.get(entry.data["Name"], entry.data["Name"])
-                region = entry.data["Region_Localised"]
+            bioname = codex_to_english_variants.get(entry.data["Name"], entry.data["Name"])
+            region = entry.data["Region_Localised"]
 
-                # HACK -- CodexEntry does not have 'Genus' key
-                genus = bioname.split()[0]
-                self.set_status(f"Scanned {bioname} at {self.body}")
+            # HACK -- CodexEntry does not have 'Genus' key
+            genus = bioname.split()[0]
+            if self.__live_data:
+                self.set_status(f"Scanned {bioname} at {body}")
 
-                self.biofound_add_signal(self.body, bioname)
+            self.biofound_init_body(body)
+            self.biofound_add_signal(body, bioname)
 
-                # update data
-                self.process_genus_bio(genus, bioname, self.body, report=True, entry_region=region)
+            # update data
+            self.process_genus_bio(genus, bioname, body, report=True, entry_region=region)
 
-                self.save_data()
-                self.__update_data(entry)
+            self.save_data()
+            self.__update_data_wrap(entry)
 
-            elif event == "SAASignalsFound" and entry.data.get("Genuses"):
-                genuses = [codex_to_english_genuses.get(i["Genus"], i["Genus"]) for i in entry.data["Genuses"]]
-                bodyName = entry.data["BodyName"]
+        elif event == "SAASignalsFound" and entry.data.get("Genuses"):
+            genuses = [codex_to_english_genuses.get(i["Genus"], i["Genus"]) for i in entry.data["Genuses"]]
+            bodyName = entry.data["BodyName"]
 
-                self.biofound_init_body(bodyName, len(genuses))
-                self.biofound_set_genuses(bodyName, genuses)
+            self.store_current_body(entry, bodyName)
 
-                for species, data in self.__raw_data["bio"].items():
-                    if bodyName in data["locations"] and species.split()[0] not in genuses:
-                        del data["locations"][bodyName]
-                        self.__update_data(entry)
-                        self.update_pos()
-                self.save_data()
+            self.biofound_init_body(bodyName, len(genuses))
+            self.biofound_set_genuses(bodyName, genuses)
 
-            elif event == "FSSBodySignals":
-                name = entry.data["BodyName"]
-                for signal in entry.data.get("Signals", []):
-                    if signal["Type"] == "$SAA_SignalType_Biological;":
-                        self.signals_in_system[name] = signal["Count"]
-                        self.biofound_init_body(name, signal["Count"])
+            for species, data in self.__raw_data["bio"].items():
+                if bodyName in data["locations"] and species.split()[0] not in genuses:
+                    del data["locations"][bodyName]
+                    self.__update_data_wrap(entry)
+                    self.update_pos()
+            self.save_data()
 
-            elif event == "FSSAllBodiesFound":
-                planets_to_remove = set()
+        elif event == "FSSBodySignals":
+            name = entry.data["BodyName"]
+            for signal in entry.data.get("Signals", []):
+                if signal["Type"] == "$SAA_SignalType_Biological;":
+                    self.signals_in_system[name] = signal["Count"]
+                    self.biofound_init_body(name, signal["Count"])
 
+        elif event == "FSSAllBodiesFound":
+            planets_to_remove = set()
+
+            for species, species_data in self.__raw_data["bio"].items():
+                for planet, planet_data in species_data["locations"].items():
+                    if planet_data["system"] != entry.data["SystemName"]:
+                        continue
+
+                    if planet not in self.signals_in_system:
+                        if planet in self.__bio_found:
+                            signalCount = self.__bio_found[planet].get("signalCount", 0)
+                            if signalCount > 0:
+                                debug(f'>> Keeping {planet}: has {signalCount} signals')
+                                continue
+
+                            debug(f'>> Removing {planet}: known to have no signals')
+
+                        planets_to_remove.add(planet)
+                        debug(f'>> Removing {planet}: has no signals')
+
+            for planet in planets_to_remove:
+                self.biofound_init_body(planet, 0)
                 for species, species_data in self.__raw_data["bio"].items():
-                    debug(f'>> FSSAllBodiesFound: checking {species}')
-                    for planet, planet_data in species_data["locations"].items():
-                        if planet_data["system"] != entry.data["SystemName"]:
-                            continue
+                    if planet in species_data["locations"]:
+                        del species_data["locations"][planet]
 
-                        if planet not in self.signals_in_system:
-                            if planet in self.__bio_found:
-                                signalCount = self.__bio_found[planet].get("signalCount", 0)
-                                if signalCount > 0:
-                                    debug(f'>> Keeping {planet}: has {signalCount} signals')
-                                    continue
+            self.__update_data_wrap(entry)
+            self.update_pos()
+            self.save_data()
+            self.signals_in_system.clear()
 
-                                debug(f'>> Removing {planet}: known to have no signals')
-
-                            planets_to_remove.add(planet)
-                            debug(f'>> Removing {planet}: has no signals')
-
-                for planet in planets_to_remove:
-                    self.biofound_init_body(planet, 0)
-                    for species, species_data in self.__raw_data["bio"].items():
-                        if planet in species_data["locations"]:
-                            del species_data["locations"][planet]
-
-                self.__update_data(entry)
-                self.update_pos()
-                self.save_data()
-                self.signals_in_system.clear()
+        elif event == "ApproachBody":
+            self.store_current_body(entry, entry.data["Body"])
+        elif event in ("Touchdown", "Disembark"):
+            if entry.data["OnPlanet"]:
+                self.store_current_body(entry, entry.data["Body"])
 
     def on_dashboard_entry(self, cmdr, is_beta, entry):
         if self.cmdr != cmdr and cmdr is not None:
@@ -688,6 +813,13 @@ class BioPatrol(tk.Frame, Module):
         return [bio_item for bio_item, data in self.__raw_data["bio"].items() if len(data["locations"]) > 0]
 
 
+    def __update_data_wrap(self, entry):
+        if not self.__live_data:
+            return
+
+        self.__update_data(entry)
+
+
     def __update_data(self, entry: JournalEntry):
         current_coords = entry.coords
         if None in [entry.coords.x, entry.coords.y, entry.coords.z] and "StarPos" in entry.data:
@@ -745,6 +877,9 @@ class BioPatrol(tk.Frame, Module):
 
 
     def update_pos(self):
+        if not self.__live_data:
+            return
+
         if len(self.data) == 0:
             self.set_status("Либо все виды найдены, либо что-то сломалось.")
             return
