@@ -247,6 +247,73 @@ class BioPatrol(tk.Frame, Module):
         self.grid(column=0, row=gridrow, sticky="NWSE")
 
 
+    def open_discoveries(self):
+        try:
+            with open(Path(self.plugin_dir, "data", self.FILENAME_BIO), 'r') as f:
+                return json.load(f)
+        except Exception:
+            self.set_status(f"Файл с находками не найден или повреждён (data/{self.FILENAME_BIO})")
+            return {}
+
+
+    def open_predictions(self):
+        try:
+            with open(Path(self.plugin_dir, "data", self.FILENAME_FLAT), 'r') as f:
+                return json.load(f)
+        except Exception:
+            self.set_status(f"Файл с предсказаниями не найден или повреждён (data/{self.FILENAME_FLAT})")
+            return {}
+
+
+    def unpack_predictions(self):
+        try:
+            with gzip.open(Path(self.plugin_dir, "data", self.FILENAME_RAW), 'r') as f:
+                return json.load(f)
+        except Exception:
+            self.set_status(f"Архив с предсказаниями не найден или повреждён (data/{self.FILENAME_RAW})")
+            return {}
+
+
+    def update_predictions(self):
+        unpacked = self.open_predictions()
+        archived = self.unpack_predictions()
+
+        unpacked_date = datetime.fromisoformat(unpacked.get("timestamp", "1970-01-01"))
+        archived_date = datetime.fromisoformat(archived.get("timestamp", "1970-01-01"))
+
+        if archived and (unpacked_date < archived_date):
+            self.__raw_data = self.process_archive_data(archived)
+            self.save_data()
+            return True
+        else:
+            if unpacked:
+                self.__raw_data = unpacked
+                return False
+            else:
+                self._enabled = False
+                return None
+
+
+    def cleanup_predictions(self):
+        for k, v in self.__bio_found.items():
+            planet = k
+
+            for species, data in self.__raw_data["bio"].items():
+                if planet not in data["locations"]:
+                    continue
+
+                species_genus = species.split()[0]
+                known_genuses = self.__bio_found[planet].get("genuses", [])
+
+                if known_genuses is not None and species_genus not in known_genuses:
+                    debug(f">> Removing {species} prediction for {planet} - genus has been ruled out by DSS")
+                    del data["locations"][planet]
+
+            for bioname in v["signals"]:
+                genus = bioname.split()[0]
+                self.process_genus_bio(genus, bioname, planet)
+
+
     def load_data(self):
         with self.__threadlock:
             while True:
@@ -258,12 +325,7 @@ class BioPatrol(tk.Frame, Module):
                     break
 
             self.body = None
-            try:
-                with open(Path(self.plugin_dir, "data", self.FILENAME_BIO), 'r') as f:
-                    self.__bio_found = json.load(f)
-            except Exception:
-                self.set_status(f"Данные по находкам не найдены или повреждены (data/{self.FILENAME_BIO})")
-                self.__bio_found = {}
+            self.__bio_found = self.open_discoveries()
 
                 # {
                 #   "signalCount": 5
@@ -276,53 +338,12 @@ class BioPatrol(tk.Frame, Module):
                 #   ]
                 # }
 
-            try:
-                with open(Path(self.plugin_dir, "data", self.FILENAME_FLAT), 'r') as f:
-                    raw_data = json.load(f)
-                    raw_formed_at = datetime.fromisoformat(raw_data.get("timestamp", "1970-01-01"))
-            except Exception:
-                self.set_status(f"Данные по биологии не найдены или повреждены (data/{self.FILENAME_FLAT})")
-                raw_data = {}
+            predictions_updated = self.update_predictions()
+            if predictions_updated is None:
+                return
 
-            try:
-                with gzip.open(Path(self.plugin_dir, "data", self.FILENAME_RAW), 'r') as f:
-                    archive_data = json.load(f)
-                    archive_formed_at = datetime.fromisoformat(archive_data.get("timestamp", "1970-01-01"))
-            except Exception:
-                self.set_status(f"Данные по биологии не найдены или повреждены (data/{self.FILENAME_RAW})")
-                archive_data = {}
-
-            if not raw_data:
-                if archive_data:
-                    self.__raw_data = self.process_archive_data(archive_data)
-                    self.save_data()
-                else:
-                    self._enabled = False
-                    return
-            else:
-                if archive_data and (raw_formed_at < archive_formed_at):
-                    self.__raw_data = self.process_archive_data(archive_data)
-                    self.save_data()
-                else:
-                    self.__raw_data = raw_data
-
-            for k, v in self.__bio_found.items():
-                planet = k
-
-                for species, data in self.__raw_data["bio"].items():
-                    if planet not in data["locations"]:
-                        continue
-
-                    species_genus = species.split()[0]
-                    known_genuses = self.__bio_found[planet].get("genuses", [])
-
-                    if known_genuses is not None and species_genus not in known_genuses:
-                        debug(f">> Removing {species} prediction for {planet} - genus has been ruled out by DSS")
-                        del data["locations"][planet]
-
-                for bioname in v["signals"]:
-                    genus = bioname.split()[0]
-                    self.process_genus_bio(genus, bioname, planet)
+            if predictions_updated == True:
+                self.cleanup_predictions()
 
             self.set_status("Данные импортированы.\nТребуется прыжок или перезапуск игры.")
             self._enabled = True
