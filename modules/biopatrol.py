@@ -292,7 +292,11 @@ class BioPatrol(tk.Frame, Module):
                     with open(file, 'r', encoding="utf-8") as f:
                         lines = f.readlines()
                     for line in lines:
-                        data = json.loads(line)
+                        try:
+                            data = json.loads(line)
+                        except:
+                            # skip broken file
+                            break
                         if "StarPos" in data:
                             coords = Coords(x=data["StarPos"][0], y=data["StarPos"][1], z=data["StarPos"][2])
                         if data["event"] == "Location":
