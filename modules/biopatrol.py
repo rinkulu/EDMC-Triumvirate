@@ -21,7 +21,7 @@ from modules.lib.conf import config as plugin_config
 
 import myNotebook as nb
 from theme import theme
-from modules.bio_dicts import codex_to_english_variants, codex_to_english_genuses, regions
+from modules.bio_dicts import codex_to_english_variants, codex_to_english_genuses, codex_to_english_regions, regions
 
 from modules.legacy import Reporter, URL_GOOGLE
 
@@ -628,7 +628,7 @@ class BioPatrol(tk.Frame, Module):
                 return
 
             bioname = codex_to_english_variants.get(entry.data["Name"], entry.data["Name"])
-            region = entry.data["Region_Localised"]
+            region = codex_to_english_regions.get(entry.data["Region"], entry.data["Region"])
 
             # HACK -- CodexEntry does not have 'Genus' key
             genus = bioname.split()[0]
