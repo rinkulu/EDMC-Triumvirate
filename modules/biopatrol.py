@@ -17,7 +17,7 @@ from modules.lib.journal import JournalEntry, Coords
 from modules.patrol.patrol_module import copyclip
 from modules.lib.context import global_context
 from modules.lib.thread import BasicThread
-from modules.lib.conf import config as plugin_config
+from modules.lib.conf import base_config as _edmc_config, config as plugin_config
 
 import myNotebook as nb
 from theme import theme
@@ -267,7 +267,8 @@ class BioPatrol(tk.Frame, Module):
 
     def process_logs(self):
         pattern = re.compile(r"^Journal\.20\d\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|[3][01])T(?:[01][0-9]|2[0-3])(?:[0-5][0-9]){2}\.\d\d\.log$")    # noqa: E501
-        logsdir = Path.home() / "Saved Games/Frontier Developments/Elite Dangerous"
+        logsdir_default = Path.home() / "Saved Games/Frontier Developments/Elite Dangerous"
+        logsdir = Path(_edmc_config.get_str("journaldir") or logsdir_default)
         logs = [
             logfile
             for logfile in logsdir.iterdir()
@@ -276,6 +277,7 @@ class BioPatrol(tk.Frame, Module):
                 and re.match(pattern, logfile.name) is not None
             )
         ]
+        debug(f"Game logs dir: {logsdir} ({len(logs)} files found)")
 
         class BioPatrolJournalProcessor:
             def __init__(self, logs: list[Path], patrol: BioPatrol):
@@ -294,7 +296,7 @@ class BioPatrol(tk.Frame, Module):
                     for line in lines:
                         try:
                             data = json.loads(line)
-                        except:
+                        except json.JSONDecodeError:
                             # skip broken file
                             break
                         if "StarPos" in data:
@@ -318,7 +320,7 @@ class BioPatrol(tk.Frame, Module):
                         self.patrol.on_historic_entry(entry)
 
         BioPatrolJournalProcessor(logs, self).run()
-
+        debug("Finished reading old game logs")
         del self.bodies
 
 
@@ -419,6 +421,7 @@ class BioPatrol(tk.Frame, Module):
             self._enabled = True
 
             if not self.__bio_found:
+                debug(f"{self.FILENAME_BIO} not found; reading old game logs")
                 self.process_logs()
 
             self.cleanup_predictions()
