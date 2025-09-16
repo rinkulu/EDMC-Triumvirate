@@ -21,7 +21,7 @@ class _SystemData:
     coords: Coords
 
 
-class SystemsModule(tk.Frame):
+class SystemsCache(tk.Frame):
     def __init__(self, master: tk.Misc, row: int):
         super().__init__(master)
         self._row = row
@@ -55,7 +55,7 @@ class SystemsModule(tk.Frame):
         return data.sid if data else None
 
     def show_coords_warning(self):
-        def inner(self: SystemsModule):
+        def inner(self: SystemsCache):
             self.grid(column=0, row=self._row, sticky="NSWE")
         self.after(0, inner, self)
 

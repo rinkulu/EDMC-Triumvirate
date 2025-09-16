@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from modules.patrol import PatrolModule
     from modules.sound_player import Player
     from modules.squadron import Squadron_Tracker
-    from modules.systems import SystemsModule
+    from core.systems import SystemsCache
 
 
 class TranslateFunc(Protocol):
@@ -71,6 +71,7 @@ class PluginContext:
     journal_processor: 'JournalProcessor'   = None
     notifier: 'Notifier'            = None
     sound_player: 'Player'          = None
+    systems_cache: 'SystemsCache'   = None
 
     # модули
     bgs_module: 'BGS'               = None
@@ -80,7 +81,6 @@ class PluginContext:
     fc_tracker: 'FC_Tracker'        = None
     colonisation_tracker: 'DeliveryTracker' = None
     friendfoe                       = None      # TODO: оживить
-    systems_module: 'SystemsModule' = None
     patrol_module: 'PatrolModule'   = None
     exp_visualizer: 'Visualizer'    = None
 

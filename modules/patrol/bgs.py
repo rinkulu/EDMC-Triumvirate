@@ -59,7 +59,7 @@ def new_bgs_patrol(bgs, faction, override):
     return build_patrol(
         type="BGS",
         system=system,
-        coords=PluginContext.systems_module.get_system_coords(system),
+        coords=PluginContext.systems_cache.get_system_coords(system),
         instructions=get_bgs_instructions(bgs, faction),
         url="https://elitebgs.app/systems/{}".format(bgs.get("system_id")),
     )

@@ -108,7 +108,7 @@ class MissionTracker(Submodule):
                 continue
             for system_data in inf_data:
                 sid = system_data["SystemAddress"]
-                system = PluginContext.systems_module.get_system_name(sid)
+                system = PluginContext.systems_cache.get_system_name(sid)
                 if system is None:
                     PluginContext.logger.error(f"Couldn't determine system name for affected sid {sid} of faction {faction}.")
                     continue

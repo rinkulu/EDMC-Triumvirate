@@ -367,7 +367,7 @@ class PatrolModule(Frame, Module):
             shipsystems[ship_system].append(ships[ship])
 
         for system, ships in shipsystems.items():
-            ship_pos = PluginContext.systems_module.get_system_coords(system)
+            ship_pos = PluginContext.systems_cache.get_system_coords(system)
             ship_count = len(ships)
             if ship_count == 1:
                 ship = ships[0]
@@ -451,7 +451,7 @@ class PatrolModule(Frame, Module):
 
         if journal_update or capi_update:
             self.sort_patrol()
-            p = PluginContext.systems_module.get_system_coords(self.system)
+            p = PluginContext.systems_cache.get_system_coords(self.system)
             self.nearest = self.get_nearest(p)
             self.hyperlink["text"] = self.nearest.get("system")
             self.hyperlink[
@@ -537,7 +537,7 @@ class PatrolModule(Frame, Module):
         return r
 
     def keyval(self, k):
-        x, y, z = PluginContext.systems_module.get_system_coords(self.system)
+        x, y, z = PluginContext.systems_cache.get_system_coords(self.system)
         return distance_between((x, y, z), k.get("coords"))
 
     def sort_patrol(self):

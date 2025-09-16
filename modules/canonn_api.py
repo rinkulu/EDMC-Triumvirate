@@ -3,7 +3,7 @@ import requests
 from datetime import datetime, timedelta
 
 from core.context import GameState, PluginContext
-from core.debug import debug, error, info
+from core.debug import debug, error
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread, Thread
@@ -112,7 +112,7 @@ class HDDetector:
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
 
         x, y, z    = journalEntry.coords
-        dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system_id)
+        dx, dy, dz = PluginContext.systems_cache.get_system_coords(self.destination_system_id)
         if None in (x, y, z):
             PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
         elif None in (dx, dy, dz):
@@ -125,7 +125,7 @@ class HDDetector:
                 "timestamp": journalEntry.data["timestamp"],
                 "x": x, "y": y, "z": z,
                 # если есть координаты - есть и название, можно на None не проверять
-                "destination": PluginContext.systems_module.get_system_name(self.destination_system_id),
+                "destination": PluginContext.systems_cache.get_system_name(self.destination_system_id),
                 "dx": dx, "dy": dy, "dz": dz,
                 "client": PluginContext.client_version,
                 "odyssey": GameState.odyssey,
@@ -145,7 +145,7 @@ class HDDetector:
             system = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
-            x, y, z = PluginContext.systems_module.get_system_coords(system)
+            x, y, z = PluginContext.systems_cache.get_system_coords(system)
 
             gametime = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
             year, remainder = gametime.split("-", 1)

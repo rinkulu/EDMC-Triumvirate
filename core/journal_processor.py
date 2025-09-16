@@ -81,7 +81,7 @@ class JournalProcessor(Thread):
         # Комплексная тема, тут может быть несколько сценариев.
         # 1) Обычный вход в игру или прыжок
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
-            PluginContext.systems_module.cache_system(entry)
+            PluginContext.systems_cache.cache_system(entry)
             GameState.system = entry["StarSystem"]
             GameState.system_address = entry["SystemAddress"]
             GameState.system_coords = Coords(*entry["StarPos"])
@@ -91,7 +91,7 @@ class JournalProcessor(Thread):
                 f"{entry['event']} detected. Location change: "
                 f"system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."
             )
-            PluginContext.systems_module.hide_coords_warning()
+            PluginContext.systems_cache.hide_coords_warning()
 
         # 2) Игрок запустил плагин после входа в игру, и у нас ничего нет. Придётся полагаться на данные EDMC
         elif entry["event"] == "StartUp":
@@ -101,7 +101,7 @@ class JournalProcessor(Thread):
             GameState.system_coords = Coords(*state["StarPos"]) if "StarPos" in state else None
             if GameState.system_coords is None:
                 PluginContext.logger.debug("EDMC didn't provide us with the coordinates, showing user warning.")
-                PluginContext.systems_module.show_coords_warning()
+                PluginContext.systems_cache.show_coords_warning()
             PluginContext.logger.debug(
                 f"Location change: system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."
             )
@@ -124,7 +124,7 @@ class JournalProcessor(Thread):
             if (system_id := entry["SystemAddress"]) == GameState.pending_jump_system_id:
                 GameState.system = GameState.pending_jump_system
                 GameState.system_address = GameState.pending_jump_system_id
-                GameState.system_coords = PluginContext.systems_module.get_system_coords(GameState.system_address)
+                GameState.system_coords = PluginContext.systems_cache.get_system_coords(GameState.system_address)
                 PluginContext.logger.debug(
                     f"New id ({system_id}) corresponds with the pending jump. Current system set to {GameState.system}, "
                     f"coords = {GameState.system_coords}."
@@ -136,8 +136,8 @@ class JournalProcessor(Thread):
                     f"Unexpected misjump: new system id ({system_id}) doesn't match the pending one "
                     f"({GameState.pending_jump_system_id}). Attempting to fetch the system name and coords..."
                 )
-                new_system = PluginContext.systems_module.get_system_name(system_id)
-                new_coords = PluginContext.systems_module.get_system_coords(system_id)
+                new_system = PluginContext.systems_cache.get_system_name(system_id)
+                new_coords = PluginContext.systems_cache.get_system_coords(system_id)
                 if None not in (new_system, new_coords):
                     GameState.system = new_system
                     GameState.system_address = system_id
@@ -148,7 +148,7 @@ class JournalProcessor(Thread):
                     PluginContext.logger.warning("No info on the new system id found. Keeping the old system for now.")
             if GameState.system_coords is None:
                 PluginContext.logger.debug("System coordinates unknown, showing user warning.")
-                PluginContext.systems_module.show_coords_warning()
+                PluginContext.systems_cache.show_coords_warning()
 
         # ПЕРЕДАЧА ДАННЫХ МОДУЛЯМ
         # Как видно, после перехода на GameState - JournalEntry как таковой стал не нужен.
@@ -223,6 +223,6 @@ class JournalProcessor(Thread):
                 mod.on_close()
             except Exception as e:
                 PluginContext.logger.error(f"Exception in module {mod} on shutdown.", exc_info=e)
-        PluginContext.systems_module.on_close()
+        PluginContext.systems_cache.on_close()
         thread.Thread.stop_all()
         self._stop = True
