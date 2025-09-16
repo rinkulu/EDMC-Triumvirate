@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from lib.module import Module
     from modules.notifier import Notifier
     from modules.patrol import PatrolModule
-    from modules.sound_player import Player
+    from core.sound_player import Player
     from modules.squadron import Squadron_Tracker
     from core.systems import SystemsCache
 
