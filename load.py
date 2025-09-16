@@ -213,7 +213,7 @@ class Updater:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
 
-        self._local_settings_module = importlib.import_module("settings")
+        self._local_settings_module = importlib.import_module("core.setting")
         self.local_version = Version(self._local_settings_module.version)
 
 
