@@ -1,11 +1,10 @@
 """
 ПРЕДУПРЕЖДЕНИЕ ПОТОМКАМ И БУДУЩЕМУ СЕБЕ
 Текущий механизм автообновлений плагина подразумевает, что импорты из других файлов плагина здесь НЕ РАЗРЕШЕНЫ!
-Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
+Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в core/plugin_init.py.
 """
 
 import functools
-import importlib
 import json
 import logging
 import os
@@ -204,6 +203,7 @@ class Updater:
     RELEASE_TYPE_KEY = "Triumvirate.Updater.ReleaseType"
     LOCAL_VERSION_KEY = "Triumvirate.Updater.LocalVersion"
     REPOSITORY_PATH = "Close-Encounters-Corps/EDMC-Triumvirate"
+    VERSION_FILE_NAME = ".version"
 
     def __init__(self):
         self.updater_thread: UpdateCycle = None
@@ -213,8 +213,8 @@ class Updater:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
 
-        self._local_settings_module = importlib.import_module("core.setting")
-        self.local_version = Version(self._local_settings_module.version)
+        self.version_file_path = Path(context.plugin_dir) / self.VERSION_FILE_NAME
+        self.local_version = Version(self.version_file_path.read_text())
 
 
     def start_update_cycle(self, _check_now: bool = False):
@@ -335,17 +335,16 @@ class Updater:
         except FileNotFoundError:
             logger.warning("Directory `userdata` not found, skipping.")
 
-        # сносим старую версию и копируем на её место новую, удаляем временные файлы, обновляем импорт настроек
+        # сносим старую версию и копируем на её место новую, удаляем временные файлы
         logger.info("Replacing plugin files...")
         shutil.rmtree(context.plugin_dir, ignore_errors=True)
         shutil.copytree(new_ver_path, context.plugin_dir, dirs_exist_ok=True)
         shutil.rmtree(tempdir)
-        importlib.reload(self._local_settings_module)
 
         # обновляем запись о локальной версии
         self.local_version = tag
-        if (settings_ver := Version(self._local_settings_module.version)) != tag:
-            logger.warning(f"New settings.version ({settings_ver}) doesn't match the tag ({tag}).")
+        if (file_version := Version(self.version_file_path.read_text())) != tag:
+            logger.warning(f"New .version ({file_version}) doesn't match the tag ({tag}).")
         logger.info(f"Done. Local version set to {tag}.")
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
@@ -362,18 +361,14 @@ class Updater:
         if context.plugin_loaded:
             return
 
-        def __inner(self):
+        def __inner(self: Updater):
             logger.info("Loading local version the in main thread...")
-            if not Path(context.plugin_dir, "context.py").exists():
+            if not Path(context.plugin_dir, "core", "context.py").exists():
                 logger.error("`context` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
-            if not Path(context.plugin_dir, "plugin_init.py").exists():
+            if not Path(context.plugin_dir, "core", "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
-                context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
-                return
-            if not Path(context.plugin_dir, "settings.py").exists():
-                logger.error("`settings.py` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
 
@@ -381,11 +376,11 @@ class Updater:
             from core.context import PluginContext as VersionContext
             VersionContext.logger = logger
             VersionContext.plugin_dir = context.plugin_dir
+            VersionContext.plugin_version = context.plugin_version
+            VersionContext.client_version = f"{VersionContext.plugin_name}.{VersionContext.plugin_version}"
             VersionContext.edmc_version = context.edmc_version
             VersionContext._tr_template = _Translation.translate
             VersionContext._event_queue = context.event_queue
-
-            context.plugin_version = VersionContext.plugin_version
 
             # и лишь теперь мы можем стартовать саму версию
             import core.plugin_init as plugin_init
@@ -414,6 +409,7 @@ class Updater:
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         # грузим версию в главном потоке
+        context.plugin_version = self.local_version
         logger.info("IGNORE THE FOLLOWING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
         tk._default_root.after(0, __inner, self)
 

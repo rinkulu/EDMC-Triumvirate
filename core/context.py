@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
-from core import settings
 from lib.module import get_active_modules
 
 
@@ -59,8 +58,8 @@ class PluginContext:
     """
     # параметры
     plugin_name: str                = "EDMC-Triumvirate"
-    plugin_version: Version         = Version(settings.version)
-    client_version: str             = f"{plugin_name}.{plugin_version}"
+    plugin_version: Version         = None
+    client_version: str             = None
     edmc_version: Version           = None
     plugin_dir: 'Path'              = None
 
