@@ -11,10 +11,10 @@ from typing import Any, Callable
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
-from context import GameState
+from core.context import GameState
 from modules.debug import debug, error, warning
 from modules.legacy import GoogleReporter
-from modules.lib.conf import config as plugin_config
+from core.config import config as plugin_config
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread
@@ -22,7 +22,7 @@ from modules.lib.thread import BasicThread
 
 # isort: off
 import functools
-from context import PluginContext
+from core.context import PluginContext
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 # isort: on
 

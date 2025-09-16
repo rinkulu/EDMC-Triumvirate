@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
-import settings
+from core import settings
 from modules.lib.module import get_active_modules
 
 
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from pathlib import Path
     from queue import Queue
 
-    from journal_processor import JournalProcessor
+    from core.journal_processor import JournalProcessor
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
     from modules.colonisation import DeliveryTracker

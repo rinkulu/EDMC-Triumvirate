@@ -3,7 +3,7 @@ import sqlite3
 import tkinter as tk
 from dataclasses import dataclass
 
-from context import PluginContext
+from core.context import PluginContext
 from modules.lib.journal import Coords
 
 

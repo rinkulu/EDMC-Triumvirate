@@ -1,4 +1,4 @@
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.debug import debug
 from modules.legacy import GoogleReporter
 from modules.lib.journal import JournalEntry

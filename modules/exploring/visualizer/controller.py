@@ -2,7 +2,7 @@ import tkinter as tk
 
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
-from settings import poi_categories as CATEGORIES
+from core.settings import poi_categories as CATEGORIES
 
 from .model import VisualizerModel
 from .ui import VisualizerView

@@ -1,10 +1,10 @@
 import requests
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.debug import debug, warning
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
-from settings import canonn_cloud_url_us_central, poi_categories
+from core.settings import canonn_cloud_url_us_central, poi_categories
 
 
 # isort: off

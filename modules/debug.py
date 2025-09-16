@@ -4,12 +4,12 @@ from sys import _getframe
 
 import myNotebook as nb  # type: ignore
 
-from modules.lib.conf import config
+from core.config import config
 
 
 # isort: off
 import functools
-from context import PluginContext
+from core.context import PluginContext
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 # isort: on
 

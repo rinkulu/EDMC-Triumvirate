@@ -4,8 +4,8 @@ from tkinter import ttk
 import myNotebook as nb  # type: ignore
 from config import config as edmc_config  # type: ignore
 
-from context import PluginContext
-from journal_processor import JournalProcessor
+from core.context import PluginContext
+from core.journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.colonisation import DeliveryTracker

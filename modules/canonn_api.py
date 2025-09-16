@@ -2,13 +2,13 @@ import json
 import requests
 from datetime import datetime, timedelta
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.debug import debug, error, info
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread, Thread
 from modules.lib.timer import Timer
-from settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
+from core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
 
 
 class CanonnReporter(BasicThread):

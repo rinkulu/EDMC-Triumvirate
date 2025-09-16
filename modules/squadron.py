@@ -1,7 +1,7 @@
-from context import GameState
+from core.context import GameState
 from modules import legacy
 from modules.debug import debug
-from modules.lib.conf import config as plugin_config
+from core.config import config as plugin_config
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 

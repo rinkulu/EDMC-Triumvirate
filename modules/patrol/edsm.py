@@ -1,7 +1,7 @@
 import requests
 
-from context import PluginContext
-from settings import edsm_poi_url
+from core.context import PluginContext
+from core.settings import edsm_poi_url
 
 from .patrol import build_patrol
 

@@ -8,7 +8,7 @@ import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 
 from modules.debug import debug
-from modules.lib.conf import config
+from core.config import config
 
 
 '''

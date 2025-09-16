@@ -378,7 +378,7 @@ class Updater:
                 return
 
             # сначала инициализируем контекст версии уже созданными объектами
-            from context import PluginContext as VersionContext
+            from core.context import PluginContext as VersionContext
             VersionContext.logger = logger
             VersionContext.plugin_dir = context.plugin_dir
             VersionContext.edmc_version = context.edmc_version
@@ -388,7 +388,7 @@ class Updater:
             context.plugin_version = VersionContext.plugin_version
 
             # и лишь теперь мы можем стартовать саму версию
-            import plugin_init
+            import core.plugin_init as plugin_init
             context.plugin_stop_hook = plugin_init.plugin_stop
             context.plugin_prefs_hook = plugin_init.plugin_prefs
             context.prefs_changed_hook = plugin_init.prefs_changed

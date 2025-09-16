@@ -26,9 +26,9 @@ import myNotebook as nb  # type: ignore
 from l10n import Locale  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
-import settings
-from context import GameState, PluginContext
-from modules.lib.conf import base_config, config
+from core import settings
+from core.context import GameState, PluginContext
+from core.config import base_config, config
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import Thread, ThreadExit

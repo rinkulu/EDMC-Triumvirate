@@ -2,7 +2,7 @@ from queue import Queue
 from threading import Thread
 from time import sleep
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules import legacy
 from modules.lib import thread
 from modules.lib.journal import Coords, JournalEntry

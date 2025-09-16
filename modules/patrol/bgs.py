@@ -5,8 +5,8 @@ from datetime import datetime
 
 from l10n import Locale  # type: ignore
 
-import settings
-from context import PluginContext
+from core import settings
+from core.context import PluginContext
 from modules.debug import debug
 from modules.lib.spreadsheet import Spreadsheet
 from modules.patrol.patrol import build_patrol

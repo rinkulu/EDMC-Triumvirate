@@ -4,7 +4,7 @@ from contextlib import closing
 
 from modules.debug import debug, error
 from modules.lib.spreadsheet import Spreadsheet
-from settings import canonn_patrols_url
+from core.settings import canonn_patrols_url
 
 from .patrol import build_patrol
 

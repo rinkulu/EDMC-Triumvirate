@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
-from context import PluginContext
+from core.context import PluginContext
 from modules.lib.timer import Timer
 
 

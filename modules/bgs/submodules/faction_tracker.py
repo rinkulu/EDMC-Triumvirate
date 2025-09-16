@@ -5,7 +5,7 @@ from queue import Queue
 from threading import Lock
 from typing import Any, Callable, Literal
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.bgs.submodule_base import Submodule
 from modules.legacy import GoogleReporter
 from modules.lib.thread import Thread

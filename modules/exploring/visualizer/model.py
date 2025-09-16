@@ -3,7 +3,7 @@ import json
 from theme import theme  # type: ignore
 
 from modules.debug import debug
-from modules.lib.conf import config as plugin_config
+from core.config import config as plugin_config
 from modules.lib.module import Module
 
 from ._dataitem import _DataItem

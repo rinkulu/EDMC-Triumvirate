@@ -2,7 +2,7 @@
 Проигрыватель звуковых файлов.
 """
 
-from context import PluginContext
+from core.context import PluginContext
 from modules.lib.thirdparty.playsound import playsound
 
 

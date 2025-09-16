@@ -10,10 +10,10 @@ from urllib.parse import quote_plus, unquote
 
 import myNotebook as nb  # type: ignore
 
-from context import GameState
+from core.context import GameState
 from modules.debug import debug, error
-from modules.lib.conf import config
-from settings import canonn_cloud_url_us_central, edsm_url
+from core.config import config
+from core.settings import canonn_cloud_url_us_central, edsm_url
 
 
 nvl = lambda a, b: a or b

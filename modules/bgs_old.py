@@ -14,10 +14,10 @@ from tkinter import filedialog, font, ttk
 
 import myNotebook as nb
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.debug import debug, error, info
 from modules.legacy import URL_GOOGLE, GoogleReporter
-from modules.lib.conf import config as plugin_config
+from core.config import config as plugin_config
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread, Thread

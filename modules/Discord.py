@@ -1,7 +1,7 @@
 import datetime
 import time
 
-from context import GameState
+from core.context import GameState
 from modules.debug import debug
 from modules.discord_webhook import DiscordEmbed, DiscordWebhook
 

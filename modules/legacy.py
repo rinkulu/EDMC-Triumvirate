@@ -7,7 +7,7 @@ from contextlib import closing
 from math import pow, sqrt
 from urllib.parse import quote_plus
 
-from context import GameState, PluginContext
+from core.context import GameState, PluginContext
 from modules.debug import debug, error
 from modules.lib.thread import BasicThread
 

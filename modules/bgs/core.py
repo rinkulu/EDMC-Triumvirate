@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Lock
 from typing import Any, Callable
 
-from context import PluginContext
+from core.context import PluginContext
 from modules.legacy import GoogleReporter
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module

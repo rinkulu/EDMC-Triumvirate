@@ -5,9 +5,9 @@ from typing import Any, Callable
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
-from context import PluginContext
+from core.context import PluginContext
+from core.settings import poi_categories as CATEGORIES
 from modules.debug import debug
-from settings import poi_categories as CATEGORIES
 
 from ._dataitem import _DataItem
 from .table import Table
