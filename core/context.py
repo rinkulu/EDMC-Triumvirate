@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from modules.fc_tracker import FC_Tracker
     from lib.journal import Coords
     from lib.module import Module
-    from modules.notifier import Notifier
+    from core.notifier import Notifier
     from modules.patrol import PatrolModule
     from core.sound_player import Player
     from modules.squadron import Squadron_Tracker
