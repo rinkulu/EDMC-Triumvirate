@@ -1,9 +1,9 @@
-from core.context import GameState
-from modules import legacy
-from core.debug import debug
 from core.config import config as plugin_config
+from core.context import GameState
+from core.debug import debug
 from lib.journal import JournalEntry
 from lib.module import Module
+from modules import legacy
 
 
 class Squadron_Tracker(Module):

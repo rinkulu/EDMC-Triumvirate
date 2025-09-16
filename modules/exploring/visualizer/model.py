@@ -2,8 +2,8 @@ import json
 
 from theme import theme  # type: ignore
 
-from core.debug import debug
 from core.config import config as plugin_config
+from core.debug import debug
 from lib.module import Module
 
 from ._dataitem import _DataItem

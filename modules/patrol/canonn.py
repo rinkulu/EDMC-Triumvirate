@@ -3,8 +3,8 @@ import requests
 from contextlib import closing
 
 from core.debug import debug, error
-from lib.spreadsheet import Spreadsheet
 from core.settings import canonn_patrols_url
+from lib.spreadsheet import Spreadsheet
 
 from .patrol import build_patrol
 

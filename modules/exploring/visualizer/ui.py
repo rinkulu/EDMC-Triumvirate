@@ -6,8 +6,8 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from core.context import PluginContext
-from core.settings import poi_categories as CATEGORIES
 from core.debug import debug
+from core.settings import poi_categories as CATEGORIES
 
 from ._dataitem import _DataItem
 from .table import Table

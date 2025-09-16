@@ -16,19 +16,19 @@ if TYPE_CHECKING:
     from queue import Queue
 
     from core.journal_processor import JournalProcessor
+    from core.notifier import Notifier
+    from core.sound_player import Player
+    from core.systems import SystemsCache
+    from lib.journal import Coords
+    from lib.module import Module
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
     from modules.colonisation import DeliveryTracker
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
     from modules.exploring.visualizer import Visualizer
     from modules.fc_tracker import FC_Tracker
-    from lib.journal import Coords
-    from lib.module import Module
-    from core.notifier import Notifier
     from modules.patrol import PatrolModule
-    from core.sound_player import Player
     from modules.squadron import Squadron_Tracker
-    from core.systems import SystemsCache
 
 
 class TranslateFunc(Protocol):

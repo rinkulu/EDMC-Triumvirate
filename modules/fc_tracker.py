@@ -11,13 +11,13 @@ from typing import Any, Callable
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
+from core.config import config as plugin_config
 from core.context import GameState
 from core.debug import debug, error, warning
-from modules.legacy import GoogleReporter
-from core.config import config as plugin_config
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread
+from modules.legacy import GoogleReporter
 
 
 # isort: off

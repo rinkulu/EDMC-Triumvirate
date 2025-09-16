@@ -14,13 +14,13 @@ from tkinter import filedialog, font, ttk
 
 import myNotebook as nb
 
+from core.config import config as plugin_config
 from core.context import GameState, PluginContext
 from core.debug import debug, error, info
-from modules.legacy import URL_GOOGLE, GoogleReporter
-from core.config import config as plugin_config
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread, Thread
+from modules.legacy import URL_GOOGLE, GoogleReporter
 
 
 class _SoundGroup:

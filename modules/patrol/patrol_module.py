@@ -27,8 +27,8 @@ from l10n import Locale  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 from core import settings
-from core.context import GameState, PluginContext
 from core.config import base_config, config
+from core.context import GameState, PluginContext
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import Thread, ThreadExit

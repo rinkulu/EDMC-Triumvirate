@@ -5,10 +5,10 @@ from threading import Lock
 from typing import Any, Callable
 
 from core.context import PluginContext
-from modules.legacy import GoogleReporter
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import Thread
+from modules.legacy import GoogleReporter
 
 from . import submodule_base
 

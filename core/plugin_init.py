@@ -5,20 +5,20 @@ import myNotebook as nb  # type: ignore
 from config import config as edmc_config  # type: ignore
 
 from core.context import PluginContext
+from core.debug import Debug
 from core.journal_processor import JournalProcessor
+from core.notifier import Notifier
+from core.sound_player import Player
+from core.systems import SystemsCache
+from lib.module import Module
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.colonisation import DeliveryTracker
-from core.debug import Debug
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
 from modules.fc_tracker import FC_Tracker
-from lib.module import Module
-from core.notifier import Notifier
 from modules.patrol import PatrolModule
-from core.sound_player import Player
 from modules.squadron import Squadron_Tracker
-from core.systems import SystemsCache
 
 
 def init_version():
