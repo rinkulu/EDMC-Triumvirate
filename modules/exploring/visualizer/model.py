@@ -2,9 +2,9 @@ import json
 
 from theme import theme  # type: ignore
 
-from modules.debug import debug
+from core.debug import debug
 from core.config import config as plugin_config
-from modules.lib.module import Module
+from lib.module import Module
 
 from ._dataitem import _DataItem
 from .ui import VisualizerView, VSettingsFrame

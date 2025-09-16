@@ -9,11 +9,11 @@ from core.journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.colonisation import DeliveryTracker
-from modules.debug import Debug
+from core.debug import Debug
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
 from modules.fc_tracker import FC_Tracker
-from modules.lib.module import Module
+from lib.module import Module
 from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.sound_player import Player

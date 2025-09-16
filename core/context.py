@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Protocol
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
 from core import settings
-from modules.lib.module import get_active_modules
+from lib.module import get_active_modules
 
 
 if TYPE_CHECKING:
@@ -22,8 +22,8 @@ if TYPE_CHECKING:
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
     from modules.exploring.visualizer import Visualizer
     from modules.fc_tracker import FC_Tracker
-    from modules.lib.journal import Coords
-    from modules.lib.module import Module
+    from lib.journal import Coords
+    from lib.module import Module
     from modules.notifier import Notifier
     from modules.patrol import PatrolModule
     from modules.sound_player import Player

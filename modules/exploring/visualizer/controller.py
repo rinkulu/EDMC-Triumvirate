@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
+from lib.journal import JournalEntry
+from lib.module import Module
 from core.settings import poi_categories as CATEGORIES
 
 from .model import VisualizerModel

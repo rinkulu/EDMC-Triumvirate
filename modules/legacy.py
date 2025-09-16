@@ -8,8 +8,8 @@ from math import pow, sqrt
 from urllib.parse import quote_plus
 
 from core.context import GameState, PluginContext
-from modules.debug import debug, error
-from modules.lib.thread import BasicThread
+from core.debug import debug, error
+from lib.thread import BasicThread
 
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'

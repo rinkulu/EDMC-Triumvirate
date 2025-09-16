@@ -4,8 +4,8 @@ from time import sleep
 
 from core.context import GameState, PluginContext
 from modules import legacy
-from modules.lib import thread
-from modules.lib.journal import Coords, JournalEntry
+from lib import thread
+from lib.journal import Coords, JournalEntry
 
 
 # Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,

@@ -6,9 +6,9 @@ from typing import Any, Callable
 
 from core.context import PluginContext
 from modules.legacy import GoogleReporter
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
-from modules.lib.thread import Thread
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import Thread
 
 from . import submodule_base
 

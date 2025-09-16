@@ -12,12 +12,12 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from core.context import GameState
-from modules.debug import debug, error, warning
+from core.debug import debug, error, warning
 from modules.legacy import GoogleReporter
 from core.config import config as plugin_config
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
-from modules.lib.thread import BasicThread
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import BasicThread
 
 
 # isort: off

@@ -7,7 +7,7 @@ from tkinter import Frame
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 
-from modules.debug import debug
+from core.debug import debug
 from core.config import config
 
 

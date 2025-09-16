@@ -4,7 +4,7 @@ import tkinter as tk
 from dataclasses import dataclass
 
 from core.context import PluginContext
-from modules.lib.journal import Coords
+from lib.journal import Coords
 
 
 # функция перевода

@@ -7,7 +7,7 @@ from theme import theme  # type: ignore
 
 from core.context import PluginContext
 from core.settings import poi_categories as CATEGORIES
-from modules.debug import debug
+from core.debug import debug
 
 from ._dataitem import _DataItem
 from .table import Table

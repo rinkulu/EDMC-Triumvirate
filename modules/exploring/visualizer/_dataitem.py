@@ -1,4 +1,4 @@
-from modules.lib.module import Module
+from lib.module import Module
 
 
 # Изначально предполагалось, что эта штука будет в model.py,

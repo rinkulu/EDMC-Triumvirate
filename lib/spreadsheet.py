@@ -2,7 +2,7 @@ import csv
 import requests
 from contextlib import closing
 
-from modules.debug import debug
+from core.debug import debug
 
 
 class BytesDecoder:

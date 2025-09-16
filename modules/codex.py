@@ -11,7 +11,7 @@ from urllib.parse import quote_plus, unquote
 import myNotebook as nb  # type: ignore
 
 from core.context import GameState
-from modules.debug import debug, error
+from core.debug import debug, error
 from core.config import config
 from core.settings import canonn_cloud_url_us_central, edsm_url
 

@@ -3,11 +3,11 @@ import requests
 from datetime import datetime, timedelta
 
 from core.context import GameState, PluginContext
-from modules.debug import debug, error, info
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
-from modules.lib.thread import BasicThread, Thread
-from modules.lib.timer import Timer
+from core.debug import debug, error, info
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import BasicThread, Thread
+from lib.timer import Timer
 from core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
 
 

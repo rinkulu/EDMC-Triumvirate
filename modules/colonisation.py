@@ -1,8 +1,8 @@
 from core.context import GameState, PluginContext
-from modules.debug import debug
+from core.debug import debug
 from modules.legacy import GoogleReporter
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
+from lib.journal import JournalEntry
+from lib.module import Module
 
 
 # isort: off

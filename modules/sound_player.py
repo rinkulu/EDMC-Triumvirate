@@ -3,7 +3,7 @@
 """
 
 from core.context import PluginContext
-from modules.lib.thirdparty.playsound import playsound
+from lib.thirdparty.playsound import playsound
 
 
 class Player:

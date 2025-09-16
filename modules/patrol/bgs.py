@@ -7,8 +7,8 @@ from l10n import Locale  # type: ignore
 
 from core import settings
 from core.context import PluginContext
-from modules.debug import debug
-from modules.lib.spreadsheet import Spreadsheet
+from core.debug import debug
+from lib.spreadsheet import Spreadsheet
 from modules.patrol.patrol import build_patrol
 
 

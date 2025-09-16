@@ -5,7 +5,7 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from core.context import PluginContext
-from modules.lib.timer import Timer
+from lib.timer import Timer
 
 
 class _Message(tk.Frame):

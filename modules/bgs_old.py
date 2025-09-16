@@ -15,12 +15,12 @@ from tkinter import filedialog, font, ttk
 import myNotebook as nb
 
 from core.context import GameState, PluginContext
-from modules.debug import debug, error, info
+from core.debug import debug, error, info
 from modules.legacy import URL_GOOGLE, GoogleReporter
 from core.config import config as plugin_config
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
-from modules.lib.thread import BasicThread, Thread
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import BasicThread, Thread
 
 
 class _SoundGroup:
