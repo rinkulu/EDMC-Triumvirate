@@ -191,7 +191,7 @@ class BGS(Module):
                     continue
                 else:
                     PluginContext.logger.info("Got the list of tracked systems from GitLab.")
-                    BGS._systems = str(response.text.split('\n'))
+                    BGS._systems = response.text.splitlines()
                     BGS._send_all()
                     return
 
