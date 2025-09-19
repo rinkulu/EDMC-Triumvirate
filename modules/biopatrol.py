@@ -10,6 +10,7 @@ from math import sqrt
 from threading import Lock
 from time import sleep
 from typing import Callable, Any
+from PIL import Image
 
 from .debug import debug
 from modules.lib.module import Module
@@ -265,6 +266,34 @@ class BioPatrol(tk.Frame, Module):
         self.grid(column=0, row=gridrow, sticky="NWSE")
 
 
+    def brab_fun(self):
+        self.is_brab_fun = True
+        brab_gif = Path(self.plugin_dir, "icons", "brabroll.gif")
+        info = Image.open(brab_gif)
+        self.brab_label = tk.Label(self, image="")
+        self.brab_label.pack(side="bottom", fill="x")
+
+        brab_frames = []
+        total_frames = info.n_frames
+        for i in range(total_frames):
+            frame = tk.PhotoImage(file=brab_gif, format=f'gif -index {i}')
+            brab_frames.append(frame)
+
+        def __inner(self, next_frame):
+            next_frame = next_frame % total_frames
+            brab_gif_frame = brab_frames[next_frame]
+            self.brab_label.configure(image=brab_gif_frame)
+            if self.is_brab_fun == True:
+                self.after(30, __inner, self, next_frame+1)
+
+        self.after(0, __inner, self, 0)
+
+
+    def stop_brab_fun(self):
+        self.is_brab_fun = False
+        self.brab_label.pack_forget()
+
+
     def process_logs(self):
         pattern = re.compile(r"^Journal\.20\d\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|[3][01])T(?:[01][0-9]|2[0-3])(?:[0-5][0-9]){2}\.\d\d\.log$")    # noqa: E501
         logsdir_default = Path.home() / "Saved Games/Frontier Developments/Elite Dangerous"
@@ -289,6 +318,7 @@ class BioPatrol(tk.Frame, Module):
                 coords = Coords(0, 0, 0)
                 system = ""
                 body = None
+                self.patrol.brab_fun()
                 for file in logs:
                     self.patrol.set_status(f"Выпрямляем логи: {os.path.basename(file)}...")
                     with open(file, 'r', encoding="utf-8") as f:
@@ -318,6 +348,7 @@ class BioPatrol(tk.Frame, Module):
                             body=body
                         )
                         self.patrol.on_historic_entry(entry)
+                self.patrol.stop_brab_fun()
 
         BioPatrolJournalProcessor(logs, self).run()
         debug("Finished reading old game logs")
