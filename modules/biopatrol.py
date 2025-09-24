@@ -4,6 +4,7 @@ import gzip
 import json
 import tkinter as tk
 from tkinter import ttk
+from tkinter.messagebox import askyesno, WARNING
 from datetime import datetime
 from pathlib import Path
 from math import sqrt
@@ -20,8 +21,8 @@ from modules.lib.context import global_context
 from modules.lib.thread import BasicThread
 from modules.lib.conf import base_config as _edmc_config, config as plugin_config
 
-import myNotebook as nb
-from theme import theme
+import myNotebook as nb     # type: ignore
+from theme import theme     # type: ignore
 from modules.bio_dicts import codex_to_english_variants, codex_to_english_genuses, codex_to_english_regions, regions
 
 from modules.legacy import Reporter, URL_GOOGLE
@@ -142,6 +143,8 @@ class BioPatrol(tk.Frame, Module):
         self.bodies = {}
         self.signals_in_system = {}
         self.__live_data = False
+        # this is needed to stop the processing of old logs upon reaching fresh data
+        self.last_processed_timestamp: datetime = None
 
         self.IMG_PREV = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "left_arrow.gif"))
         self.IMG_NEXT = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "right_arrow.gif"))
@@ -260,6 +263,20 @@ class BioPatrol(tk.Frame, Module):
         self.filter_button.bind("<Button-1>", self.__create_filter_window)
         theme.button_bind(self.filter_button_dark, self.__create_filter_window)
 
+        # кнопка обработки старых логов
+        self.old_logs_frame = tk.Frame(self)
+        self.old_logs_frame.grid_columnconfigure(0, weight=1)
+
+        self.old_logs_button = nb.Button(self.old_logs_frame, text="Обработать старые логи")
+        self.old_logs_button_dark = tk.Label(self.old_logs_frame, text="Обработать старые логи", fg="white")
+        theme.register_alternate(
+            (self.old_logs_button, self.old_logs_button_dark, self.old_logs_button_dark),
+            {"column": 0, "row": 0, "sticky": "EW"}
+        )
+        # for some obscure reason, using '<Button-1>' here makes the button get stuck in the pressed state
+        self.old_logs_button.bind('<ButtonRelease-1>', self.__on_old_logs_processing_requested)
+        theme.button_bind(self.old_logs_button_dark, self.__on_old_logs_processing_requested)
+
         # упаковываем до данных по местоположению
         self.set_status("Местоположение неизвестно.\nТребуется прыжок или перезапуск игры.")
         BasicThread(name="BioPatrolDataReader", target=self.load_data).start()
@@ -294,7 +311,7 @@ class BioPatrol(tk.Frame, Module):
         self.brab_label.pack_forget()
 
 
-    def process_logs(self):
+    def read_old_logs(self):
         pattern = re.compile(r"^Journal\.20\d\d-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|[3][01])T(?:[01][0-9]|2[0-3])(?:[0-5][0-9]){2}\.\d\d\.log$")    # noqa: E501
         logsdir_default = Path.home() / "Saved Games/Frontier Developments/Elite Dangerous"
         logsdir = Path(_edmc_config.get_str("journaldir") or logsdir_default)
@@ -329,6 +346,12 @@ class BioPatrol(tk.Frame, Module):
                         except json.JSONDecodeError:
                             # skip broken file
                             break
+                        if (
+                            self.patrol.last_processed_timestamp        # None if this is run on startup
+                            and datetime.fromisoformat(data["timestamp"]) > self.patrol.last_processed_timestamp
+                        ):
+                            # we reached fresh data - better leave it for the normal mode to process
+                            return
                         if "StarPos" in data:
                             coords = Coords(x=data["StarPos"][0], y=data["StarPos"][1], z=data["StarPos"][2])
                         if data["event"] == "Location":
@@ -352,7 +375,7 @@ class BioPatrol(tk.Frame, Module):
 
         BioPatrolJournalProcessor(logs, self).run()
         debug("Finished reading old game logs")
-        del self.bodies
+        self.bodies = {}
 
 
     def open_discoveries(self):
@@ -434,16 +457,16 @@ class BioPatrol(tk.Frame, Module):
             self.body = None
             self.open_discoveries()
 
-                # {
-                #   "signalCount": 5
-                #   "signals" : [
-                #     "Tussock Pennatis - Yellow",
-                #     "Tussock Pennatis - Yellow",
-                #     "Tussock Pennatis - Yellow",
-                #     "Tussock Pennatis - Yellow",
-                #     "Tussock Pennatis - Yellow"
-                #   ]
-                # }
+            # {
+            #   "signalCount": 5
+            #   "signals" : [
+            #     "Tussock Pennatis - Yellow",
+            #     "Tussock Pennatis - Yellow",
+            #     "Tussock Pennatis - Yellow",
+            #     "Tussock Pennatis - Yellow",
+            #     "Tussock Pennatis - Yellow"
+            #   ]
+            # }
 
             predictions_updated = self.update_predictions()
             if predictions_updated is None:
@@ -453,7 +476,7 @@ class BioPatrol(tk.Frame, Module):
 
             if not self.__bio_found:
                 debug(f"{self.FILENAME_BIO} not found; reading old game logs")
-                self.process_logs()
+                self.read_old_logs()
 
             self.cleanup_predictions()
 
@@ -578,9 +601,9 @@ class BioPatrol(tk.Frame, Module):
     def biofound_init_body(self, body, signal_count=None):
         if body not in self.__bio_found:
             self.__bio_found[body] = {
-              "signalCount" : signal_count,
-              "signals" : [],
-              "genuses" : None
+                "signalCount": signal_count,
+                "signals": [],
+                "genuses": None
             }
 
     def biofound_set_genuses(self, body, genuses):
@@ -613,6 +636,8 @@ class BioPatrol(tk.Frame, Module):
 
 
     def process_entry(self, entry):
+        if self.__live_data:
+            self.last_processed_timestamp = datetime.fromisoformat(entry.data["timestamp"])
         required_events = ["Location", "FSDJump", "ScanOrganic", "SAASignalsFound", "FSSBodySignals", "FSSAllBodiesFound", "CodexEntry"]
         if not self.__live_data:
             required_events += ["ApproachBody", "Touchdown", "Disembark"]
@@ -751,25 +776,29 @@ class BioPatrol(tk.Frame, Module):
 
 
     def set_status(self, text: str):
-        def __inner(self):
+        def __inner():
             self.switch_frame.pack_forget()
             self.region_frame.pack_forget()
             self.closest_location_frame.pack_forget()
             self.buttons_frame.pack_forget()
+            # we won't unmap `filter_frame` because the user needs the ability
+            # to change regions in case there are no suitable locations in the current selection
+            self.old_logs_frame.pack_forget()
             self.__dummy_var.set(text)
             self.dummy_label.pack(side="top", fill="x")
-        self.after(0, __inner, self)
+        self.after(0, __inner)
 
 
     def show(self):
-        def __inner(self):
+        def __inner():
             self.dummy_label.pack_forget()
             self.switch_frame.pack(side="top", fill="x")
             self.region_frame.pack(side="top", fill="x")
             self.closest_location_frame.pack(side="top", fill="x")
             self.buttons_frame.pack(side="top", fill="x")
             self.filter_frame.pack(side="bottom", fill="x")
-        self.after(0, __inner, self)
+            self.old_logs_frame.pack(side="bottom", fill="x")
+        self.after(0, __inner)
 
 
     @property
@@ -1032,3 +1061,36 @@ class BioPatrol(tk.Frame, Module):
         self.__region_filter_window.destroy()
         self.__region_filter_window = None
         self.__update_data_coords(self.current_coords)
+
+
+    def __on_old_logs_processing_requested(self, event: tk.Event):
+        answer = askyesno(
+            title="Чтение старых логов",
+            message=(
+                "Запустить чтение старых логов?\n\n"
+                "Это действие приведёт к сбросу текущих био-данных плагина и начнёт обработку "
+                "всех игровых логов, сохранённых на устройстве. Этот процесс займёт некоторое время. "
+                "Данная опция может восстановить ваши старые и пропущенные находки, но они "
+                "не будут отправлены в общую таблицу открытий.\n\n"
+                "Продолжить?"
+            ),
+            icon=WARNING
+        )
+        if not answer:
+            return
+
+        def inner():
+            # this will block JournalProcessor, so the whole plugin will be waiting for us to finish
+            # (won't affect EDMC and other plugins)
+            with self.__threadlock:
+                self.__bio_found = {}
+                self.__live_data = False
+                self.read_old_logs()
+                self.cleanup_predictions()
+                self.__live_data = True
+                self.save_data()
+            debug("Finished reading old logs.")
+            self.show()
+
+        debug("Processing of old logs was requested by the user.")
+        BasicThread(name="BioPatrolOldLogsReader", target=inner).start()
