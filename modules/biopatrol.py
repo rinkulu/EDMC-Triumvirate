@@ -251,7 +251,7 @@ class BioPatrol(tk.Frame, Module):
         theme.button_bind(self.delete_button_dark, self.__delete)
 
         # кнопка фильтра по регионам
-        self.filter_frame = tk.Frame(self)      # EDMC использует grid для пар виджетов, а мы хотим в self юзать pack
+        self.filter_frame = tk.Frame(self)
         self.filter_frame.grid_columnconfigure(0, weight=1)
 
         self.filter_button = nb.Button(self.filter_frame, text="Фильтр регионов")
@@ -276,6 +276,23 @@ class BioPatrol(tk.Frame, Module):
         # for some obscure reason, using '<Button-1>' here makes the button get stuck in the pressed state
         self.old_logs_button.bind('<ButtonRelease-1>', self.__on_old_logs_processing_requested)
         theme.button_bind(self.old_logs_button_dark, self.__on_old_logs_processing_requested)
+
+        # задаём и сохраняем порядок отображения виджетов
+        self.dummy_label.grid(row=0, sticky="NWSE")
+        self.switch_frame.grid(row=1, sticky="NWSE")
+        self.region_frame.grid(row=2, sticky="NWSE")
+        self.closest_location_frame.grid(row=3, sticky="NWSE")
+        self.buttons_frame.grid(row=4, sticky="NWSE")
+        self.filter_frame.grid(row=5, sticky="NWSE")
+        self.old_logs_frame.grid(row=6, sticky="NWSE")
+        self.dummy_label.grid_remove()
+        self.switch_frame.grid_remove()
+        self.region_frame.grid_remove()
+        self.closest_location_frame.grid_remove()
+        self.buttons_frame.grid_remove()
+        self.filter_frame.grid_remove()
+        self.old_logs_frame.grid_remove()
+
 
         # упаковываем до данных по местоположению
         self.set_status("Местоположение неизвестно.\nТребуется прыжок или перезапуск игры.")
@@ -777,27 +794,27 @@ class BioPatrol(tk.Frame, Module):
 
     def set_status(self, text: str):
         def __inner():
-            self.switch_frame.pack_forget()
-            self.region_frame.pack_forget()
-            self.closest_location_frame.pack_forget()
-            self.buttons_frame.pack_forget()
+            self.switch_frame.grid_remove()
+            self.region_frame.grid_remove()
+            self.closest_location_frame.grid_remove()
+            self.buttons_frame.grid_remove()
             # we won't unmap `filter_frame` because the user needs the ability
             # to change regions in case there are no suitable locations in the current selection
-            self.old_logs_frame.pack_forget()
+            self.old_logs_frame.grid_remove()
             self.__dummy_var.set(text)
-            self.dummy_label.pack(side="top", fill="x")
+            self.dummy_label.grid()
         self.after(0, __inner)
 
 
     def show(self):
         def __inner():
-            self.dummy_label.pack_forget()
-            self.switch_frame.pack(side="top", fill="x")
-            self.region_frame.pack(side="top", fill="x")
-            self.closest_location_frame.pack(side="top", fill="x")
-            self.buttons_frame.pack(side="top", fill="x")
-            self.filter_frame.pack(side="bottom", fill="x")
-            self.old_logs_frame.pack(side="bottom", fill="x")
+            self.dummy_label.grid_remove()
+            self.switch_frame.grid()
+            self.region_frame.grid()
+            self.closest_location_frame.grid()
+            self.buttons_frame.grid()
+            self.filter_frame.grid()
+            self.old_logs_frame.grid()
         self.after(0, __inner)
 
 
