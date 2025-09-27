@@ -152,6 +152,8 @@ class BioPatrol(tk.Frame, Module):
         self.IMG_PINNED = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "pinned.gif"))
         self.IMG_TO_BEGINNING = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "to_beginning.gif"))
 
+        self.grid_columnconfigure(0, weight=1)
+
         # заглушка/статус
         self.__dummy_var = tk.StringVar(self)
         self.dummy_label = tk.Label(self, textvariable=self.__dummy_var)
@@ -293,7 +295,6 @@ class BioPatrol(tk.Frame, Module):
         self.filter_frame.grid_remove()
         self.old_logs_frame.grid_remove()
 
-
         # упаковываем до данных по местоположению
         self.set_status("Местоположение неизвестно.\nТребуется прыжок или перезапуск игры.")
         BasicThread(name="BioPatrolDataReader", target=self.load_data).start()
@@ -317,8 +318,8 @@ class BioPatrol(tk.Frame, Module):
             next_frame = next_frame % total_frames
             brab_gif_frame = brab_frames[next_frame]
             self.brab_label.configure(image=brab_gif_frame)
-            if self.is_brab_fun == True:
-                self.after(30, __inner, self, next_frame+1)
+            if self.is_brab_fun is True:
+                self.after(30, __inner, self, next_frame + 1)
 
         self.after(0, __inner, self, 0)
 
