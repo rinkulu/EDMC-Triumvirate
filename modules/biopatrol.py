@@ -306,7 +306,7 @@ class BioPatrol(tk.Frame, Module):
         brab_gif = Path(self.plugin_dir, "icons", "brabroll.gif")
         info = Image.open(brab_gif)
         self.brab_label = tk.Label(self, image="")
-        self.brab_label.pack(side="bottom", fill="x")
+        self.brab_label.grid(row=1, sticky="NWSE")
 
         brab_frames = []
         total_frames = info.n_frames
@@ -326,7 +326,7 @@ class BioPatrol(tk.Frame, Module):
 
     def stop_brab_fun(self):
         self.is_brab_fun = False
-        self.brab_label.pack_forget()
+        self.brab_label.grid_remove()
 
 
     def read_old_logs(self):
