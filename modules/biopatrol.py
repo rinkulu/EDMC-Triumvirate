@@ -151,6 +151,7 @@ class BioPatrol(tk.Frame, Module):
         self.IMG_PIN = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "pin.gif"))
         self.IMG_PINNED = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "pinned.gif"))
         self.IMG_TO_BEGINNING = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "to_beginning.gif"))
+        self.IMG_BRABFUN = tk.PhotoImage(file=Path(self.plugin_dir, "icons", "brabfun.png"))
 
         self.grid_columnconfigure(0, weight=1)
 
@@ -253,6 +254,7 @@ class BioPatrol(tk.Frame, Module):
         theme.button_bind(self.delete_button_dark, self.__delete)
 
         # кнопка фильтра по регионам
+        # кнопка обработки старых логов
         self.filter_frame = tk.Frame(self)
         self.filter_frame.grid_columnconfigure(0, weight=1)
 
@@ -265,15 +267,11 @@ class BioPatrol(tk.Frame, Module):
         self.filter_button.bind("<Button-1>", self.__create_filter_window)
         theme.button_bind(self.filter_button_dark, self.__create_filter_window)
 
-        # кнопка обработки старых логов
-        self.old_logs_frame = tk.Frame(self)
-        self.old_logs_frame.grid_columnconfigure(0, weight=1)
-
-        self.old_logs_button = nb.Button(self.old_logs_frame, text="Обработать старые логи")
-        self.old_logs_button_dark = tk.Label(self.old_logs_frame, text="Обработать старые логи", fg="white")
+        self.old_logs_button = nb.Button(self.filter_frame, image=self.IMG_BRABFUN)
+        self.old_logs_button_dark = tk.Label(self.filter_frame, image=self.IMG_BRABFUN, fg="white")
         theme.register_alternate(
             (self.old_logs_button, self.old_logs_button_dark, self.old_logs_button_dark),
-            {"column": 0, "row": 0, "sticky": "EW"}
+            {"column": 1, "row": 0, "sticky": "EW"}
         )
         # for some obscure reason, using '<Button-1>' here makes the button get stuck in the pressed state
         self.old_logs_button.bind('<ButtonRelease-1>', self.__on_old_logs_processing_requested)
@@ -286,14 +284,12 @@ class BioPatrol(tk.Frame, Module):
         self.closest_location_frame.grid(row=3, sticky="NWSE")
         self.buttons_frame.grid(row=4, sticky="NWSE")
         self.filter_frame.grid(row=5, sticky="NWSE")
-        self.old_logs_frame.grid(row=6, sticky="NWSE")
         self.dummy_label.grid_remove()
         self.switch_frame.grid_remove()
         self.region_frame.grid_remove()
         self.closest_location_frame.grid_remove()
         self.buttons_frame.grid_remove()
         self.filter_frame.grid_remove()
-        self.old_logs_frame.grid_remove()
 
         # упаковываем до данных по местоположению
         self.set_status("Местоположение неизвестно.\nТребуется прыжок или перезапуск игры.")
@@ -801,7 +797,6 @@ class BioPatrol(tk.Frame, Module):
             self.buttons_frame.grid_remove()
             # we won't unmap `filter_frame` because the user needs the ability
             # to change regions in case there are no suitable locations in the current selection
-            self.old_logs_frame.grid_remove()
             self.__dummy_var.set(text)
             self.dummy_label.grid()
         self.after(0, __inner)
@@ -815,7 +810,6 @@ class BioPatrol(tk.Frame, Module):
             self.closest_location_frame.grid()
             self.buttons_frame.grid()
             self.filter_frame.grid()
-            self.old_logs_frame.grid()
         self.after(0, __inner)
 
 
