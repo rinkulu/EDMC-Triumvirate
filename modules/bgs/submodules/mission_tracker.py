@@ -210,22 +210,27 @@ class MissionTracker(Submodule):
 
 
     def _insert_or_update(self, mission: Mission):
-        self.core.database.execute(f"INSERT OR INGORE INTO systems (mission_id) VALUES ({mission.mission_id})")
+        self.core.database.execute(f"INSERT OR IGNORE INTO missions (mission_id) VALUES ({mission.mission_id})")
         self.core.database.execute(
-            f"""
-            UPDATE systems
-            SET
-                cmdr = {mission.cmdr},
-                status = {mission.status},
-                mission_type = {mission.mission_type},
-                timestamp_accepted = {mission.timestamp_accepted},
-                timestamp_expires = {mission.timestamp_expires},
-                timestamp_finished = {mission.timestamp_finished},
-                origin_system = {mission.origin_system},
-                origin_system_id = {mission.origin_system_id},
-                origin_faction = {mission.origin_faction},
-            WHERE mission_id = {mission.mission_id}
             """
+            UPDATE missions
+            SET
+                cmdr = ?,
+                status = ?,
+                mission_type = ?,
+                timestamp_accepted = ?,
+                timestamp_expires = ?,
+                timestamp_finished = ?,
+                origin_system = ?,
+                origin_system_id = ?,
+                origin_faction = ?
+            WHERE mission_id = ?
+            """,
+            (
+                mission.cmdr, mission.status, mission.mission_type, mission.timestamp_accepted, mission.timestamp_expires,
+                mission.timestamp_finished, mission.origin_system, mission.origin_system_id, mission.origin_faction,
+                mission.mission_id
+            )
         )
         self.core.database.commit()
 
@@ -239,7 +244,7 @@ class MissionTracker(Submodule):
             expires = datetime.fromisoformat(mission_obj.timestamp_expires)
             if expires < now:
                 mid = mission_obj.mission_id
-                self.core.database.execute("UPDATE systems SET status = ? WHERE mission_id = ?", (MissionStatus.UNKNOWN, mid))
+                self.core.database.execute("UPDATE missions SET status = ? WHERE mission_id = ?", (MissionStatus.UNKNOWN, mid))
                 PluginContext.logger.debug(
                     f"Mission {mid} has expired ({mission_obj.timestamp_expires}), status set to {MissionStatus.UNKNOWN}."
                 )
