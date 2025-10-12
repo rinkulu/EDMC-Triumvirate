@@ -2,6 +2,7 @@ import os
 import re
 import gzip
 import json
+import sqlite3
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno, WARNING
@@ -122,7 +123,6 @@ class BioPatrolJournalEntry:
 class BioPatrol(tk.Frame, Module):
     FILENAME_RAW = 'bio.json.gz'
     FILENAME_FLAT = 'bio-flat.json'
-    FILENAME_BIO = 'bio-found.json'
 
     def __init__(self, parent, gridrow):
         super().__init__(parent)
@@ -393,13 +393,50 @@ class BioPatrol(tk.Frame, Module):
         self.bodies = {}
 
 
-    def open_discoveries(self):
-        try:
-            with open(Path(self.plugin_dir, "data", self.FILENAME_BIO), 'r') as f:
-                self.__bio_found = json.load(f)
-        except Exception:
-            self.__bio_found = {}
+    def init_discoveries(self):
+        self.con.execute('''
+        CREATE TABLE IF NOT EXISTS biopatrol_planets (
+            planet_name TEXT PRIMARY KEY,
+            bio_signals INTEGER
+        )
+        ''')
+        self.con.execute('''
+        CREATE TABLE IF NOT EXISTS biopatrol_planets_genuses (
+            planet_name TEXT NOT NULL,
+            genus TEXT NOT NULL,
+            PRIMARY KEY (planet_name, genus)
+        )
+        ''')
+        self.con.execute('''
+        CREATE TABLE IF NOT EXISTS biopatrol_planets_signals (
+            planet_name TEXT NOT NULL,
+            signal TEXT NOT NULL,
+            PRIMARY KEY (planet_name, signal)
+        )
+        ''')
 
+
+    def clean_discoveries(self):
+        self.con.execute('DELETE FROM biopatrol_planets')
+        self.con.execute('DELETE FROM biopatrol_planets_genuses')
+        self.con.execute('DELETE FROM biopatrol_planets_signals')
+        self.con.commit()
+
+
+    def open_discoveries(self):
+        path = Path(self.plugin_dir, "data", "biopatrol.db")
+
+        ret = True
+        if not os.path.isfile(path):
+            ret = False
+
+        try:
+            self.con = sqlite3.connect(path, check_same_thread=False)
+            self.init_discoveries()
+        except:
+            ret = None
+
+        return ret
 
     def open_predictions(self):
         try:
@@ -440,23 +477,21 @@ class BioPatrol(tk.Frame, Module):
 
 
     def cleanup_predictions(self):
-        for k, v in self.__bio_found.items():
-            planet = k
+        for fetched_signal in self.con.execute('SELECT planet_name, signal FROM biopatrol_planets_signals'):
+            planet = fetched_signal[0]
 
             for species, data in self.__raw_data["bio"].items():
                 if planet not in data["locations"]:
                     continue
 
                 species_genus = species.split()[0]
-                known_genuses = self.__bio_found[planet].get("genuses", [])
-
-                if known_genuses is not None and species_genus not in known_genuses:
+                for fetched_genus in self.con.execute('SELECT planet_name, genus FROM biopatrol_planets_genuses WHERE planet_name = ? AND genus = ?', (planet, species_genus)):
                     debug(f">> Removing {species} prediction for {planet} - genus has been ruled out by DSS")
                     del data["locations"][planet]
 
-            for bioname in v["signals"]:
-                genus = bioname.split()[0]
-                self.process_genus_bio(genus, bioname, planet)
+            bioname = fetched_signal[1]
+            genus = bioname.split()[0]
+            self.process_genus_bio(genus, bioname, planet)
 
 
     def load_data(self):
@@ -470,7 +505,7 @@ class BioPatrol(tk.Frame, Module):
                     break
 
             self.body = None
-            self.open_discoveries()
+            discoveries_opened = self.open_discoveries()
 
             # {
             #   "signalCount": 5
@@ -489,8 +524,8 @@ class BioPatrol(tk.Frame, Module):
 
             self._enabled = True
 
-            if not self.__bio_found:
-                debug(f"{self.FILENAME_BIO} not found; reading old game logs")
+            if discoveries_opened == False:
+                debug(f"CMDR discoveries not found; reading old game logs")
                 self.read_old_logs()
 
             self.cleanup_predictions()
@@ -531,8 +566,7 @@ class BioPatrol(tk.Frame, Module):
         with open(Path(self.plugin_dir, "data", self.FILENAME_FLAT), 'w') as f:
             json.dump(self.__raw_data, f, ensure_ascii=False)
 
-        with open(Path(self.plugin_dir, "data", self.FILENAME_BIO), 'w') as f:
-            json.dump(self.__bio_found, f, ensure_ascii=False)
+        self.con.commit()
 
 
     def process_genus_bio(self, genus, bioname, planet, report=False, entry_region=None):
@@ -579,8 +613,19 @@ class BioPatrol(tk.Frame, Module):
                 remove_planet = True
 
             # found all signals, clear planet from lists
-            signals_found = len(self.__bio_found[planet]["signals"])
-            signals_count = self.__bio_found[planet]["signalCount"]
+            (signals_found, signals_count) = self.con.execute('''
+            SELECT
+                COUNT(biopatrol_planets_signals.signal),
+                biopatrol_planets.bio_signals
+            FROM
+                biopatrol_planets_signals
+            INNER JOIN
+                biopatrol_planets
+            ON
+                biopatrol_planets.planet_name = biopatrol_planets_signals.planet_name
+            WHERE
+                biopatrol_planets.planet_name = ?
+            ''', (planet, )).fetchone()
             if signals_found == signals_count:
                 debug(f">> Removing {species} prediction for {planet} - all {signals_count} signals discovered")
                 remove_planet = True
@@ -614,19 +659,18 @@ class BioPatrol(tk.Frame, Module):
 
 
     def biofound_init_body(self, body, signal_count=None):
-        if body not in self.__bio_found:
-            self.__bio_found[body] = {
-                "signalCount": signal_count,
-                "signals": [],
-                "genuses": None
-            }
+        self.con.execute('INSERT OR IGNORE INTO biopatrol_planets (planet_name, bio_signals) VALUES (?, ?)', (body, signal_count))
 
     def biofound_set_genuses(self, body, genuses):
-        self.__bio_found[body]["genuses"] = genuses
+        for genus in genuses:
+            self.con.execute('INSERT OR IGNORE INTO biopatrol_planets_genuses (planet_name, genus) VALUES (?, ?)', (body, genus))
 
     def biofound_add_signal(self, body, signal):
-        if signal not in self.__bio_found[body]["signals"]:
-            self.__bio_found[body]["signals"].append(signal)
+        self.con.execute('INSERT OR IGNORE INTO biopatrol_planets_signals (planet_name, signal) VALUES (?, ?)', (body, signal))
+
+
+    def biofound_planet_exists(self, planet):
+        return self.con.execute('SELECT COUNT(planet_name) FROM biopatrol_planets WHERE planet_name = ?', (planet, )).fetchone()[0] > 0
 
 
     def get_current_body(self, key):
@@ -750,8 +794,8 @@ class BioPatrol(tk.Frame, Module):
                         continue
 
                     if planet not in self.signals_in_system:
-                        if planet in self.__bio_found:
-                            signalCount = self.__bio_found[planet].get("signalCount", 0)
+                        if self.biofound_planet_exists(planet):
+                            signalCount = self.con.execute('SELECT bio_signals FROM biopatrol_planets WHERE planet_name = ?', (planet, )).fetchone()[0]
                             if signalCount > 0:
                                 debug(f'>> Keeping {planet}: has {signalCount} signals')
                                 continue
@@ -1041,7 +1085,7 @@ class BioPatrol(tk.Frame, Module):
         planet = self.data[self.pos]["closest_location"]
         coords = self.data[self.pos]["coords"]
 
-        if planet not in self.__bio_found:
+        if not self.biofound_planet_exists(planet):
             self.set_status(f"Сначала просканируйте {planet} с помощью DSS.")
             self.after(3000, self.show)
             return
@@ -1097,8 +1141,9 @@ class BioPatrol(tk.Frame, Module):
             # this will block JournalProcessor, so the whole plugin will be waiting for us to finish
             # (won't affect EDMC and other plugins)
             with self.__threadlock:
-                self.__bio_found = {}
                 self.__live_data = False
+                self.clean_discoveries()
+                self.open_discoveries()
                 self.read_old_logs()
                 self.cleanup_predictions()
                 self.__live_data = True
