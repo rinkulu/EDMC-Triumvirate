@@ -365,6 +365,7 @@ class BioPatrol(tk.Frame, Module):
                             and datetime.fromisoformat(data["timestamp"]) > self.patrol.last_processed_timestamp
                         ):
                             # we reached fresh data - better leave it for the normal mode to process
+                            self.patrol.stop_brab_fun()
                             return
                         if "StarPos" in data:
                             coords = Coords(x=data["StarPos"][0], y=data["StarPos"][1], z=data["StarPos"][2])
