@@ -98,7 +98,7 @@ class JournalProcessor(Thread):
             PluginContext.logger.debug("Seems like the game is already running. Using EDMC's location data.")
             GameState.system = state.get("SystemName")
             GameState.system_address = state.get("SystemAddress")
-            GameState.system_coords = Coords(*state["StarPos"]) if "StarPos" in state else None
+            GameState.system_coords = Coords(*state["StarPos"]) if "StarPos" in state and state["StarPos"] is not None else None
             if GameState.system_coords is None:
                 PluginContext.logger.debug("EDMC didn't provide us with the coordinates, showing user warning.")
                 PluginContext.systems_cache.show_coords_warning()
@@ -131,18 +131,22 @@ class JournalProcessor(Thread):
                 )
                 # pending-и сохраним до ивента прыжка, там сбросим
             else:
-                # прыгнули не пойми куда??
-                PluginContext.logger.warning(
-                    f"Unexpected misjump: new system id ({system_id}) doesn't match the pending one "
-                    f"({GameState.pending_jump_system_id}). Attempting to fetch the system name and coords..."
-                )
+                if GameState.system_address is None and GameState.pending_jump_system_id is None:
+                    # частный случай (1)+(4): мы только входим в игру, локации не знаем, а сигналы уже получили
+                    PluginContext.logger.debug(f"Got system ID {system_id} from non-location event {entry['event']}.")
+                else:
+                    # прыгнули не пойми куда??
+                    PluginContext.logger.warning(
+                        f"Unexpected misjump: new system id ({system_id}) doesn't match the pending one "
+                        f"({GameState.pending_jump_system_id})."
+                    )
                 new_system = PluginContext.systems_cache.get_system_name(system_id)
                 new_coords = PluginContext.systems_cache.get_system_coords(system_id)
                 if None not in (new_system, new_coords):
                     GameState.system = new_system
                     GameState.system_address = system_id
                     GameState.system_coords = new_coords
-                    PluginContext.logger.warning(f"System changed to {new_system}, coords: {new_coords}.")
+                    PluginContext.logger.debug(f"System changed to {new_system}, coords: {new_coords}.")
                 else:
                     # в кэше данных не нашлось, вытянуть с интернетов тоже не вышло
                     PluginContext.logger.warning("No info on the new system id found. Keeping the old system for now.")
