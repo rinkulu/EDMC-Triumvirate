@@ -47,9 +47,9 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.exp_visualizer = Visualizer(frame, 1)
     PluginContext.patrol_module = PatrolModule(frame, 2)
     PluginContext.fc_tracker = FC_Tracker(frame, 3)
+    PluginContext.bgs_module = BGS(frame, 4)
 
     # эти модули не имеют UI, но стартуем их здесь же
-    PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
     PluginContext.sq_tracker = Squadron_Tracker()

@@ -88,7 +88,7 @@ class JournalProcessor(Thread):
             GameState.pending_jump_system = None
             GameState.pending_jump_system_id = None
             PluginContext.logger.debug(
-                f"{entry['event']} detected. Location change: "
+                f"Event {entry['event']} detected. Location change: "
                 f"system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."
             )
             PluginContext.systems_cache.hide_coords_warning()
@@ -120,7 +120,7 @@ class JournalProcessor(Thread):
             and entry["SystemAddress"] != GameState.system_address
             and entry["event"] not in ("NavRoute", "FSDTarget", "CarrierBuy", "CarrierJumpRequest", "CarrierLocation")
         ):
-            PluginContext.logger.debug("Detected SystemAddress mismatch.")
+            PluginContext.logger.debug(f"Detected SystemAddress mismatch (event {entry['event']}).")
             if (system_id := entry["SystemAddress"]) == GameState.pending_jump_system_id:
                 GameState.system = GameState.pending_jump_system
                 GameState.system_address = GameState.pending_jump_system_id
@@ -212,6 +212,9 @@ class JournalProcessor(Thread):
             GameState.flags.update(flags)
         if (flags2 := entry.get("Flags2")) is not None:
             GameState.flags2.update(flags2)
+
+        for mod in PluginContext.active_modules:
+            mod.on_dashboard_entry(cmdr, is_beta, entry)
 
 
     def on_cmdr_data(self, data: dict, is_beta: bool):

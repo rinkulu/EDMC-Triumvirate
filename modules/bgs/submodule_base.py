@@ -21,14 +21,23 @@ class SubmoduleMeta(ABCMeta):
 
     @classmethod
     def init_submodules(cls, core: 'BGSCore'):
+        def rowgen():
+            row = 0
+            while True:
+                yield row
+                row += 1
+
+        rg = rowgen()
         for subm in cls._submodules:
             subm.core = core
+            subm._ui_row = next(rg)
             instance = super().__call__(subm)
             cls._instances.add(instance)
 
 
 class Submodule(ABC, metaclass=SubmoduleMeta):
     core: 'BGSCore'
+    _ui_row: int
 
     def on_journal_entry(self, entry: dict):
         """
@@ -36,6 +45,14 @@ class Submodule(ABC, metaclass=SubmoduleMeta):
         В отличие от Module.on_journal_entry, принимает запись "как есть"
         и должен полагаться на данные контекста для получения дополнительной информации.
         """
+
+    def on_dashboard_entry(self):
+        """
+        Вызывается при обновлении Status.json
+        В отличие от Module.on_dashboard_entry, служит лишь сигналом обновления файла.
+        Субмодуль должен получать данные из context.GameState
+        """
+
 
     def on_close(self):
         """

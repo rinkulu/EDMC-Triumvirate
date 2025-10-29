@@ -37,7 +37,7 @@ class FactionDataFetcher(Thread):
     REMOTE_DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTDY_aCGkppsZVZI_XhjBo_E3dxvGWilsOjpti9bPpqFLHM7Ar47pHfTeeSUfjLW3lI3hzsfy0YVCl7/pub?gid=1715591931&single=true&output=csv"  # noqa: E501
 
     def __init__(self, callback: Callable[[list[list[str]]], Any]):
-        super().__init__()
+        super().__init__(name="BGS faction data fetcher")
         self._callback = callback
 
     def do_run(self):
@@ -46,6 +46,7 @@ class FactionDataFetcher(Thread):
             self.sleep(self.REFRESH_TIME)
 
     def fetch_data(self):
+        PluginContext.logger.debug("Updating BGS factions data...")
         try:
             resp = requests.get(self.REMOTE_DATA_URL, timeout=15)
             resp.raise_for_status()

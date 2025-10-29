@@ -1,8 +1,11 @@
 import requests
 import sqlite3
+import tkinter as tk
 from queue import Queue
 from threading import Lock
 from typing import Any, Callable
+
+import myNotebook as nb  # type: ignore
 
 from core.context import PluginContext
 from lib.journal import JournalEntry
@@ -61,7 +64,7 @@ class Filter:
         params: dict,
         affected_systems: list[str],
     ):
-        if not self._data:
+        if not self._tracked_systems:
             PluginContext.logger.debug(
                 "BGS report check cannot be done: no tracked systems data yet. Saving the report for a delayed check."
             )
@@ -87,15 +90,17 @@ class BGSCore(Module):
     localized_name = _translate("BGS module")
     DB_PATH = PluginContext.plugin_dir / "userdata" / "BGSdata.db"
 
-    def __init__(self):
+    def __init__(self, parent: tk.Misc, row: int):
         self.filter = Filter()
         self.database = sqlite3.connect(self.DB_PATH, check_same_thread=False)
+        self.ui_frame = nb.Frame(parent)
         submodule_base.init_submodules(self)
         self.submodules = submodule_base.get_submodules()
         if self.submodules:
             PluginContext.logger.info(
                 f"{len(self.submodules)} submodules initiated: " + ', '.join(s.__class__.__qualname__ for s in self.submodules)
             )
+            self.ui_frame.grid(row=row, column=0, sticky="NWSE")
         else:
             PluginContext.logger.error("No submodules found. Disabling the BGS module.")
             self.enabled = False
@@ -113,6 +118,16 @@ class BGSCore(Module):
             except Exception as e:
                 PluginContext.logger.error(
                     f"Exception in BGS submodule {subm} while processing a journal entry:",
+                    exc_info=e
+                )
+
+    def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
+        for subm in self.submodules:
+            try:
+                subm.on_dashboard_entry()
+            except Exception as e:
+                PluginContext.logger.error(
+                    f"Exception in BGS submodule {subm} while processing a dashboard entry:",
                     exc_info=e
                 )
 
