@@ -43,7 +43,7 @@ class VoucherTracker(Submodule):
                 "entry.351553038": amount,
                 "usp": "pp_url",
             }
-            self.core.send_data(url, params, [system])
+            self.send_bgs_report(url, params, system)
 
         elif voucher_type == "bounty":
             PluginContext.logger.debug("Redeeming bounties:")
@@ -62,4 +62,4 @@ class VoucherTracker(Submodule):
                         "usp": "pp_url",
                     }
                     self.redeemed_factions.append(faction_name)
-                    self.core.send_data(url, params, [system])
+                    self.send_bgs_report(url, params, system)

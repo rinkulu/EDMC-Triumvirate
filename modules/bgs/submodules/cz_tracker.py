@@ -538,7 +538,7 @@ class CZTracker(Submodule):
             "entry.1383403456": conflict.winner_faction,
             "usp": "pp_url"
         }
-        self.core.send_data(url, params, [conflict.system])
+        self.send_bgs_report(url, params, conflict.system)
 
 
     def __ally_winner_button_callback(self, conflict: Conflict):

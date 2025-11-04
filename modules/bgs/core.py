@@ -1,11 +1,11 @@
 import requests
 import sqlite3
 import tkinter as tk
+from collections.abc import Callable
+from dataclasses import dataclass
 from queue import Queue
 from threading import Lock
-from typing import Any, Callable
-
-import myNotebook as nb  # type: ignore
+from typing import Any
 
 from core.context import PluginContext
 from lib.journal import JournalEntry
@@ -20,6 +20,14 @@ from . import submodule_base
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 # isort: on
+
+
+@dataclass
+class BGSReport:
+    submodule_src: str
+    url: str
+    params: dict
+    affected_systems: list[str]
 
 
 class FilterUpdater(Thread):
@@ -53,37 +61,37 @@ class FilterUpdater(Thread):
 class Filter:
     def __init__(self):
         self.__threadlock = Lock()
-        self.updater = FilterUpdater(self._on_data_update)
-        self.updater.start()
-        self.bgs_reports_queue = Queue()
+        self.bgs_reports_queue: Queue[BGSReport] = Queue()
         self._tracked_systems: set[str] = set()
+        self.updater = FilterUpdater(self.on_data_update)
+        self.updater.start()
 
-    def dispatch_bgs_report(
-        self,
-        url: str,
-        params: dict,
-        affected_systems: list[str],
-    ):
+    def process_bgs_report(self, report: BGSReport):
         if not self._tracked_systems:
             PluginContext.logger.debug(
-                "BGS report check cannot be done: no tracked systems data yet. Saving the report for a delayed check."
+                f"[{report.submodule_src}] BGS report check cannot be done: no tracked systems data yet. "
+                "Saving the report for a delayed check."
             )
-            self.bgs_reports_queue.put((affected_systems, url, params))
-            return
-        with self.__threadlock:
-            if not any(s in self._tracked_systems for s in affected_systems):
-                PluginContext.logger.debug("None of the provided affected systems are tracked, ignoring this BGS report.")
-                return
-            PluginContext.logger.debug("Sending a BGS report.")
-            GoogleReporter(url, params).start()
+            self.bgs_reports_queue.put(report)
+        else:
+            with self.__threadlock:
+                if not any(s in self._tracked_systems for s in report.affected_systems):
+                    PluginContext.logger.debug(
+                        f"[{report.submodule_src}] None of the provided affected systems "
+                        f"({', '.join(report.affected_systems)}) "
+                        "are tracked, ignoring this BGS report."
+                    )
+                    return
+                PluginContext.logger.debug(f"[{report.submodule_src}] Sending a BGS report.")
+                GoogleReporter(report.url, report.params).start()
 
-    def _on_data_update(self, systems: list[str]):
+    def on_data_update(self, systems: list[str]):
         with self.__threadlock:
             self._tracked_systems = set(systems)
         if not self.bgs_reports_queue.empty():
             PluginContext.logger.debug("Processing delayed BGS report checks:")
             while not self.bgs_reports_queue.empty():
-                self.dispatch_bgs_report(*self.bgs_reports_queue.get())
+                self.process_bgs_report(self.bgs_reports_queue.get())
 
 
 class BGSCore(Module):
@@ -131,8 +139,13 @@ class BGSCore(Module):
                     exc_info=e
                 )
 
-    def send_data(self, url: str, params: dict, affected_systems: list[str]):
+    def _send_data(self, url: str, params: dict, affected_systems: str | list[str], submodule_src: str):
         """
-        Небольшая прослойка для субмодулей, чтобы им не обращаться напрямую к фильтру.
+        Метод для субмодулей для отправки данных через фильтр.
+        Субмодули используют его через обёртку в своём метаклассе; submodule_src задаётся там же
+        (см. `SubmoduleMeta.init_submodules`)
         """
-        self.filter.dispatch_bgs_report(url, params, affected_systems)
+        if isinstance(affected_systems, str):
+            affected_systems = [affected_systems]
+        report = BGSReport(submodule_src, url, params, affected_systems)
+        self.filter.process_bgs_report(report)

@@ -262,4 +262,4 @@ class MissionTracker(Submodule):
             "entry.179254259": inf_change,
             "usp": "pp_url",
         }
-        self.core.send_data(url, params, [system])
+        self.send_bgs_report(url, params, system)
