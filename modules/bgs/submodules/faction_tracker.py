@@ -46,7 +46,7 @@ class FactionDataFetcher(Thread):
 
     def fetch_data(self):
         try:
-            resp = requests.get(self.REMOTE_DATA_URL)
+            resp = requests.get(self.REMOTE_DATA_URL, timeout=15)
             resp.raise_for_status()
         except requests.RequestException as e:
             PluginContext.logger.error("Couldn't fetch factions data. Exception info:", exc_info=e)
