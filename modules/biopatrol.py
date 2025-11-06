@@ -796,8 +796,9 @@ class BioPatrol(tk.Frame, Module):
             self.region_frame.grid_remove()
             self.closest_location_frame.grid_remove()
             self.buttons_frame.grid_remove()
-            # we won't unmap `filter_frame` because the user needs the ability
+            # we should always have `filter_frame` mapped because the user needs the ability
             # to change regions in case there are no suitable locations in the current selection
+            self.filter_frame.grid()
             self.__dummy_var.set(text)
             self.dummy_label.grid()
         self.after(0, __inner)
