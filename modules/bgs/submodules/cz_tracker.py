@@ -2,11 +2,15 @@ import tkinter as tk
 from dataclasses import dataclass
 from datetime import datetime
 from tkinter import ttk
-from typing import Any, Callable, Literal
+from typing import Any, Literal, TYPE_CHECKING
+from collections.abc import Callable
 
 from core.context import GameState, PluginContext
 from modules.bgs.submodule_base import Submodule
 from modules.legacy import URL_GOOGLE
+
+if TYPE_CHECKING:
+    from modules.bgs.core import BgsUiFrame
 
 
 # isort: off
@@ -125,7 +129,7 @@ class DisplayTimer:
 
 
 class ConflictInfoFrame(tk.Frame):
-    def __init__(self, parent: tk.Misc, row: int):
+    def __init__(self, parent: 'BgsUiFrame', row: int):
         super().__init__(parent)
         self.row = row
         self._enabled = True
@@ -343,6 +347,8 @@ class ConflictInfoFrame(tk.Frame):
 
 
     def __show(self):
+        self.master: 'BgsUiFrame'
+        self.master.show()
         self.grid(row=self.row, column=0, sticky="NWSE")
 
 

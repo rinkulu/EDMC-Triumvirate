@@ -30,6 +30,39 @@ class BGSReport:
     affected_systems: list[str]
 
 
+class BgsUiFrame(tk.Frame):
+    """
+    `tk.Frame`, но скрывает себя, если всего его наследники окажутся скрыты (`<manager>_remove/forget()`).
+    Обычный `Frame` в таком случае остаётся пустым местом на экране и не обновляет свой размер.
+
+    Наследники **обязаны** вызывать `BgsUiFrame.show`, когда они помещаются на экран.
+    В противном случае, если сам `BgsUiFrame` будет в этот момент скрыт, tkinter не сгенерирует
+    ивент `<Map>`, и фрейм не узнает, что ему надо замаппить себя.
+    """
+    def __init__(self, parent: tk.Misc, row: int, column: int):
+        super().__init__(parent)
+        self._children_mapped = 0
+        self._grid_row = row
+        self._grid_column = column
+        self.bind_all("<Map>", self.__on_event_map, add="+")
+        self.bind_all("<Unmap>", self.__on_event_unmap, add="+")
+
+    def show(self):
+        self.grid(row=self._grid_row, column=self._grid_column)
+
+    def __on_event_map(self, event: tk.Event):
+        if event.widget in self.winfo_children():
+            self._children_mapped += 1
+            self.grid(row=self._grid_row, column=self._grid_column)
+
+    def __on_event_unmap(self, event: tk.Event):
+        if event.widget not in self.winfo_children():
+            return
+        self._children_mapped -= 1
+        if self._children_mapped == 0:
+            self.grid_remove()
+
+
 class FilterUpdater(Thread):
     REFRESH_TIME = 30 * 60  # s
     FETCH_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTDY_aCGkppsZVZI_XhjBo_E3dxvGWilsOjpti9bPpqFLHM7Ar47pHfTeeSUfjLW3lI3hzsfy0YVCl7/pub?gid=1163755226&single=true&output=csv"  # noqa: E501
@@ -101,14 +134,13 @@ class BGSCore(Module):
     def __init__(self, parent: tk.Misc, row: int):
         self.filter = Filter()
         self.database = sqlite3.connect(self.DB_PATH, check_same_thread=False)
-        self.ui_frame = nb.Frame(parent)
+        self.ui_frame = BgsUiFrame(parent, row, 0)
         submodule_base.init_submodules(self)
         self.submodules = submodule_base.get_submodules()
         if self.submodules:
             PluginContext.logger.info(
                 f"{len(self.submodules)} submodules initiated: " + ', '.join(s.__class__.__qualname__ for s in self.submodules)
             )
-            self.ui_frame.grid(row=row, column=0, sticky="NWSE")
         else:
             PluginContext.logger.error("No submodules found. Disabling the BGS module.")
             self.enabled = False
