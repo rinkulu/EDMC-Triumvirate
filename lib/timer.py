@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from tkinter import _default_root
-from typing import Any, Callable
+from typing import Any
 
 from core.debug import debug
 from lib.thread import Thread, ThreadExit

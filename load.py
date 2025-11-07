@@ -14,6 +14,7 @@ import tempfile
 import threading
 import tkinter as tk
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -21,7 +22,6 @@ from queue import Queue
 from semantic_version import Version
 from time import sleep
 from tkinter import ttk
-from typing import Callable
 
 import myNotebook as nb  # type: ignore
 from config import appname, appversion  # type: ignore

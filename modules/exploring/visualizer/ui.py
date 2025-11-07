@@ -1,6 +1,7 @@
 import tkinter as tk
+from collections.abc import Callable
 from tkinter import PhotoImage, ttk
-from typing import Any, Callable
+from typing import Any
 
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore

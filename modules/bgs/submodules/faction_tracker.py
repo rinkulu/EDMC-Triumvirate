@@ -1,9 +1,10 @@
 import csv
 import requests
+from collections.abc import Callable
 from dataclasses import dataclass, fields
 from queue import Queue
 from threading import Lock
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from core.context import GameState, PluginContext
 from lib.thread import Thread

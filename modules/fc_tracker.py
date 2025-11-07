@@ -2,11 +2,12 @@ import json
 import requests
 import tkinter as tk
 import traceback
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, fields
 from datetime import UTC, datetime
 from enum import Enum
 from tkinter import ttk
-from typing import Any, Callable
+from typing import Any
 
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
