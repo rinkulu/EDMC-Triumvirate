@@ -155,6 +155,10 @@ class MissionTracker(Submodule):
         # 1 - активные миссии, которые есть в ивенте, но отсутствуют в БД
         for mission in active_missions:
             mid = mission["MissionID"]
+            # игнорируем миссии на постройку главного порта в колонии
+            if "Colonisation_Initial" in mission["Name"]:
+                PluginContext.logger.debug(f"Skipping the mission to construct colonisation primary port (id {mid})")
+                continue
             cur.execute("SELECT 1 FROM missions WHERE mission_id = ?", (mid,))
             res = cur.fetchone()
             if res is None:
