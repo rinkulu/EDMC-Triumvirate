@@ -62,6 +62,9 @@ class SystemsCache(tk.Frame):
     def hide_coords_warning(self):
         self.after(0, self.grid_forget)
 
+    def coords_warning_shown(self) -> bool:
+        return self.winfo_ismapped()
+
 
     def _db_add_system(self, data: _SystemData):
         cur = self._cache.execute(
