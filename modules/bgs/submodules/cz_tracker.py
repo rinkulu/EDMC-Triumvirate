@@ -536,7 +536,7 @@ class CZTracker(Submodule):
             "entry.1896400912": conflict.timestamp_finished,
             "entry.1178049789": conflict.cmdr,
             "entry.721869491": conflict.system,
-            "entry.1671504189": conflict.conflict_type,
+            # "entry.1671504189": conflict.conflict_type,
             "entry.461250117": conflict.on_foot_settlement,
             "entry.428944810": conflict.intensity,
             "entry.1396326275": str(weight).replace('.', ','),
@@ -544,6 +544,11 @@ class CZTracker(Submodule):
             "entry.1383403456": conflict.winner_faction,
             "usp": "pp_url"
         }
+
+        # TODO: убрать после перехода на сервер. Фикс для совместимости со старыми данными таблицы
+        conflict_type = "Space" if conflict.conflict_type == 'Space' else 'Foot'
+        params["entry.1671504189"] = conflict_type
+
         self.send_bgs_report(url, params, conflict.system)
 
 
