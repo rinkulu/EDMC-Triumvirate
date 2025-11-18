@@ -101,14 +101,14 @@ def get_bgs_instructions(bgs, faction):
     if target:
         retval = "{} Влияние {}%;{}{}".format(
             faction,
-            Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
+            Locale.string_from_number(float(bgs.get("influence") * 100), 2),
             states,
             update_text,
         )
     if over:
         retval = "{} Влияние {}%;{} {}{}.".format(
             faction,
-            Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
+            Locale.string_from_number(float(bgs.get("influence") * 100), 2),
             states,
             contact,
             update_text,
@@ -116,7 +116,7 @@ def get_bgs_instructions(bgs, faction):
     if under:
         retval = "{} Влияние {}%;{} Пожалуйста выполняйте миссии за {}, чтобы увеличить влияние фракции {}".format(
             faction,
-            Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
+            Locale.string_from_number(float(bgs.get("influence") * 100), 2),
             states,
             faction,
             update_text,

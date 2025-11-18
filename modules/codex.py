@@ -11,7 +11,11 @@ from urllib.parse import quote_plus, unquote
 from tkinter import Frame
 import tkinter as tk
 from settings import edsm_url, canonn_cloud_url_us_central
-from context import GameState
+from context import GameState, PluginContext
+
+# функция перевода
+import functools
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 nvl = lambda a, b: a or b
 
@@ -49,27 +53,27 @@ class poiTypes(threading.Thread):
 
 class CodexTypes(Frame):
     tooltips = {
-        "Geology": _("Geology: Vents and fumeroles"),
-        "Cloud": _("Lagrange Clouds"),
-        "Anomaly": _("Anomalous stellar phenomena"),
-        "Thargoid": _("Thargoid sites or barnacles"),
-        "Biology": _("Biological surface signals"),
-        "Guardian": _("Guardian sites"),
-        "None": _("Unclassified codex entry"),
-        "Human": _("Human Sites"),
-        "Ring": _("Planetary Ring Resources"),
-        "Other": _("Other Sites"),
-        "Planets": _("Valuable Planets"),
-        "Tourist": _("Tourist Informatiom")
+        "Geology": _translate("Geology: Vents and fumeroles"),
+        "Cloud": _translate("Lagrange Clouds"),
+        "Anomaly": _translate("Anomalous stellar phenomena"),
+        "Thargoid": _translate("Thargoid sites or barnacles"),
+        "Biology": _translate("Biological surface signals"),
+        "Guardian": _translate("Guardian sites"),
+        "None": _translate("Unclassified codex entry"),
+        "Human": _translate("Human Sites"),
+        "Ring": _translate("Planetary Ring Resources"),
+        "Other": _translate("Other Sites"),
+        "Planets": _translate("Valuable Planets"),
+        "Tourist": _translate("Tourist Informatiom")
     }
 
     body_types = {
-        'Metal-rich body': _('Metal-Rich Body'),
-        'Metal rich body': _('Metal-Rich Body'),
-        'Earth-like world': _('Earthlike World'),
-        'Earthlike body': _('Earthlike World'),
-        'Water world': _('Water World'),
-        'Ammonia world': _('Ammonia World')
+        'Metal-rich body': _translate('Metal-Rich Body'),
+        'Metal rich body': _translate('Metal-Rich Body'),
+        'Earth-like world': _translate('Earthlike World'),
+        'Earthlike body': _translate('Earthlike World'),
+        'Water world': _translate('Water World'),
+        'Ammonia world': _translate('Ammonia World')
     }
 
     bodycount = 0
@@ -650,8 +654,8 @@ class CodexTypes(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
 
-        nb.Label(frame, text=_("Настройки Кодекса")).grid(row=0, column=0, sticky="NW")
-        nb.Checkbutton(frame, text=_("Скрыть иконки кодекса"), variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
+        nb.Label(frame, text=_translate("Настройки Кодекса")).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text=_translate("Скрыть иконки кодекса"), variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
 
         return frame
 

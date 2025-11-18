@@ -130,7 +130,7 @@ class BGS(Module):
 
         try:
             sounds = json.loads(plugin_config.get_str("BGS.sounds"))
-        except TypeError:
+        except (TypeError, json.JSONDecodeError):
             sounds = None
         if (
             not sounds

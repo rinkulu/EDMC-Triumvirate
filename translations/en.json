@@ -14,6 +14,22 @@
         "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
         "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
     },
+    "modules\\codex.py": {
+        "Geology: Vents and fumeroles": "Geology: Vents and fumeroles",
+        "Lagrange Clouds": "Lagrange Clouds",
+        "Anomalous stellar phenomena": "Anomalous stellar phenomena",
+        "Thargoid sites or barnacles": "Thargoid sites or barnacles",
+        "Biological surface signals": "Biological surface signals",
+        "Guardian sites": "Guardian sites",
+        "Unclassified codex entry": "Unclassified codex entry",
+        "Human Sites": "Human Sites",
+        "Planetary Ring Resources": "Planetary Ring Resources",
+        "Other Sites": "Other Sites",
+        "Valuable Planets": "Valuable Planets",
+        "Tourist Informatiom": "Tourist Informatiom",
+        "Настройки Кодекса": "Codex settings",
+        "Скрыть иконки кодекса": "Hide Codex icons"
+    },
     "modules\\colonisation.py": {
         "Colonisation delivery tracker": "Colonisation delivery tracker"
     },

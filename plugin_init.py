@@ -109,4 +109,7 @@ def plugin_stop():
     PluginContext.logger.debug("Stopping the plugin.")
     for mod in PluginContext.active_modules:
         mod.on_close()
-    thread.Thread.stop_all()
+    PluginContext.bgs_module.stop()
+    PluginContext.logger.debug("Joining threads...")
+    thread.BasicThread.join_all()
+    PluginContext.logger.dubug("Done, exiting.")

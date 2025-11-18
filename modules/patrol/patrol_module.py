@@ -131,6 +131,9 @@ class PatrolModule(Frame, Module):
 
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
+        # быстрый фикс для EDMC 6.0, где плагин может быть отключён в рантайме, и на base_config.shutting_down полагаться нельзя
+        self.shutting_down = False
+
         self.ships = []
         self.bind("<<PatrolDone>>", self.update)
         plugin_dir = PluginContext.plugin_dir
@@ -388,6 +391,9 @@ class PatrolModule(Frame, Module):
         When the plugin stops we want to save the patrols where excluded = True
         We will not inclde ships or BGS in this as they can be excluded in other ways.
         """
+        self.shutting_down = True
+        if self.update_thread:
+            self.update_thread.STOP = True
         if self.excluded is not None:
             self.excluded.save(self.patrol_list)
 
@@ -460,7 +466,7 @@ class PatrolModule(Frame, Module):
             )
 
             self.distance["text"] = "{}ly".format(
-                Locale.stringFromNumber(
+                Locale.string_from_number(
                     distance_between(p, self.nearest.get("coords")), 2
                 )
             )
@@ -563,7 +569,8 @@ class PatrolModule(Frame, Module):
         debug("Waiting for SQID event...")
         while not self.sqid_evt.is_set():
             self.sqid_evt.wait(timeout=5)
-            if base_config.shutting_down:
+            if base_config.shutting_down or self.shutting_down:
+                debug("Received shutdown command, aborting download.")
                 return
         debug("Downloading patrol data...")
 

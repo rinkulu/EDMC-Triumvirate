@@ -210,7 +210,7 @@ class Updater:
         self.release_type: str = edmc_config.get_str(self.RELEASE_TYPE_KEY)
         if self.release_type is None:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
-            edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
+            edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type.value)
 
         saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
         self.local_version = Version(saved_version or "0.0.0")
@@ -397,7 +397,7 @@ class Updater:
                 version_mismatch = True
                 if "dev" in context.plugin_version.prerelease:
                     logger.info("Local version is of development release type, changing Updater settings.")
-                    edmc_config.set(context.updater.RELEASE_TYPE_KEY, ReleaseType._DEVELOPMENT)
+                    edmc_config.set(context.updater.RELEASE_TYPE_KEY, ReleaseType._DEVELOPMENT.value)
                     context.updater.release_type = ReleaseType._DEVELOPMENT
 
             # и лишь теперь мы можем стартовать саму версию
@@ -574,8 +574,10 @@ def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
+    logger.debug("Received shutdown signal, stopping the updater thread.")
     context.updater.stop_update_cycle()
     if context.plugin_loaded:
+        logger.debug("Passing the shutdown signal to the loaded version.")
         context.plugin_stop_hook()
 
 
@@ -619,7 +621,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     if new_reltype == ReleaseType._DEVELOPMENT:
         context.status_label.clear()
     if new_reltype != context.updater.release_type:
-        edmc_config.set(context.updater.RELEASE_TYPE_KEY, new_reltype)
+        edmc_config.set(context.updater.RELEASE_TYPE_KEY, new_reltype.value)
         context.updater.release_type = new_reltype
         context.updater.restart_update_cycle()
     if context.plugin_loaded:
