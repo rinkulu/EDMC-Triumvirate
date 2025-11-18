@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import math
 import threading
 import time
 
 from ..debug import debug
+
 
 class BasicThread(threading.Thread):
     """
@@ -13,23 +13,20 @@ class BasicThread(threading.Thread):
     """
     pool = []
     STOP_ALL = False
+    SLEEP_DURATION = 0.25
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         BasicThread.pool.append(self)
         # флаг для сигнализирования потоку, что ему пора бы остановиться
         self.STOP = False
-        self.sleep_duration = 5
 
     def sleep(self, secs: float):
-        cycles = math.ceil(secs / self.sleep_duration)
-        for x in range(cycles):
+        while secs > 0:
             if self.STOP:
                 raise ThreadExit()
-            duration = self.sleep_duration
-            if (x + 1) == cycles:
-                duration = (secs % self.sleep_duration) or self.sleep_duration
-            time.sleep(duration)
+            time.sleep(min(secs, self.SLEEP_DURATION))
+            secs -= self.SLEEP_DURATION
 
     @classmethod
     def stop_all(cls):
@@ -38,8 +35,15 @@ class BasicThread(threading.Thread):
             thread.STOP = True
 
     @classmethod
+    def join_all(cls):
+        cls.stop_all()
+        while cls.list_alive():
+            time.sleep(cls.SLEEP_DURATION)
+
+    @classmethod
     def list_alive(cls):
         return [x for x in cls.pool if x.is_alive()]
+
 
 class Thread(BasicThread):
     def run(self):

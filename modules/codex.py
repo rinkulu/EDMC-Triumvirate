@@ -12,6 +12,7 @@ from tkinter import Frame
 import tkinter as tk
 from settings import canonn_realtime_url, edsm_url
 from modules.lib.context import global_context
+from l10n import translations as tr
 
 nvl = lambda a, b: a or b
 
@@ -49,27 +50,27 @@ class poiTypes(threading.Thread):
 
 class CodexTypes(Frame):
     tooltips = {
-        "Geology": _("Geology: Vents and fumeroles"),
-        "Cloud": _("Lagrange Clouds"),
-        "Anomaly": _("Anomalous stellar phenomena"),
-        "Thargoid": _("Thargoid sites or barnacles"),
-        "Biology": _("Biological surface signals"),
-        "Guardian": _("Guardian sites"),
-        "None": _("Unclassified codex entry"),
-        "Human": _("Human Sites"),
-        "Ring": _("Planetary Ring Resources"),
-        "Other": _("Other Sites"),
-        "Planets": _("Valuable Planets"),
-        "Tourist": _("Tourist Informatiom")
+        "Geology": tr.tl("Geology: Vents and fumeroles"),
+        "Cloud": tr.tl("Lagrange Clouds"),
+        "Anomaly": tr.tl("Anomalous stellar phenomena"),
+        "Thargoid": tr.tl("Thargoid sites or barnacles"),
+        "Biology": tr.tl("Biological surface signals"),
+        "Guardian": tr.tl("Guardian sites"),
+        "None": tr.tl("Unclassified codex entry"),
+        "Human": tr.tl("Human Sites"),
+        "Ring": tr.tl("Planetary Ring Resources"),
+        "Other": tr.tl("Other Sites"),
+        "Planets": tr.tl("Valuable Planets"),
+        "Tourist": tr.tl("Tourist Informatiom")
     }
 
     body_types = {
-        'Metal-rich body': _('Metal-Rich Body'),
-        'Metal rich body': _('Metal-Rich Body'),
-        'Earth-like world': _('Earthlike World'),
-        'Earthlike body': _('Earthlike World'),
-        'Water world': _('Water World'),
-        'Ammonia world': _('Ammonia World')
+        'Metal-rich body': tr.tl('Metal-Rich Body'),
+        'Metal rich body': tr.tl('Metal-Rich Body'),
+        'Earth-like world': tr.tl('Earthlike World'),
+        'Earthlike body': tr.tl('Earthlike World'),
+        'Water world': tr.tl('Water World'),
+        'Ammonia world': tr.tl('Ammonia World')
     }
 
     bodycount = 0
@@ -650,8 +651,8 @@ class CodexTypes(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
 
-        nb.Label(frame, text=_("Настройки Кодекса")).grid(row=0, column=0, sticky="NW")
-        nb.Checkbutton(frame, text=_("Скрыть иконки кодекса"), variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
+        nb.Label(frame, text=tr.tl("Настройки Кодекса")).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text=tr.tl("Скрыть иконки кодекса"), variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
 
         return frame
 

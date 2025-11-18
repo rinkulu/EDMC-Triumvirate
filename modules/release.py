@@ -16,6 +16,7 @@ import tkinter as tk
 import zipfile
 from tkinter import Frame
 from semantic_version import Version
+import requests
 
 import myNotebook as nb
 import settings
@@ -206,7 +207,11 @@ class Release(Frame, Module):
             return
         url = settings.release_gh_latest
         client = WebClient()
-        data = client.get(url).json()
+        try:
+            data = client.get(url, timeout=10).json()
+        except requests.RequestException as e:
+            debug(f"Failed to get latest release: {e}")
+            return
         latest_tag = data["tag_name"]
         latest_version = Version(latest_tag)
         self.hyperlink["url"] = data["html_url"]
