@@ -146,7 +146,18 @@ class JournalProcessor(Thread):
                     # в кэше данных не нашлось, вытянуть с интернетов тоже не вышло
                     PluginContext.logger.warning("No info on the new system id found. Keeping the old system for now.")
 
-        # 5) Ещё неизвестные нам случаи, тут только логировать
+        # 5) Вход в игру рядом с поселением. ApproachSettlement опережает в логах Location и даже FSSSignalDiscovered
+        elif entry["event"] == "ApproachSettlement" and GameState.system_address is None:
+            sid: int = entry["SystemAddress"]
+            GameState.system_address = sid
+            GameState.system = PluginContext.systems_cache.get_system_name(sid)
+            GameState.system_coords = PluginContext.systems_cache.get_system_coords(sid)
+            PluginContext.logger.debug(
+                "Detected ApproachSettlement on game startup. "
+                f"Got system id {sid}, fetched system name {GameState.system}, fetched coords {GameState.system_coords}."
+            )
+
+        # 6) Ещё неизвестные нам случаи, тут только логировать
         elif (
             "SystemAddress" in entry
             and entry["SystemAddress"] != GameState.system_address

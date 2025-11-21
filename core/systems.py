@@ -25,6 +25,7 @@ class SystemsCache(tk.Frame):
     def __init__(self, master: tk.Misc, row: int):
         super().__init__(master)
         self._row = row
+        self._mapped = False    # вместо winfo_mapped, чтобы без задержек между потоками
         self._message = tk.Label(self, text=_translate("<SYSTEMS_MODULE_NO_COORDS_WARNING>"))
         self._message.pack(side="left")
         self._cache = sqlite3.connect(PluginContext.plugin_dir / "userdata" / "cache.db", check_same_thread=False)
@@ -57,13 +58,15 @@ class SystemsCache(tk.Frame):
     def show_coords_warning(self):
         def inner(self: SystemsCache):
             self.grid(column=0, row=self._row, sticky="NSWE")
+        self._mapped = True
         self.after(0, inner, self)
 
     def hide_coords_warning(self):
+        self._mapped = False
         self.after(0, self.grid_forget)
 
     def coords_warning_shown(self) -> bool:
-        return self.winfo_ismapped()
+        return self._mapped
 
 
     def _db_add_system(self, data: _SystemData):
