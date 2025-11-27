@@ -1,6 +1,6 @@
+import functools
 from abc import ABC, ABCMeta
 from typing import TYPE_CHECKING, final
-import functools
 
 
 if TYPE_CHECKING:

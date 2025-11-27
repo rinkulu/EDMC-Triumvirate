@@ -1,13 +1,14 @@
 import tkinter as tk
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from tkinter import ttk
-from typing import Any, Literal, TYPE_CHECKING
-from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Literal
 
 from core.context import GameState, PluginContext
 from modules.bgs.submodule_base import Submodule
 from modules.legacy import URL_GOOGLE
+
 
 if TYPE_CHECKING:
     from modules.bgs.core import BgsUiFrame
