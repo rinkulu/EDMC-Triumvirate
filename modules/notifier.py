@@ -46,7 +46,12 @@ class _Message(tk.Frame):
     def _close(self, event: tk.Event | None = None):
         if self._timer:
             self._timer.kill()      # на случай, если уведомление скрыто раньше времени
-        self.destroy()
+
+        # FIXME: это сделано для обхода бага в EDMC 6.0 - https://github.com/EDCD/EDMarketConnector/issues/2555
+        # Да, здесь успешно течёт память, но другого незатратного варианта у нас нет, пока EDCD не починят свой код.
+        # self.destroy()
+        self.grid_forget()
+
         self.master._message_destroyed(self)
 
     @classmethod
