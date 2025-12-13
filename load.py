@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import csv
-import functools
 import os
 import logging
 import webbrowser
@@ -42,8 +41,6 @@ from modules.release import Release
 from modules.systems import SystemsModule
 from modules.colonisation import DeliveryTracker
 import settings
-
-_ = functools.partial(l10n.Translations.translate, context=__file__)
 
 plugin_name = os.path.basename(os.path.dirname(__file__))
 
@@ -210,7 +207,10 @@ def plugin_stop():
     logger.debug("Stopping the plugin")
     for mod in context.modules:
         mod.close()
-    thread.Thread.stop_all()
+    this.bgs_module.stop()
+    logger.debug("Joining threads...")
+    thread.BasicThread.join_all()
+    logger.dubug("Done, exiting.")
 
 
 def kill_notification():

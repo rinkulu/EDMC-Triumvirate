@@ -1,15 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
- 
-import tkinter as tk
-from tkinter import Frame
-import logging
 
-import datetime
-import sys
-import threading
+import tkinter as tk
+import logging
+from .lib.conf import config
 
 import myNotebook as nb
-from .lib.conf import config
+from l10n import translations as tr
 
 
 class Debug:
@@ -53,7 +49,7 @@ class Debug:
         frame.columnconfigure(1, weight=1)
         frame.grid(row=0, column=0, sticky="NSEW")
 
-        nb.Checkbutton(frame, text=_("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text=tr.tl("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
 
         return frame
 
