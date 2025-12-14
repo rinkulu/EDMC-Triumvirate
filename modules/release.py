@@ -81,7 +81,7 @@ class SimpleThread(Thread):
 
 
 class Release(Frame, Module):
-    def __init__(self, plugin_dir, parent, version, gridrow):
+    def __init__(self, plugin_dir, parent, version: Version, gridrow):
 
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
@@ -216,8 +216,11 @@ class Release(Frame, Module):
         latest_version = Version(latest_tag)
         self.hyperlink["url"] = data["html_url"]
         self.hyperlink["text"] = f"EDMC-Triumvirate: {latest_tag}"
-        if latest_version == self.version:
-            self.grid_remove()
+        if latest_version.truncate() == self.version.truncate():
+            if latest_version.build != self.version.build:
+                self.hyperlink["text"] = f"Модифицированная версия {self.version}"
+            else:
+                self.grid_remove()
             return
         elif latest_version < self.version:
             self.hyperlink["text"] = f"Тестовая версия {self.version}"

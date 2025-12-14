@@ -77,12 +77,12 @@ class RegionFilterWindow(tk.Toplevel):
 
     @classmethod
     def load_config(cls) -> dict[str, bool]:
-        config = plugin_config.get_str(cls.CONFIG_KEY)
-        if config is None:
+        try:
+            config = json.loads(plugin_config.get_str(cls.CONFIG_KEY))
+        except json.JSONDecodeError:
+            debug("Biopatrol regions filter config not found or invalid, resetting to default.")
             config = {r: True for r in regions}
             plugin_config.set(cls.CONFIG_KEY, json.dumps(config, ensure_ascii=False))
-        else:
-            config = json.loads(config)
         return config
 
     def __set_all(self):
@@ -1074,7 +1074,8 @@ class BioPatrol(tk.Frame, Module):
         self.enabled_regions = [region for region, enabled in config.items() if enabled]
         self.__region_filter_window.destroy()
         self.__region_filter_window = None
-        self.__update_data_coords(self.current_coords)
+        if self.current_coords:
+            self.__update_data_coords(self.current_coords)
 
 
     def __on_old_logs_processing_requested(self, event: tk.Event):
@@ -1104,7 +1105,8 @@ class BioPatrol(tk.Frame, Module):
                 self.__live_data = True
                 self.save_data()
             debug("Finished reading old logs.")
-            self.show()
+            if self.current_coords:
+                self.show()
 
         debug("Processing of old logs was requested by the user.")
         BasicThread(name="BioPatrolOldLogsReader", target=inner).start()
