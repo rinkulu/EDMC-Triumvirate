@@ -160,7 +160,7 @@ class UpdateCycle(threading.Thread):
     Поток, крутящийся в фоне и время от времени проверяющий наличие обновлений.
     """
     UPDATE_CYCLE = 30 * 60
-    STEP = 3
+    STEP = 1
 
     def __init__(self, updater_fn: Callable, check_now: bool):
         super().__init__()
@@ -179,7 +179,7 @@ class UpdateCycle(threading.Thread):
                 tk._default_root.after(0, lambda: None)
             except RuntimeError:
                 logger.debug("Tk isn't ready yet, waiting...")
-                sleep(1)
+                sleep(self.STEP)
             else:
                 break
 
@@ -193,7 +193,6 @@ class UpdateCycle(threading.Thread):
                 timer = self.UPDATE_CYCLE
             timer -= self.STEP
             sleep(self.STEP)
-        logger.debug("UpdateCycle stopped.")
 
 
 class Updater:
@@ -228,8 +227,9 @@ class Updater:
         if not self.updater_thread:
             return
         self.updater_thread.stop()
+        self.updater_thread.join()
         self.updater_thread = None
-        logger.debug("UpdateCycle was asked to stop.")
+        logger.debug("UpdateCycle stopped.")
 
 
     def restart_update_cycle(self):
