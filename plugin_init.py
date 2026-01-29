@@ -112,4 +112,4 @@ def plugin_stop():
     PluginContext.bgs_module.stop()
     PluginContext.logger.debug("Joining threads...")
     thread.BasicThread.join_all()
-    PluginContext.logger.dubug("Done, exiting.")
+    PluginContext.logger.debug("Done, exiting.")
