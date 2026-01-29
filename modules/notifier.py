@@ -1,3 +1,4 @@
+from semantic_version import Version
 import tkinter as tk
 from pathlib import Path
 from PIL import Image, ImageTk
@@ -46,7 +47,14 @@ class _Message(tk.Frame):
     def _close(self, event: tk.Event | None = None):
         if self._timer:
             self._timer.kill()      # на случай, если уведомление скрыто раньше времени
-        self.destroy()
+
+        # Это сделано для обхода бага в EDMC 6.0 - https://github.com/EDCD/EDMarketConnector/issues/2555
+        # TODO: вернуть destroy с версии, когда будет выпущен фикс
+        if PluginContext.edmc_version >= Version("6.0.0"):
+            self.grid_forget()
+        else:
+            self.destroy()
+
         self.master._message_destroyed(self)
 
     @classmethod
