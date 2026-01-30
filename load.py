@@ -56,6 +56,7 @@ class BasicContext:
     plugin_loaded: bool             = False
     plugin_version: Version         = None
     plugin_dir: str                 = None
+    _shutdown: bool                 = False
 
     updater: "Updater"              = None
     event_queue: Queue[dict]        = Queue()
@@ -574,6 +575,12 @@ def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
+    # Пользователь может накликать кнопку отключения в настройках EDMC несколько раз,
+    # и мы получим несколько вызовов этой функции.
+    # https://github.com/EDCD/EDMarketConnector/issues/2605
+    if context._shutdown:
+        return
+    context._shutdown = True
     logger.debug("Received shutdown signal, stopping the updater thread.")
     context.updater.stop_update_cycle()
     if context.plugin_loaded:
