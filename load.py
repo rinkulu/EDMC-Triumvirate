@@ -581,11 +581,12 @@ def plugin_stop():
     if context._shutdown:
         return
     context._shutdown = True
-    logger.debug("Received shutdown signal, stopping the updater thread.")
+    logger.info("Received plugin_stop signal, starting shutdown procedures.")
     context.updater.stop_update_cycle()
     if context.plugin_loaded:
         logger.debug("Passing the shutdown signal to the loaded version.")
         context.plugin_stop_hook()
+    logger.info("Done.")
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
@@ -606,6 +607,8 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
+    if context._shutdown:   # никогда не должно произойти, но предосторожность не помешает
+        return
     # EDMC позволяет вернуть только их nb.Frame, иначе AssertionError.
     # При этом эта хрень где-то у себя в кишочках что-то маппит grid-ом,
     # поэтому использовать удобный нам pack здесь не выйдет.
@@ -622,6 +625,8 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     """
     EDMC вызывает эту функцию при сохранении настроек пользователем.
     """
+    if context._shutdown:   # никогда не должно произойти, но предосторожность не помешает
+        return
     _Translation.update_active_language(edmc_config.get_str("language"))
     new_reltype = context.settings_frame.get_selected_reltype()
     context.settings_frame = None
@@ -650,6 +655,8 @@ def journal_entry(
     """
     EDMC вызывает эту функцию при появлении новой записи в логах игры.
     """
+    if context._shutdown:
+        return
     context.event_queue.put({"type": "journal_entry", "data": (cmdr, is_beta, system, station, entry, state)})
 
 
@@ -657,6 +664,8 @@ def dashboard_entry(cmdr: str | None, is_beta: bool, entry: dict):
     """
     EDMC вызывает эту функцию при обновлении игрой status.json.
     """
+    if context._shutdown:
+        return
     context.event_queue.put({"type": "dashboard_entry", "data": (cmdr, is_beta, entry)})
 
 
@@ -664,4 +673,6 @@ def cmdr_data(data: dict, is_beta: bool):
     """
     EDMC вызывает эту функцию при получении данных о командире с серверов Frontier.
     """
+    if context._shutdown:
+        return
     context.event_queue.put({"type": "cmdr_data", "data": (data, is_beta)})

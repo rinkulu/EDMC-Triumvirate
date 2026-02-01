@@ -1,26 +1,32 @@
-from queue import Queue
+from queue import Queue, Empty
+from threading import Thread
 
 import settings
 from context import PluginContext, GameState, Flags, Flags2
 from modules import legacy
 from modules.lib.journal import JournalEntry
-from modules.lib.thread import Thread
 
 
 class JournalProcessor(Thread):
     def __init__(self):
+        self._stop = False  # флаг остановки потока
         super().__init__(name="Triumvirate journal entry processor")
-        self.queue: Queue = PluginContext._event_queue
+        self.queue: Queue[dict] = PluginContext._event_queue
         self._startup = True
 
 
-    def do_run(self):
-        while True:
-            if self.queue.empty():
-                self.sleep(1)
-                continue
+    def shutdown(self):
+        self._stop = True
+
+
+    def run(self):
+        while not (self._stop and self.queue.empty()):  # мы хотим обработать очередь ивентов до конца перед выходом
             try:
-                entry = self.queue.get(block=False)
+                entry = self.queue.get(timeout=1)
+            except Empty:
+                continue
+
+            try:
                 match entry["type"]:
                     case "journal_entry":
                         self.on_journal_entry(*entry["data"])
@@ -42,6 +48,9 @@ class JournalProcessor(Thread):
                     ),
                     timeout=0
                 )
+
+        # log on exit
+        PluginContext.logger.debug("Journal processor stopped.")
 
 
     def on_journal_entry(self, cmdr: str | None, is_beta: bool, system: str | None, station: str | None, entry: dict, state: dict):
