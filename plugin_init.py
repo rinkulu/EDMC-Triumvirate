@@ -106,7 +106,9 @@ def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
-    PluginContext.logger.debug("Stopping the plugin.")
+    PluginContext.logger.info("Stopping the plugin.")
+    PluginContext.journal_processor.set_stop()
+    PluginContext.journal_processor.join()
     for mod in PluginContext.active_modules:
         mod.on_close()
     PluginContext.bgs_module.stop()
