@@ -50,11 +50,11 @@ def update_existing_with_template():
         and f.name.endswith(".json")
         and "template" not in f.name
     ]
-    template: dict[str, dict[str, dict[str, str]]] = json.loads(template_file.read_text(encoding='utf-8'))
+    template: dict[str, dict[str, str]] = json.loads(template_file.read_text(encoding='utf-8'))
     global_missing = set()
 
     for langfile in lang_files:
-        lang: dict[str, dict[str, dict[str, str]]] = json.loads(langfile.read_text(encoding='utf-8'))
+        lang: dict[str, dict[str, str]] = json.loads(langfile.read_text(encoding='utf-8'))
         updated = lang.copy()
         print(f"Comparing the template with '{langfile}'...")
 
