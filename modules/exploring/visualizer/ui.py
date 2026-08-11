@@ -1,20 +1,23 @@
 import tkinter as tk
-from tkinter import ttk, PhotoImage
-from pathlib import Path
-from typing import Callable, Any
+from collections.abc import Callable
+from tkinter import PhotoImage, ttk
+from typing import Any
 
-from context import PluginContext
-from settings import poi_categories as CATEGORIES
-from .table import Table
+import myNotebook as nb  # type: ignore
+from theme import theme  # type: ignore
+
+from core.context import PluginContext
+from core.debug import debug
+from core.settings import poi_categories as CATEGORIES
+
 from ._dataitem import _DataItem
-from modules.debug import debug
+from .table import Table
 
-import myNotebook as nb             # type: ignore
-from theme import theme             # type: ignore
 
-# Подключение функции перевода
+# isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 categories_localized = {
@@ -113,7 +116,7 @@ class _IconButton(tk.Frame):
         self.category = category
         self.__callback = callback
 
-        icons_path = Path(PluginContext.plugin_dir, "icons")
+        icons_path = PluginContext.plugin_dir / "icons"
         self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
         self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 

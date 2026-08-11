@@ -3,13 +3,14 @@
 """
 from datetime import datetime
 
-import settings
-from l10n import Locale         # type: ignore
+from l10n import Locale  # type: ignore
 
-from context import PluginContext
-from modules.debug import debug
-from modules.lib.spreadsheet import Spreadsheet
+from core import settings
+from core.context import PluginContext
+from core.debug import debug
+from lib.spreadsheet import Spreadsheet
 from modules.patrol.patrol import build_patrol
+
 
 EXCLUDE = {"Basta", "Hide", "Cancel"}
 
@@ -58,7 +59,7 @@ def new_bgs_patrol(bgs, faction, override):
     return build_patrol(
         type="BGS",
         system=system,
-        coords=PluginContext.systems_module.get_system_coords(system),
+        coords=PluginContext.systems_cache.get_system_coords(system),
         instructions=get_bgs_instructions(bgs, faction),
         url="https://elitebgs.app/systems/{}".format(bgs.get("system_id")),
     )

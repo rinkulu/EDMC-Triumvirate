@@ -1,4 +1,4 @@
-from config import config as base_config        # type: ignore
+from config import config as base_config  # type: ignore
 
 
 class Config:

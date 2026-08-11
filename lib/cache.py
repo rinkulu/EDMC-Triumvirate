@@ -1,5 +1,5 @@
-from .thread import Thread
-from ..debug import debug
+from core.debug import debug
+from lib.thread import Thread
 
 
 class Cache(Thread):

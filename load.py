@@ -1,19 +1,20 @@
 """
 ПРЕДУПРЕЖДЕНИЕ ПОТОМКАМ И БУДУЩЕМУ СЕБЕ
 Текущий механизм автообновлений плагина подразумевает, что импорты из других файлов плагина здесь НЕ РАЗРЕШЕНЫ!
-Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
+Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в core/plugin_init.py.
 """
 
-import json
-import os
-import logging
 import functools
+import json
+import logging
+import os
 import requests
 import shutil
 import tempfile
 import threading
 import tkinter as tk
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -21,14 +22,13 @@ from queue import Queue
 from semantic_version import Version
 from time import sleep
 from tkinter import ttk
-from typing import Callable
 
-from l10n import Locale                             # type: ignore
-import myNotebook as nb                             # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel        # type: ignore
-from config import appname, appversion              # type: ignore
-from config import config as edmc_config            # type: ignore
-from theme import theme                             # type: ignore
+import myNotebook as nb  # type: ignore
+from config import appname, appversion  # type: ignore
+from config import config as edmc_config  # type: ignore
+from l10n import Locale  # type: ignore
+from theme import theme  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 
 # Дефолтная конфигурация логгера. Требование EDMC
@@ -55,7 +55,7 @@ class BasicContext:
     edmc_version: Version           = appversion() if callable(appversion) else Version(appversion)
     plugin_loaded: bool             = False
     plugin_version: Version         = None
-    plugin_dir: str                 = None
+    plugin_dir: Path                = None
     _shutdown: bool                 = False
 
     updater: "Updater"              = None
@@ -96,7 +96,7 @@ class _Translation:
             logger.debug(f"Unsupported system language ({sys_lang}).")
             cls.system_language = sys_lang
 
-        translations_dir = Path(context.plugin_dir) / "translations"
+        translations_dir = context.plugin_dir / "translations"
         if not translations_dir.exists():
             logger.error("Couldn't find the directory with the translation files.")
             return
@@ -203,6 +203,7 @@ class Updater:
     RELEASE_TYPE_KEY = "Triumvirate.Updater.ReleaseType"
     LOCAL_VERSION_KEY = "Triumvirate.Updater.LocalVersion"
     REPOSITORY_PATH = "Close-Encounters-Corps/EDMC-Triumvirate"
+    VERSION_FILE_NAME = ".version"
 
     def __init__(self):
         self.updater_thread: UpdateCycle = None
@@ -212,8 +213,8 @@ class Updater:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type.value)
 
-        saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
-        self.local_version = Version(saved_version or "0.0.0")
+        self.version_file_path = Path(context.plugin_dir) / self.VERSION_FILE_NAME
+        self.local_version = Version(self.version_file_path.read_text())
 
 
     def start_update_cycle(self, _check_now: bool = False):
@@ -244,15 +245,6 @@ class Updater:
         if self.release_type == ReleaseType._DEVELOPMENT:
             logger.info("Release type is Development, stopping the updating process.")
             self.stop_update_cycle()
-            self.__use_local_version()
-            return
-
-        if self.local_version == Version("0.0.0"):
-            # первый запуск плагина после обновления до 1.12.0
-            logger.info((
-                "No saved local version info found. "
-                "Assuming 1.12.0 or higher is installed for the first time, stopping the updating process."
-            ))
             self.__use_local_version()
             return
 
@@ -352,8 +344,9 @@ class Updater:
         shutil.rmtree(tempdir)
 
         # обновляем запись о локальной версии
-        edmc_config.set(self.LOCAL_VERSION_KEY, str(tag))
         self.local_version = tag
+        if (file_version := Version(self.version_file_path.read_text())) != tag:
+            logger.warning(f"New .version ({file_version}) doesn't match the tag ({tag}).")
         logger.info(f"Done. Local version set to {tag}.")
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
@@ -370,40 +363,29 @@ class Updater:
         if context.plugin_loaded:
             return
 
-        def __inner(self):
+        def __inner(self: Updater):
             logger.info("Loading local version the in main thread...")
-            if not Path(context.plugin_dir, "context.py").exists():
+            if not Path(context.plugin_dir, "core", "context.py").exists():
                 logger.error("`context` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
-            if not Path(context.plugin_dir, "plugin_init.py").exists():
+            if not Path(context.plugin_dir, "core", "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
 
             # сначала инициализируем контекст версии уже созданными объектами
-            from context import PluginContext as VersionContext
+            from core.context import PluginContext as VersionContext
             VersionContext.logger = logger
             VersionContext.plugin_dir = context.plugin_dir
+            VersionContext.plugin_version = context.plugin_version
+            VersionContext.client_version = f"{VersionContext.plugin_name}.{VersionContext.plugin_version}"
             VersionContext.edmc_version = context.edmc_version
             VersionContext._tr_template = _Translation.translate
             VersionContext._event_queue = context.event_queue
 
-            version_mismatch = False
-            context.plugin_version = VersionContext.plugin_version
-            if self.local_version != context.plugin_version:
-                logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
-                edmc_config.set(self.LOCAL_VERSION_KEY, str(context.plugin_version))
-                self.local_version = context.plugin_version
-                logger.warning(f"Local version set to {context.plugin_version}.")
-                version_mismatch = True
-                if "dev" in context.plugin_version.prerelease:
-                    logger.info("Local version is of development release type, changing Updater settings.")
-                    edmc_config.set(context.updater.RELEASE_TYPE_KEY, ReleaseType._DEVELOPMENT.value)
-                    context.updater.release_type = ReleaseType._DEVELOPMENT
-
             # и лишь теперь мы можем стартовать саму версию
-            import plugin_init
+            import core.plugin_init as plugin_init
             context.plugin_stop_hook = plugin_init.plugin_stop
             context.plugin_prefs_hook = plugin_init.plugin_prefs
             context.prefs_changed_hook = plugin_init.prefs_changed
@@ -424,13 +406,12 @@ class Updater:
 
             context.plugin_loaded = True
             logger.info("Local version configured, running.")
-            if version_mismatch:
-                context.updater.restart_update_cycle()
 
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         # грузим версию в главном потоке
+        context.plugin_version = self.local_version
         logger.info("IGNORE THE FOLLOWING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
         tk._default_root.after(0, __inner, self)
 
@@ -557,12 +538,12 @@ def plugin_start(plugin_dir):
     raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
 
-def plugin_start3(plugin_dir: str) -> str:
+def plugin_start3(plugin_dir_str: str) -> str:
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
-    context.plugin_dir = plugin_dir
+    context.plugin_dir = Path(plugin_dir_str)
     _Translation.setup()
     _Translation.update_active_language(edmc_config.get_str("language"))
 

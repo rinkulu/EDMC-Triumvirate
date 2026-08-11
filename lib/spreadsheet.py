@@ -1,8 +1,8 @@
 import csv
+import requests
 from contextlib import closing
 
-import requests
-from ..debug import debug
+from core.debug import debug
 
 
 class BytesDecoder:

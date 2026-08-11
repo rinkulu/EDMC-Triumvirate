@@ -1,14 +1,16 @@
-import requests
 import json
+import requests
 from datetime import datetime, timedelta
 
-from context import PluginContext, GameState
-from settings import canonn_cloud_url_us_central, canonn_cloud_url_europe_west
-from modules.debug import info, debug, error
-from modules.lib.module import Module
-from modules.lib.journal import JournalEntry
-from modules.lib.thread import Thread, BasicThread
-from modules.lib.timer import Timer
+from core.context import GameState, PluginContext
+from core.debug import debug, error
+from core.settings import (
+    canonn_cloud_url_europe_west, canonn_cloud_url_us_central
+)
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import BasicThread, Thread
+from lib.timer import Timer
 
 
 class CanonnReporter(BasicThread):
@@ -57,7 +59,7 @@ class HDDetector:
 
     def __init__(self):
         self.departure_system: str          = None
-        self.destination_system: str        = None
+        self.destination_system_id: int     = None
         self.departure_timestamp: datetime  = None
         self.status = self.SAFE
         self._timer: Timer | None = None
@@ -69,7 +71,7 @@ class HDDetector:
 
         if event == "StartJump" and entry["JumpType"] == "Hyperspace":
             self.departure_system = journalEntry.system
-            self.destination_system = entry["StarSystem"]
+            self.destination_system_id = entry["SystemAddress"]
             self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
 
         elif event == "FSDJump":
@@ -112,21 +114,26 @@ class HDDetector:
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
 
         x, y, z    = journalEntry.coords
-        dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system)
-
-        url = f"{canonn_cloud_url_europe_west}/postHDDetected"
-        params = {
-            "cmdr": journalEntry.cmdr,
-            "system": journalEntry.system,
-            "timestamp": journalEntry.data["timestamp"],
-            "x": x, "y": y, "z": z,
-            "destination": self.destination_system,
-            "dx": dx, "dy": dy, "dz": dz,
-            "client": PluginContext.client_version,
-            "odyssey": GameState.odyssey,
-            "hostile": self.status == self.HOSTILE
-        }
-        CanonnReporter(url, params).start()
+        dx, dy, dz = PluginContext.systems_cache.get_system_coords(self.destination_system_id)
+        if None in (x, y, z):
+            PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
+        elif None in (dx, dy, dz):
+            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords.")
+        else:
+            url = f"{canonn_cloud_url_europe_west}/postHDDetected"
+            params = {
+                "cmdr": journalEntry.cmdr,
+                "system": journalEntry.system,
+                "timestamp": journalEntry.data["timestamp"],
+                "x": x, "y": y, "z": z,
+                # если есть координаты - есть и название, можно на None не проверять
+                "destination": PluginContext.systems_cache.get_system_name(self.destination_system_id),
+                "dx": dx, "dy": dy, "dz": dz,
+                "client": PluginContext.client_version,
+                "odyssey": GameState.odyssey,
+                "hostile": (self.status == self.HOSTILE)
+            }
+            CanonnReporter(url, params).start()
 
         # сбрасываем состояние до следующего перехвата
         self.status = self.SAFE
@@ -140,7 +147,7 @@ class HDDetector:
             system = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
-            x, y, z = PluginContext.systems_module.get_system_coords(system)
+            x, y, z = PluginContext.systems_cache.get_system_coords(system)
 
             gametime = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
             year, remainder = gametime.split("-", 1)

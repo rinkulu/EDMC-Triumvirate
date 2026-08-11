@@ -136,15 +136,3 @@ poi_categories = [
     "Tourist",
     "None"
 ]
-
-
-#############
-### other ###
-#############
-version = "1.12.0-beta-2.hf12"     # семантическое версионирование
-
-
-try:
-    from settings_local import *
-except ImportError:
-    pass

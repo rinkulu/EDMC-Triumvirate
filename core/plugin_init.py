@@ -1,28 +1,31 @@
 import tkinter as tk
 from tkinter import ttk
 
-from context import PluginContext
-from journal_processor import JournalProcessor
+import myNotebook as nb  # type: ignore
+
+from core.config import base_config as edmc_config
+from core.context import PluginContext
+from core.debug import Debug
+from core.journal_processor import JournalProcessor
+from core.notifier import Notifier
+from core.sound_player import Player
+from core.systems import SystemsCache
+from lib import thread
+from lib.module import Module
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.colonisation import DeliveryTracker
-from modules.debug import Debug
-from modules.fc_tracker import FC_Tracker
-from modules.notifier import Notifier
-from modules.patrol import PatrolModule
-from modules.systems import SystemsModule
-from modules.squadron import Squadron_Tracker
 from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
-from modules.lib import thread
-from modules.lib.module import Module
-
-import myNotebook as nb                         # type: ignore
-from config import config as edmc_config        # type: ignore
+from modules.fc_tracker import FC_Tracker
+from modules.patrol import PatrolModule
+from modules.squadron import Squadron_Tracker
 
 
 def init_version():
     Debug.setup(PluginContext.logger)
+    PluginContext.sound_player = Player()
+
     # очистка устаревших ключей конфигурации
     edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
     edmc_config.delete("Triumvirate.Canonn", suppress=True)
@@ -30,6 +33,7 @@ def init_version():
     # edmc_config.delete("Triumvirate.CanonnDebug", suppress=True)
     # edmc_config.delete("Triumvirate.DisableAutoUpdate", suppress=True)
     # edmc_config.delete("Triumvirate.RemoveBackup", suppress=True)
+    # edmc_config.delete("Triumvirate.Updater.LocalVersion", supress=True)
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
@@ -39,14 +43,14 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     """
     frame = tk.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
-    PluginContext.notifier = Notifier(frame, 3)    # его надо инициализировать первым, но маппить в самый низ
-    PluginContext.exp_visualizer = Visualizer(frame, 0)
-    PluginContext.patrol_module = PatrolModule(frame, 1)
-    PluginContext.fc_tracker = FC_Tracker(frame, 2)
+    PluginContext.notifier = Notifier(frame, 4)    # его надо инициализировать первым, но маппить в самый низ
+    PluginContext.systems_cache = SystemsCache(frame, 0)
+    PluginContext.exp_visualizer = Visualizer(frame, 1)
+    PluginContext.patrol_module = PatrolModule(frame, 2)
+    PluginContext.fc_tracker = FC_Tracker(frame, 3)
+    PluginContext.bgs_module = BGS(frame, 4)
 
     # эти модули не имеют UI, но стартуем их здесь же
-    PluginContext.systems_module = SystemsModule()
-    PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
     PluginContext.sq_tracker = Squadron_Tracker()
@@ -111,7 +115,6 @@ def plugin_stop():
     PluginContext.journal_processor.join()
     for mod in PluginContext.active_modules:
         mod.on_close()
-    PluginContext.bgs_module.stop()
     PluginContext.logger.debug("Joining threads...")
     thread.BasicThread.join_all()
     PluginContext.logger.debug("Done, exiting.")

@@ -16,28 +16,29 @@
 import json
 import math
 import os
+import requests
 import threading
 import tkinter as tk
 from tkinter import Frame
 from urllib.parse import quote_plus
 
-import requests
+import myNotebook as nb  # type: ignore
+from l10n import Locale  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
-import myNotebook as nb                         # type: ignore
-from l10n import Locale                         # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel    # type: ignore
-import settings
+from core import settings
+from core.config import base_config, config
+from core.context import GameState, PluginContext
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import Thread, ThreadExit
 
-from context import PluginContext, GameState
+from .bgs import BGSTasksOverride, new_bgs_patrol
 from .canonn import CanonnPatrols
-from .patrol import build_patrol
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
-from .bgs import BGSTasksOverride, new_bgs_patrol
-from ..lib.conf import config, base_config
-from ..lib.thread import Thread, ThreadExit
-from ..lib.journal import JournalEntry
-from ..lib.module import Module
+from .patrol import build_patrol
+
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 
@@ -312,7 +313,7 @@ class PatrolModule(Frame, Module):
         same_system = (
             nearest_system.upper() == entry.system.upper() if nearest_system else False
         )
-        if event in {"Location", "FSDJump", "StartUp"}:
+        if event in {"Location", "FSDJump", "CarrierJump", "StartUp"}:
             debug(f"Refreshing Patrol ({event})")
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
@@ -369,7 +370,7 @@ class PatrolModule(Frame, Module):
             shipsystems[ship_system].append(ships[ship])
 
         for system, ships in shipsystems.items():
-            ship_pos = PluginContext.systems_module.get_system_coords(system)
+            ship_pos = PluginContext.systems_cache.get_system_coords(system)
             ship_count = len(ships)
             if ship_count == 1:
                 ship = ships[0]
@@ -456,7 +457,7 @@ class PatrolModule(Frame, Module):
 
         if journal_update or capi_update:
             self.sort_patrol()
-            p = PluginContext.systems_module.get_system_coords(self.system)
+            p = PluginContext.systems_cache.get_system_coords(self.system)
             self.nearest = self.get_nearest(p)
             self.hyperlink["text"] = self.nearest.get("system")
             self.hyperlink[
@@ -542,7 +543,7 @@ class PatrolModule(Frame, Module):
         return r
 
     def keyval(self, k):
-        x, y, z = PluginContext.systems_module.get_system_coords(self.system)
+        x, y, z = PluginContext.systems_cache.get_system_coords(self.system)
         return distance_between((x, y, z), k.get("coords"))
 
     def sort_patrol(self):

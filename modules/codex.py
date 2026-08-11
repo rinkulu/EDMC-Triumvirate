@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-import myNotebook as nb         # type: ignore
 import os
 import requests
 import threading
-import traceback
-from modules.debug import debug, error
-from .lib.conf import config
-from math import sqrt, pow
-from urllib.parse import quote_plus, unquote
-from tkinter import Frame
 import tkinter as tk
-from settings import edsm_url, canonn_cloud_url_us_central
-from context import GameState, PluginContext
+import traceback
+from math import pow, sqrt
+from tkinter import Frame
+from urllib.parse import quote_plus, unquote
+
+from core.config import config
+from core.context import GameState, PluginContext
+from core.debug import debug, error
+from core.settings import canonn_cloud_url_us_central, edsm_url
+
+import myNotebook as nb  # type: ignore
 
 # функция перевода
 import functools
@@ -497,7 +499,7 @@ class CodexTypes(Frame):
             debug("Looking for POI data in {}".format(system))
             poiTypes(system, cmdr, self.getdata).start()
 
-        if entry.get("event") in ("Location", "StartUp", "FSDJump"):
+        if entry.get("event") in ("Location", "StartUp", "FSDJump", "CarrierJump"):
             if entry.get("SystemAllegiance") in ("Thargoid", "Guardian"):
                 self.merge_poi(entry.get("SystemAllegiance"), "{} Controlled".format(entry.get("SystemAllegiance")), "")
 

@@ -1,14 +1,16 @@
 import requests
 
-from context import PluginContext, GameState
-from settings import poi_categories, canonn_cloud_url_us_central
-from modules.debug import debug, warning
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
+from core.context import GameState, PluginContext
+from core.debug import debug, warning
+from core.settings import canonn_cloud_url_us_central, poi_categories
+from lib.journal import JournalEntry
+from lib.module import Module
 
-# Подключение функции перевода
+
+# isort: off
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 class CanonnCodexPOI(Module):
@@ -29,9 +31,10 @@ class CanonnCodexPOI(Module):
             self.destination_system = entry.data.get("StarSystem")
         elif event == "FSDJump":
             if (system := entry.data["StarSystem"]) == self.destination_system:
+                # в противном случае это, скорее всего, таргоидский перехват, и мы всё ещё в старой системе
                 self.fetch_data(system)
             self.destination_system = None
-        elif event == "Location":
+        elif event in ("Location", "CarrierJump"):
             self.fetch_data(entry.data["StarSystem"])
 
 

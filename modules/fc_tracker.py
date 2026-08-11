@@ -2,27 +2,30 @@ import json
 import requests
 import tkinter as tk
 import traceback
-from dataclasses import dataclass, fields, asdict
-from datetime import datetime, UTC
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, fields
+from datetime import UTC, datetime
 from enum import Enum
 from tkinter import ttk
-from typing import Callable, Any
+from typing import Any
 
-from context import GameState
-from modules.debug import debug, error, warning
+import myNotebook as nb  # type: ignore
+from theme import theme  # type: ignore
+
+from core.config import config as plugin_config
+from core.context import GameState
+from core.debug import debug, error, warning
+from lib.journal import JournalEntry
+from lib.module import Module
+from lib.thread import BasicThread
 from modules.legacy import GoogleReporter
-from modules.lib.conf import config as plugin_config
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
-from modules.lib.thread import BasicThread
 
-import myNotebook as nb             # type: ignore
-from theme import theme             # type: ignore
 
-# Подключение функции перевода
+# isort: off
 import functools
-from context import PluginContext
+from core.context import PluginContext
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 
 # Эксперимент: декоратор для UI методов, чтобы везде tk.after не пихать
@@ -82,7 +85,8 @@ class FCData:
         return result
 
     def reset(self):
-        map(lambda f: setattr(self, f.name, f.default), fields(self))
+        for f in fields(self):
+            setattr(self, f.name, f.default)
 
 
 ##############
@@ -177,7 +181,7 @@ class SettingsFrame(tk.Frame):
         )
         self.disable_access_warnings_checkbox.pack(side="top", fill="x")
 
-        self.no_fc_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
+        self.no_fc_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
         self.fc_info_frame = FCInfoFrame(self, config)
         self.info_missing_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
         self.access_warning_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
@@ -226,7 +230,7 @@ class FCModuleFrame(tk.Frame):
         label.grid(row=0, column=0, sticky="NWSE")
 
         button = nb.Button(frame, text=_translate("I don't have a fleet carrier"))
-        button_dark = tk.Label(frame, text=_translate("I don't have a fleet carrier"))
+        button_dark = tk.Label(frame, fg="white", text=_translate("I don't have a fleet carrier"))
         grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
         theme.register_alternate(
             (button, button_dark, button_dark),
@@ -269,7 +273,7 @@ class FCModuleFrame(tk.Frame):
         label.grid(row=0, column=0, sticky="NWSE")
 
         button = nb.Button(frame, command=self.hide, text=_translate("Close"))
-        button_dark = tk.Label(frame, text=_translate("Close"))
+        button_dark = tk.Label(frame, fg="white", text=_translate("Close"))
         grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
         theme.register_alternate(
             (button, button_dark, button_dark),

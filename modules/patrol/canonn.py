@@ -1,12 +1,11 @@
-from contextlib import closing
 import csv
-
 import requests
+from contextlib import closing
 
-from settings import canonn_patrols_url
+from core.debug import debug, error
+from core.settings import canonn_patrols_url
+from lib.spreadsheet import Spreadsheet
 
-from ..lib.spreadsheet import Spreadsheet
-from ..debug import debug, error
 from .patrol import build_patrol
 
 

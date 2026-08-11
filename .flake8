@@ -1,0 +1,7 @@
+[flake8]
+exclude = .git,.venv,__pycache__
+max-line-length = 135
+
+# E303 Too many blank lines (3): Two blank lines are expected between functions and classes and one blank line is expected between methods of a class.
+# W503 Line break occurred before a binary operator
+extend-ignore = E303,W503

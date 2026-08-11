@@ -1,8 +1,8 @@
+import json
 import os.path
 
-import json
+from core.context import PluginContext
 
-from context import PluginContext
 
 class PatrolExclusions(dict):
     def __init__(self, path, **kwargs):

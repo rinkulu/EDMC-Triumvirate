@@ -1,7 +1,9 @@
-from typing import Callable, Any
+from collections.abc import Callable
 from tkinter import _default_root
-from modules.lib.thread import Thread, ThreadExit
-from modules.debug import debug
+from typing import Any
+
+from core.debug import debug
+from lib.thread import Thread, ThreadExit
 
 
 class Timer(Thread):

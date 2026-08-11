@@ -2,7 +2,7 @@
 import threading
 import time
 
-from ..debug import debug
+from core.debug import debug
 
 
 class BasicThread(threading.Thread):

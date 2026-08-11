@@ -1,10 +1,11 @@
 import tkinter as tk
 
-from settings import poi_categories as CATEGORIES
-from .ui import VisualizerView
+from core.settings import poi_categories as CATEGORIES
+from lib.journal import JournalEntry
+from lib.module import Module
+
 from .model import VisualizerModel
-from modules.lib.journal import JournalEntry
-from modules.lib.module import Module
+from .ui import VisualizerView
 
 
 class VisualizerController(Module):
