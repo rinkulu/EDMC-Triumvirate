@@ -16,19 +16,19 @@ import tkinter as tk
 import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from queue import Queue
 from semantic_version import Version
 from time import sleep
 from tkinter import ttk
 
-import myNotebook as nb  # type: ignore
-from config import appname, appversion  # type: ignore
-from config import config as edmc_config  # type: ignore
-from l10n import Locale  # type: ignore
-from theme import theme  # type: ignore
-from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
+import myNotebook as nb  # pyright: ignore[reportMissingImports]
+from config import appname, appversion  # pyright: ignore[reportMissingImports]
+from config import config as edmc_config  # pyright: ignore[reportMissingImports]
+from l10n import Locale  # pyright: ignore[reportMissingImports]
+from theme import theme  # pyright: ignore[reportMissingImports]
+from ttkHyperlinkLabel import HyperlinkLabel  # pyright: ignore[reportMissingImports]
 
 
 # Дефолтная конфигурация логгера. Требование EDMC
@@ -51,35 +51,49 @@ class BasicContext:
     """
     Хранилище объектов и параметров, используемых до загрузки версии.
     По сути нужно лишь для того, чтобы не засорять код global-ами.
+
+    ВАЖНО: часть объектов, помеченная конкретными типами, на деле инициализируется в None
+    с подавлением ошибок. Эти объекты создаются в процессе запуска EDMC и плагина
+    в функциях `plugin_start3` и `plugin_app`. Это сделано осознанно, т.к. предполагается,
+    что любые действия обновлятор и плагин в целом должны проводить только после полной
+    инициализации EDMC. Если вы попытаетесь их использовать слишком рано и логичным образом
+    нарветесь на эксепшены, вина на вас.
     """
-    edmc_version: Version           = appversion() if callable(appversion) else Version(appversion)
-    plugin_loaded: bool             = False
-    plugin_version: Version         = None
-    plugin_dir: Path                = None
-    _shutdown: bool                 = False
+    plugin_name: str = "Triumvirate"
+    edmc_version: Version = appversion() if callable(appversion) else Version(appversion)  # pyright: ignore[reportAssignmentType]
+    event_queue: Queue[dict] = Queue()
+    _shutdown: bool = False
 
-    updater: "Updater"              = None
-    event_queue: Queue[dict]        = Queue()
+    # инициализируется в plugin_start3
+    plugin_dir: Path = None  # pyright: ignore[reportAssignmentType]
 
-    plugin_frame: tk.Frame          = None
-    plugin_ui: tk.Misc              = None
-    status_label: "StatusLabel"     = None
-    version_frame: "VersionFrame"   = None
-    settings_frame: "ReleaseTypeSettingFrame" = None
+    # инициализируются в plugin_app
+    updater: "Updater" = None  # pyright: ignore[reportAssignmentType]
+    plugin_frame: tk.Frame = None  # pyright: ignore[reportAssignmentType]
+    status_label: "StatusLabel" = None  # pyright: ignore[reportAssignmentType]
 
-    plugin_stop_hook: Callable      = None
-    plugin_prefs_hook: Callable     = None
-    prefs_changed_hook: Callable    = None
+    # создается в plugin_prefs, сбрасывается в None в prefs_changed
+    settings_frame: "ReleaseTypeSettingFrame | None" = None
 
-context = BasicContext()        # noqa: E305
+    # выставляются после инициализации версии и больше не могут быть изменены без перезапуска EDMC
+    plugin_loaded: bool = False
+    plugin_version: Version | None = None
+    version_frame: "VersionFrame | None" = None
+    plugin_ui: tk.Misc | None = None
+    plugin_stop_hook: Callable | None = None
+    plugin_prefs_hook: Callable | None = None
+    prefs_changed_hook: Callable | None = None
+
+
+context = BasicContext()
 
 
 # Механизм перевода
 # Из-за ограничений механизма локализации EDMC будем использовать свой
 class _Translation:
     fallback_language = "en"
-    system_language: str = None
-    selected_language: str = None
+    system_language: str
+    selected_language: str
     available_languages: list[str] = []
     _strings: dict[str, dict[str, dict[str, str]]] = {}     # {"lang": {"file": {"key": "value"}}}
 
@@ -133,7 +147,7 @@ class _Translation:
         logger.info(f"Selected language set to {cls.selected_language}.")
 
     @classmethod
-    def translate(cls, x: str, filepath: str, lang: str = None):
+    def translate(cls, x: str, filepath: str, lang: str | None = None):
         if lang not in cls.available_languages:
             lang = cls.selected_language
 
@@ -150,10 +164,10 @@ _translate = functools.partial(_Translation.translate, filepath=__file__)
 
 # Механизм обновления плагина
 
-class ReleaseType(str, Enum):
+class ReleaseType(StrEnum):
     STABLE = "Stable"
     BETA = "Beta"
-    _DEVELOPMENT = "Development"        # не должен быть публичным, тк, по сути, отключает автообновление
+    _DEVELOPMENT = "Development"  # не должен быть публичным, тк, по сути, отключает автообновление
 
 
 class UpdateCycle(threading.Thread):
@@ -165,30 +179,18 @@ class UpdateCycle(threading.Thread):
 
     def __init__(self, updater_fn: Callable, check_now: bool):
         super().__init__()
-        self._stop = False      # флаг остановки потока
+        self._stop = threading.Event()  # флаг остановки потока
         self._updater_fn = updater_fn
         self._check_now = check_now
 
     def stop(self):
-        self._stop = True
+        self._stop.set()
 
     def run(self):
-        # прежде чем запускать процесс обновления, подождём, пока EDMC создаст своё окно
-        # увы, winfo_ismapped до этого момента работать тоже не будет, поэтому придётся поколхозничать
-        while not self._stop:
-            try:
-                tk._default_root.after(0, lambda: None)
-            except RuntimeError:
-                logger.debug("Tk isn't ready yet, waiting...")
-                sleep(self.STEP)
-            else:
-                break
-
         if self._check_now:
             self._updater_fn()
-
         timer = self.UPDATE_CYCLE
-        while not (self._stop or edmc_config.shutting_down):
+        while not (self._stop.is_set() or edmc_config.shutting_down):
             if timer <= 0:
                 self._updater_fn()
                 timer = self.UPDATE_CYCLE
@@ -200,27 +202,31 @@ class Updater:
     """
     Класс, отвечающий за загрузку, распаковку, проверку и установку обновлений плагина.
     """
+    DEFAULT_RELEASE_TYPE = ReleaseType.BETA  # TODO: изменить на STABLE после выпуска 1.12.0
     RELEASE_TYPE_KEY = "Triumvirate.Updater.ReleaseType"
     LOCAL_VERSION_KEY = "Triumvirate.Updater.LocalVersion"
     REPOSITORY_PATH = "Close-Encounters-Corps/EDMC-Triumvirate"
     VERSION_FILE_NAME = ".version"
 
     def __init__(self):
-        self.updater_thread: UpdateCycle = None
-
-        self.release_type: str = edmc_config.get_str(self.RELEASE_TYPE_KEY)
-        if self.release_type is None:
-            self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
-            edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type.value)
-
+        self.updater_thread: UpdateCycle | None = None
         self.version_file_path = Path(context.plugin_dir) / self.VERSION_FILE_NAME
         self.local_version = Version(self.version_file_path.read_text())
 
+        saved_rt = edmc_config.get_str(self.RELEASE_TYPE_KEY)
+        if saved_rt not in ReleaseType:
+            logger.info(f"Missing or invalid saved release type: {saved_rt!r}. Resetting to default ({self.DEFAULT_RELEASE_TYPE}).")
+            edmc_config.set(self.RELEASE_TYPE_KEY, self.DEFAULT_RELEASE_TYPE)
+            saved_rt = self.DEFAULT_RELEASE_TYPE
+        else:
+            saved_rt = ReleaseType(saved_rt)
+        self.release_type = saved_rt
 
-    def start_update_cycle(self, _check_now: bool = False):
+
+    def start_update_cycle(self, check_now: bool = False):
         if self.updater_thread:
             return
-        self.updater_thread = UpdateCycle(self.__check_for_updates, _check_now)
+        self.updater_thread = UpdateCycle(self.__check_for_updates, check_now)
         self.updater_thread.start()
         logger.debug("UpdateCycle started.")
 
@@ -237,7 +243,7 @@ class Updater:
 
     def restart_update_cycle(self):
         self.stop_update_cycle()
-        self.start_update_cycle(_check_now=True)
+        self.start_update_cycle(check_now=True)
 
 
     def __check_for_updates(self):
@@ -280,16 +286,12 @@ class Updater:
             context.status_label.clear()
             self.__use_local_version()
         else:
-            if latest < self.local_version:
-                logger.info((f"Remote version ({latest}) is lower than the local one ({self.local_version}). "
-                             "A downgrade is required."))
-            else:
-                logger.info(f"Found an update: {self.local_version} -> {latest}.")
-
+            logger.info(f"Remote version ({latest}) doesn't match the local one ({self.local_version}).")
             if not context.plugin_loaded:
+                logger.info("Plugin not loaded yet, proceeding to downloading.")
                 self.__download_update(latest)
             else:
-                logger.info("Notifying user.")
+                logger.info("Plugin already loaded - can't update without a restart. Notifying the user.")
                 context.status_label.set_text(
                     _translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest))
                 )
@@ -298,7 +300,7 @@ class Updater:
     def __download_update(self, tag: Version):
         context.status_label.set_text(_translate("Downloading an update..."))
         url = f"https://api.github.com/repos/{self.REPOSITORY_PATH}/zipball/{tag}"
-        tempdir = Path(tempfile.gettempdir()) / "EDMC-Triumvirate"
+        tempdir = Path(tempfile.gettempdir()) / f"EDMC-{context.plugin_name}"
         if tempdir.exists():
             shutil.rmtree(tempdir)
         tempdir.mkdir()
@@ -318,16 +320,21 @@ class Updater:
             context.status_label.set_text(_translate("Error: couldn't download an update."))
             self.__use_local_version()
             return
+        except Exception as e:
+            logger.error("Unexpected error while downloading the update! Exception info:", exc_info=e)
+            context.status_label.set_text(_translate("Failed to update the plugin - unexpected error!"))
+            self.__use_local_version()
+            return
 
         # распаковываем
         context.status_label.set_text(_translate("Installing an update..."))
         logger.info("Extracting the new version archive to the temporary directory...")
-        with zipfile.ZipFile(version_zip, 'r') as zipf:
-            zipf.extractall(tempdir)
+        with zipfile.ZipFile(version_zip, 'r') as zf:
+            zf.extractall(tempdir)
         version_zip.unlink()
 
         # сверяем текущий load.py с новым - это нам понадобится в будущем
-        new_ver_path = next(tempdir.iterdir())      # гитхаб оборачивает файлы в отдельную директорию
+        new_ver_path = next(tempdir.iterdir())  # гитхаб оборачивает файлы в отдельную директорию
         loadpy_was_edited = self.__files_differ(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"))
 
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
@@ -355,7 +362,8 @@ class Updater:
             self.__use_local_version()
         else:
             logger.info("load.py was modified. EDMC restart is required.")
-            self.updater_thread.stop()
+            if self.updater_thread:
+                self.updater_thread.stop()
             context.status_label.set_text(_translate("The update is installed. Please restart EDMC."))
 
 
@@ -364,7 +372,7 @@ class Updater:
             return
 
         def __inner(self: Updater):
-            logger.info("Loading local version the in main thread...")
+            logger.info(f"Loading local version {self.local_version} the in main thread...")
             if not Path(context.plugin_dir, "core", "context.py").exists():
                 logger.error("`context` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
@@ -378,8 +386,9 @@ class Updater:
             from core.context import PluginContext as VersionContext
             VersionContext.logger = logger
             VersionContext.plugin_dir = context.plugin_dir
-            VersionContext.plugin_version = context.plugin_version
-            VersionContext.client_version = f"{VersionContext.plugin_name}.{VersionContext.plugin_version}"
+            VersionContext.plugin_name = context.plugin_name
+            VersionContext.plugin_version = self.local_version
+            VersionContext.client_version = f"{context.plugin_name}.{self.local_version}"
             VersionContext.edmc_version = context.edmc_version
             VersionContext._tr_template = _Translation.translate
             VersionContext._event_queue = context.event_queue
@@ -393,27 +402,28 @@ class Updater:
             plugin_init.init_version()
 
             context.status_label.clear()
-            context.version_frame = VersionFrame(context.plugin_frame, context.plugin_version)
+            context.version_frame = VersionFrame(context.plugin_frame, self.local_version)
             context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
             theme.register(context.version_frame)
             theme.register(context.plugin_ui)
             # theme.register и theme.update не проверяют пары виджетов,
             # поэтому мы легко можем случайно замаппить, например, кнопки не для той темы.
             # Чтобы нам с этим не париться во всех модулях, вынудим EDMC заново применить тему на весь GUI.
-            theme.apply(tk._default_root)
+            # NOTE: _default_root здесь нельзя заменить на нормальный виджет, потому что theme.apply()
+            # пытается что-то там делать с параметром `-menu`, который есть только у tk.Tk и tk.Toplevel.
+            theme.apply(tk._default_root)  # pyright: ignore[reportAttributeAccessIssue]
             context.version_frame.grid(row=0, column=0, sticky="NWS")
             context.plugin_ui.grid(row=2, column=0, sticky="NWSE")
 
             context.plugin_loaded = True
-            logger.info("Local version configured, running.")
-
+            context.plugin_version = self.local_version
+            logger.info(f"Local version {self.local_version} configured, running.")
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         # грузим версию в главном потоке
-        context.plugin_version = self.local_version
         logger.info("IGNORE THE FOLLOWING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
-        tk._default_root.after(0, __inner, self)
+        context.plugin_frame.after_idle(__inner, self)
 
 
     def __files_differ(self, file1: Path, file2: Path):
@@ -478,13 +488,13 @@ class VersionFrame(tk.Frame):
         if release_url is not None:
             self.version_label = HyperlinkLabel(
                 master=self,
-                text=str(context.plugin_version),
+                text=str(version),
                 url=release_url,
             )
         else:
             self.version_label = tk.Label(
                 master=self,
-                text=str(context.plugin_version),
+                text=str(version),
             )
 
         self.version_label.pack(side="left")
@@ -498,7 +508,11 @@ class ReleaseTypeSettingFrame(tk.Frame):
         reltypes_list = [ReleaseType.STABLE.value, ReleaseType.BETA.value]
         if (
             context.updater.release_type == ReleaseType._DEVELOPMENT
-            or context.plugin_version is not None and "dev" in context.plugin_version.prerelease
+            or (
+                context.plugin_version is not None
+                and context.plugin_version.prerelease is not None
+                and "dev" in context.plugin_version.prerelease
+            )
         ):
             reltypes_list.append(ReleaseType._DEVELOPMENT.value)
 
@@ -543,14 +557,12 @@ def plugin_start3(plugin_dir_str: str) -> str:
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
+    if context.edmc_version < Version("5.11.0"):
+        raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
     context.plugin_dir = Path(plugin_dir_str)
     _Translation.setup()
     _Translation.update_active_language(edmc_config.get_str("language"))
-
-    if context.edmc_version < Version("5.11.0"):
-        raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
-
-    return "Triumvirate"
+    return context.plugin_name
 
 
 def plugin_stop():
@@ -567,7 +579,7 @@ def plugin_stop():
     context.updater.stop_update_cycle()
     if context.plugin_loaded:
         logger.debug("Passing the shutdown signal to the loaded version.")
-        context.plugin_stop_hook()
+        context.plugin_stop_hook()  # pyright: ignore[reportOptionalCall]
     logger.info("Done.")
 
 
@@ -581,7 +593,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     context.status_label = StatusLabel(context.plugin_frame, 1)
     context.status_label.show()
     context.updater = Updater()
-    context.updater.start_update_cycle(_check_now=True)
+    parent.after_idle(context.updater.start_update_cycle, True)
     return context.plugin_frame
 
 
@@ -599,7 +611,7 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     context.settings_frame = ReleaseTypeSettingFrame(frame)
     context.settings_frame.grid(row=0, column=0, sticky="NSWE")
     if context.plugin_loaded:
-        context.plugin_prefs_hook(frame, cmdr, is_beta).grid(row=1, column=0, sticky="NWSE")
+        context.plugin_prefs_hook(frame, cmdr, is_beta).grid(row=1, column=0, sticky="NWSE")  # pyright: ignore[reportOptionalCall]
     return frame
 
 
@@ -610,7 +622,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     if context._shutdown:   # никогда не должно произойти, но предосторожность не помешает
         return
     _Translation.update_active_language(edmc_config.get_str("language"))
-    new_reltype = context.settings_frame.get_selected_reltype()
+    new_reltype = context.settings_frame.get_selected_reltype()  # pyright: ignore[reportOptionalMemberAccess]
     context.settings_frame = None
     if new_reltype == ReleaseType._DEVELOPMENT:
         context.status_label.clear()
@@ -619,7 +631,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
         context.updater.release_type = new_reltype
         context.updater.restart_update_cycle()
     if context.plugin_loaded:
-        context.prefs_changed_hook(cmdr, is_beta)
+        context.prefs_changed_hook(cmdr, is_beta)  # pyright: ignore[reportOptionalCall]
 
 
 # Эти функции относятся к внутреигровым событиям.

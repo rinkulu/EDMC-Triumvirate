@@ -57,7 +57,7 @@ class PluginContext:
     Хранит параметры плагина и ссылки на его компоненты.
     """
     # параметры
-    plugin_name: str                = "EDMC-Triumvirate"
+    plugin_name: str                = None
     plugin_version: Version         = None
     client_version: str             = None
     edmc_version: Version           = None
