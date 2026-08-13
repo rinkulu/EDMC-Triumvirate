@@ -144,7 +144,7 @@ class BGSCore(Module):
         else:
             PluginContext.logger.error("No submodules found. Disabling the BGS module.")
             self.enabled = False
-            PluginContext.notifier.send(_translate("BGS module encountered an error during initialization and was disabled."), 0)
+            PluginContext.notifier.display(_translate("BGS module encountered an error during initialization and was disabled."), 0)
 
     def on_close(self):
         for mod in self.submodules:

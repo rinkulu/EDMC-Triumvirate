@@ -41,7 +41,7 @@ class JournalProcessor(Thread):
                 PluginContext.logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
                 # TODO: отправка логов
                 # TODO: убрать после тестирования 1.12.0
-                PluginContext.notifier.send(
+                PluginContext.notifier.display(
                     (
                         "Неожиданная ошибка при обработке логов! "
                         "Дальнейшая корректная работа плагина не гарантирована - перезапустите EDMC. "
@@ -207,7 +207,7 @@ class JournalProcessor(Thread):
                 except Exception as e:
                     PluginContext.logger.error(f"Exception in module {mod} while processing a chat message.", exc_info=e)
                     # TODO: убрать после тестирования 1.12.0
-                    PluginContext.notifier.send("Ошибка при обработке логов. Пожалуйста, сообщите @elcy.", 0)
+                    PluginContext.notifier.display("Ошибка при обработке логов. Пожалуйста, сообщите @elcy.", 0)
         else:
             for mod in PluginContext.active_modules:
                 try:

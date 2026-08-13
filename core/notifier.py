@@ -90,7 +90,7 @@ class Notifier(tk.Frame):
         self._pool: list[_Message] = list()
 
 
-    def send(self, text: str, timeout: int = 60):
+    def display(self, text: str, timeout: int = 60):
         """
         Выводит новое уведомление.
 
@@ -99,7 +99,7 @@ class Notifier(tk.Frame):
         *timeout* - промежуток времени, спустя который уведомление автоматически скроется.
         Можно задать 0, тогда оно будет висеть, пока пользователь сам его не закроет.
         """
-        self.after(0, self.__send, text, timeout)
+        self.after(0, self.__display, text, timeout)
 
 
     def clear(self):
@@ -107,7 +107,7 @@ class Notifier(tk.Frame):
         self.after(0, self.__clear)
 
 
-    def __send(self, text, timeout):
+    def __display(self, text, timeout):
         if len(self._pool) == 0:
             self.__show()
         elif len(self._pool) == self.MAX_NOTIFICATIONS:

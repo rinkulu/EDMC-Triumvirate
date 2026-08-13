@@ -499,7 +499,7 @@ class CZTracker(Submodule):
             return
         if self.conflict.timestamp_started is None:
             PluginContext.logger.error("timestamp_finished was None on conflict end!")
-            PluginContext.notifier.send(_translate("Conflict's results couldn't be processed due to an internal error."))
+            PluginContext.notifier.display(_translate("Conflict's results couldn't be processed due to an internal error."))
             self.__gui.conflict_ended(self.conflict)
             self.conflict = None
             return
