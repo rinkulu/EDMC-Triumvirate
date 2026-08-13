@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import requests
 import threading
@@ -8,16 +7,19 @@ from math import pow, sqrt
 from tkinter import Frame
 from urllib.parse import quote_plus, unquote
 
-from core.plugin_config import plugin_config
-from core.context import GameState, PluginContext
-from core.debug import debug, error
-from core.settings import canonn_cloud_url_us_central, edsm_url
-
 import myNotebook as nb  # type: ignore
 
+from core.context import GameState, PluginContext
+from core.debug import debug, error
+from core.plugin_config import plugin_config
+from core.settings import canonn_cloud_url_us_central, edsm_url
+
+
+# isort: off
 # функция перевода
 import functools
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+# isort: on
 
 nvl = lambda a, b: a or b
 

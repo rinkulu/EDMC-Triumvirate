@@ -1,5 +1,5 @@
-from abc import ABC, ABCMeta, abstractmethod
 import tkinter as tk
+from abc import ABC, ABCMeta, abstractmethod
 
 from lib.journal import JournalEntry
 

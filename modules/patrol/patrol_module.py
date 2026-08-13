@@ -28,8 +28,8 @@ from l10n import Locale  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 from core import settings
-from core.plugin_config import plugin_config
 from core.context import GameState, PluginContext
+from core.plugin_config import plugin_config
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import Thread, ThreadExit

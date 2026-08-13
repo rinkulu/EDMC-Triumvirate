@@ -4,9 +4,7 @@ from datetime import datetime, timedelta
 
 from core.context import GameState, PluginContext
 from core.debug import debug, error
-from core.settings import (
-    canonn_cloud_url_europe_west, canonn_cloud_url_us_central
-)
+from core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread, Thread

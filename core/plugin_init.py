@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 
-from config import config as edmc_config  # type: ignore
 import myNotebook as nb  # type: ignore
+from config import config as edmc_config  # type: ignore
 
 from core.context import PluginContext
 from core.debug import Debug

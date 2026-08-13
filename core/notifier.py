@@ -1,6 +1,6 @@
-from semantic_version import Version
 import tkinter as tk
 from PIL import Image, ImageTk
+from semantic_version import Version
 
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
