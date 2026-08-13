@@ -352,7 +352,9 @@ class Updater:
 
         # обновляем запись о локальной версии
         self.local_version = tag
-        if (file_version := Version(self.version_file_path.read_text())) != tag:
+        if not self.version_file_path.exists():
+            logger.warning("New installed version doesn't include the `.version` file.")
+        elif (file_version := Version(self.version_file_path.read_text())) != tag:
             logger.warning(f"New .version ({file_version}) doesn't match the tag ({tag}).")
         logger.info(f"Done. Local version set to {tag}.")
 
