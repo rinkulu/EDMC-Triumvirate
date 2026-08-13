@@ -373,7 +373,7 @@ class Updater:
         if context.plugin_loaded:
             return
 
-        def __inner(self: Updater):
+        def __inner():
             logger.info(f"Loading local version {self.local_version} the in main thread...")
             if not Path(context.plugin_dir, "core", "context.py").exists():
                 logger.error("`context` module not found. Aborting.")
@@ -424,8 +424,7 @@ class Updater:
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         # грузим версию в главном потоке
-        logger.info("IGNORE THE FOLLOWING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
-        context.plugin_frame.after_idle(__inner, self)
+        context.plugin_frame.after_idle(__inner)
 
 
     def __files_differ(self, file1: Path, file2: Path):
