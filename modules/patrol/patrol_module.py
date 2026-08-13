@@ -13,6 +13,7 @@
 все галочки патруля.
 """
 
+import functools
 import json
 import math
 import os
@@ -39,6 +40,9 @@ from .canonn import CanonnPatrols
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .patrol import build_patrol
+
+
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
@@ -128,6 +132,10 @@ class InfoLink(HyperlinkLabel):
 
 
 class PatrolModule(Frame, Module):
+    @property
+    def localized_name(self) -> str:
+        return _translate("Patrol module")
+
     def __init__(self, parent, gridrow):
         super().__init__(parent)
 

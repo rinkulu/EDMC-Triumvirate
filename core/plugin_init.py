@@ -19,7 +19,7 @@ from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
 from modules.fc_tracker import FC_Tracker
 from modules.patrol import PatrolModule
-from modules.squadron import Squadron_Tracker
+from modules.squadron import SquadronTracker
 
 
 def init_version():
@@ -53,7 +53,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     # эти модули не имеют UI, но стартуем их здесь же
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
-    PluginContext.sq_tracker = Squadron_Tracker()
+    PluginContext.sq_tracker = SquadronTracker()
     PluginContext.canonn_codex_poi = CanonnCodexPOI()
 
     # TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули

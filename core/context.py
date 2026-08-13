@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from modules.exploring.visualizer import Visualizer
     from modules.fc_tracker import FC_Tracker
     from modules.patrol import PatrolModule
-    from modules.squadron import Squadron_Tracker
+    from modules.squadron import SquadronTracker
 
 
 class TranslateFunc(Protocol):
@@ -76,7 +76,7 @@ class PluginContext:
     bgs_module: 'BGS'               = None
     canonn_api: 'CanonnRealtimeAPI' = None
     canonn_codex_poi: 'CanonnCodexPOI'  = None
-    sq_tracker: 'Squadron_Tracker'  = None
+    sq_tracker: 'SquadronTracker'  = None
     fc_tracker: 'FC_Tracker'        = None
     colonisation_tracker: 'DeliveryTracker' = None
     friendfoe                       = None      # TODO: оживить

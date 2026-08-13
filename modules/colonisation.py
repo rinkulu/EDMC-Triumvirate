@@ -12,7 +12,9 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class DeliveryTracker(Module):
-    localized_name = _translate("Colonisation delivery tracker")
+    @property
+    def localized_name(self) -> str:
+        return _translate("Colonisation deliveries tracker")
 
     def __init__(self):
         self.docked_on_cs: bool = False

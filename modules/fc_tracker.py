@@ -335,6 +335,10 @@ class FC_Tracker(Module):
     FC_DATA_KEY = "FCTracker.CarrierData"
     FC_ACCESS_WARNINGS_KEY = "FCTracker.DisableAccessWarnings"
 
+    @property
+    def localized_name(self) -> str:
+        return _translate("Fleet carrier tracker")
+
     def __init__(self, parent: tk.Misc, row: int):
         self.load_fc_data()
         self.ui_frame = FCModuleFrame(parent, row, self.__no_carrier_callback)

@@ -14,8 +14,11 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class CanonnCodexPOI(Module):
-    localized_name = _translate("Codex module")
     URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("Codex module")
 
     def __init__(self):
         PluginContext.exp_visualizer.register(self)

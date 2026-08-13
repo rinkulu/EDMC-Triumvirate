@@ -1,3 +1,4 @@
+import functools
 import json
 import requests
 from datetime import datetime, timedelta
@@ -9,6 +10,9 @@ from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread, Thread
 from lib.timer import Timer
+
+
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class CanonnReporter(BasicThread):
@@ -182,6 +186,10 @@ class CanonnRealtimeAPI(Module):
     _instance = None
     _hdtracker = HDDetector()
     whitelist = dict()
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("Canonn API client")
 
     def __init__(self):
         super().__init__()

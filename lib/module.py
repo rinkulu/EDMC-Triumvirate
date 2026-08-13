@@ -34,12 +34,14 @@ class Module(ABC, metaclass=ModuleMeta):
     Интерфейс, описывающий модуль и доступные ему "хуки".
     """
 
+    enabled: bool
+
     def on_start(self, plugin_dir: str):
         """
         Вызывается при старте плагина.
         """
 
-    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> tk.Misc | None:
+    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> tk.Frame | None:
         """
         Вызывается при отрисовки окна настроек.
         """
@@ -73,13 +75,6 @@ class Module(ABC, metaclass=ModuleMeta):
     def on_close(self):
         """
         Вызывается в момент завершения работы плагина.
-        """
-
-    @property
-    @abstractmethod
-    def enabled(self) -> bool:
-        """
-        Сообщает, включен ли модуль.
         """
 
     @property

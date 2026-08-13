@@ -128,8 +128,11 @@ class Filter:
 
 
 class BGSCore(Module):
-    localized_name = _translate("BGS module")
     DB_PATH = PluginContext.plugin_dir / "userdata" / "BGSdata.db"
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("BGS module")
 
     def __init__(self, parent: tk.Misc, row: int):
         self.filter = Filter()

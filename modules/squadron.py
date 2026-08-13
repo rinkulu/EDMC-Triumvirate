@@ -1,4 +1,6 @@
-from core.context import GameState
+import functools
+
+from core.context import GameState, PluginContext
 from core.debug import debug
 from core.plugin_config import plugin_config
 from lib.journal import JournalEntry
@@ -6,8 +8,15 @@ from lib.module import Module
 from modules import legacy
 
 
-class Squadron_Tracker(Module):
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+
+
+class SquadronTracker(Module):
     SQUADRON_KEY = "SquadronTracker.SavedSquadron"
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("Squadron tracker")
 
     def __init__(self):
         self.saved_squadron = plugin_config.get_str(self.SQUADRON_KEY) or None

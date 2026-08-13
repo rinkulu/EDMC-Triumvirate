@@ -1,5 +1,7 @@
+import functools
 import tkinter as tk
 
+from core.context import PluginContext
 from core.settings import poi_categories as CATEGORIES
 from lib.journal import JournalEntry
 from lib.module import Module
@@ -8,12 +10,20 @@ from .model import VisualizerModel
 from .ui import VisualizerView
 
 
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+
+
 class VisualizerController(Module):
     """
     Модуль для объединённого вывода информации по текущей системе
     из исследовательских модулей с разбивкой инфы по категориям.
     Духовный наследник старого модуля Кодекса в контексте отображения.
     """
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("Visualizer")
+
 
     def __init__(self, parent: tk.Misc, row: int):
         super().__init__()
@@ -62,7 +72,7 @@ class VisualizerController(Module):
 
     # методы, специфичные для Module
 
-    def on_journal_entry(self, entry: JournalEntry):        # noqa: E301
+    def on_journal_entry(self, entry: JournalEntry):  # noqa: E301
         self.__model.update_system(entry.system)
 
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
