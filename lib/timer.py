@@ -1,5 +1,5 @@
+import tkinter as tk
 from collections.abc import Callable
-from tkinter import _default_root
 from typing import Any
 
 from core.debug import debug
@@ -21,7 +21,7 @@ class Timer(Thread):
         target: Callable[[], Any],
         run_on_closing: bool = True,
         run_in_the_main_thread: bool = False,
-        _name: str = None,
+        _name: str | None = None,
         *args, **kwargs
     ):
         """
@@ -112,4 +112,4 @@ class Timer(Thread):
         if not self.run_in_the_main_thread:
             self.target(*self.target_args, **self.target_kwargs)
         else:
-            _default_root.after(0, self.target, *self.target_args)
+            tk._default_root.after(0, self.target, *self.target_args)  # pyright: ignore[reportAttributeAccessIssue]

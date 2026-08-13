@@ -3,7 +3,7 @@ from lib.thread import Thread
 
 
 class Cache(Thread):
-    def __init__(self, name: str, max_size: int, static: dict = None):
+    def __init__(self, name: str, max_size: int, static: dict | None = None):
         super().__init__(name=name)
         self.max_size = max_size
         self.static = static or {}

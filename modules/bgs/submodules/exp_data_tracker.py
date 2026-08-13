@@ -5,7 +5,7 @@ from modules.legacy import URL_GOOGLE
 
 class ExpDataTracker(Submodule):
     def __init__(self):
-        self.station_owner: str = None
+        self.station_owner: str | None = None
 
     def on_journal_entry(self, entry: dict):
         event = entry["event"]

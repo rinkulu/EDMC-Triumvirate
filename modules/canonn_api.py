@@ -58,19 +58,19 @@ class HDDetector:
     HOSTILE  = 4
 
     def __init__(self):
-        self.departure_system: str          = None
-        self.destination_system_id: int     = None
-        self.departure_timestamp: datetime  = None
+        self.departure_system: str | None = None
+        self.destination_system_id: int | None = None
+        self.departure_timestamp: datetime | None = None
         self.status = self.SAFE
         self._timer: Timer | None = None
 
 
-    def journal_entry(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
+    def journal_entry(self, journal_entry: JournalEntry):
+        entry = journal_entry.data
         event = entry["event"]
 
         if event == "StartJump" and entry["JumpType"] == "Hyperspace":
-            self.departure_system = journalEntry.system
+            self.departure_system = journal_entry.system
             self.destination_system_id = entry["SystemAddress"]
             self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
 
@@ -96,7 +96,7 @@ class HDDetector:
                 # подождём, ожидая агрессии со стороны таргоида
                 debug("[HDDetector] Waiting for the signs of aggression...")
                 if not self._timer:
-                    self._timer = Timer(20, lambda: self._reportHD(journalEntry))
+                    self._timer = Timer(20, lambda: self._reportHD(journal_entry))
                     self._timer.start()
 
             elif entry["MusicTrack"] in ("Combat_Unknown", "Combat_Dogfight", "Combat_Hunters"):
@@ -105,29 +105,37 @@ class HDDetector:
                 if self._timer:
                     self._timer.kill()
                     self._timer = None
-                self._reportHD(journalEntry)
+                self._reportHD(journal_entry)
 
 
-    def _reportHD(self, journalEntry: JournalEntry):
+    def _reportHD(self, journal_entry: JournalEntry):
         if not self.status == self.HOSTILE:
             debug("[HDDetector] Aggression against the player not detected.")
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
 
-        x, y, z    = journalEntry.coords
-        dx, dy, dz = PluginContext.systems_cache.get_system_coords(self.destination_system_id)
-        if None in (x, y, z):
+        if self.destination_system_id is None:
+            PluginContext.logger.error("Detected hyperdiction, but destination_system_id was None!")
+            self.status = self.SAFE
+            return
+
+        current_coords = GameState.system_coords
+        dest_coords = PluginContext.systems_cache.get_system_coords(self.destination_system_id)
+        dest_name = PluginContext.systems_cache.get_system_name(self.destination_system_id)
+
+        if current_coords is None:
             PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
-        elif None in (dx, dy, dz):
-            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords.")
+        elif dest_coords is None or dest_name is None:
+            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords or name.")
         else:
+            x, y, z = current_coords
+            dx, dy, dz = dest_coords
             url = f"{canonn_cloud_url_europe_west}/postHDDetected"
             params = {
-                "cmdr": journalEntry.cmdr,
-                "system": journalEntry.system,
-                "timestamp": journalEntry.data["timestamp"],
+                "cmdr": journal_entry.cmdr,
+                "system": journal_entry.system,
+                "timestamp": journal_entry.data["timestamp"],
                 "x": x, "y": y, "z": z,
-                # если есть координаты - есть и название, можно на None не проверять
-                "destination": PluginContext.systems_cache.get_system_name(self.destination_system_id),
+                "destination": dest_name,
                 "dx": dx, "dy": dy, "dz": dz,
                 "client": PluginContext.client_version,
                 "odyssey": GameState.odyssey,
@@ -144,12 +152,17 @@ class HDDetector:
         entry = journalEntry.data
         if entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM"):
             debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
-            system = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
+            system = entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
-            x, y, z = PluginContext.systems_cache.get_system_coords(system)
 
-            gametime = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
+            coords = PluginContext.systems_cache.get_system_coords(system)
+            if coords is None:
+                PluginContext.logger.warning(f"Can't report last encounter to Canonn: system coordinates unknown ({system!r})")
+                return
+
+            x, y, z = coords
+            gametime = entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
             year, remainder = gametime.split("-", 1)
             timestamp = "{}-{}".format(str(int(year) - 1286), remainder)
 
@@ -180,21 +193,19 @@ class CanonnRealtimeAPI(Module):
         WhitelistUpdater().start()
 
 
-    def on_journal_entry(self, journalEntry: JournalEntry):
-        if journalEntry.data["event"] == "Statistics":
-            self._hdtracker.check_last_encounter(journalEntry)
-
-        if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
-            return                      # и EDMC в этот момент отдаёт system=None
-
+    def on_journal_entry(self, entry: JournalEntry):
+        if entry.data["event"] == "Statistics":
+            self._hdtracker.check_last_encounter(entry)
+        if not entry.system:
+            return
         # проверяем:
         # сигналы в системе
-        self._check_fss_signal(journalEntry)
+        self._check_fss_signal(entry)
         # таргоидские гиперперехваты
-        self._hdtracker.journal_entry(journalEntry)
+        self._hdtracker.journal_entry(entry)
         # всё остальное
-        if journalEntry.data["event"] != "FSSSignalDiscovered":
-            self._check_whitelisted_events(journalEntry)
+        if entry.data["event"] != "FSSSignalDiscovered":
+            self._check_whitelisted_events(entry)
 
 
     def on_close(self):

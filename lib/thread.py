@@ -19,7 +19,7 @@ class BasicThread(threading.Thread):
         super().__init__(**kwargs)
         BasicThread.pool.append(self)
         # флаг для сигнализирования потоку, что ему пора бы остановиться
-        self.STOP = False
+        self.STOP: bool = False
 
     def sleep(self, secs: float):
         while secs > 0:

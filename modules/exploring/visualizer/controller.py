@@ -36,7 +36,7 @@ class VisualizerController(Module):
         self.__model.add_module(module_instance)
 
 
-    def show(self, caller: Module, text: str, category: str = None, location: str | None = None) -> None:
+    def show(self, caller: Module, text: str, category: str | None = None, location: str | None = None) -> None:
         """
         Добавляет запись в список данных к отображению.
 

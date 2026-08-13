@@ -36,7 +36,7 @@ class Table(tk.Frame):
         if len(values) != self.__n_columns:
             raise RuntimeError()
 
-        max_width = max(self.MAXWIDTH, tk._default_root.winfo_width())
+        max_width = max(self.MAXWIDTH, tk._default_root.winfo_width())  # pyright: ignore[reportAttributeAccessIssue]
         max_string_len = int(self.MAXWIDTH / len(values))
         used_width = 0
 

@@ -96,13 +96,13 @@ class MissionTracker(Submodule):
         mission_obj.timestamp_finished = entry["timestamp"]
         self._insert_or_update(mission_obj)
 
-        effects: list[dict] = entry.get("FactionEffects")
+        effects: list[dict] = entry.get("FactionEffects", [])
         if not effects:
             PluginContext.logger.debug(f"Mission {mission_id} doesn't have any faction effects.")
             return
         for faction_data in effects:
             faction = faction_data["Faction"]
-            inf_data: list[dict] = faction_data.get("Influence")
+            inf_data: list[dict] = faction_data.get("Influence", [])
             if not inf_data:
                 PluginContext.logger.warning(f"No influence data for faction {faction}.")
                 continue

@@ -149,7 +149,7 @@ class SystemsCache(tk.Frame):
                 f"Reported name: {name}, reported coords: [{x}, {y}, {z}]."
             )
             return None
-        return _SystemData(system_id, name, Coords(x, y, z))
+        return _SystemData(system_id, name, Coords(x, y, z))  # pyright: ignore[reportArgumentType]
 
 
     def _fetch_system_by_name(self, system_name: str) -> _SystemData | list[_SystemData] | None:

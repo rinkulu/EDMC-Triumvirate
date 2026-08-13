@@ -19,7 +19,7 @@ class CanonnCodexPOI(Module):
 
     def __init__(self):
         PluginContext.exp_visualizer.register(self)
-        self.destination_system: str = None
+        self.destination_system: str | None = None
 
 
     def on_journal_entry(self, entry: JournalEntry):
@@ -28,7 +28,7 @@ class CanonnCodexPOI(Module):
 
         event = entry.data.get("event")
         if event == "StartJump" and entry.data.get("JumpType") == "Hyperspace":
-            self.destination_system = entry.data.get("StarSystem")
+            self.destination_system = entry.data["StarSystem"]
         elif event == "FSDJump":
             if (system := entry.data["StarSystem"]) == self.destination_system:
                 # в противном случае это, скорее всего, таргоидский перехват, и мы всё ещё в старой системе
@@ -67,10 +67,10 @@ class CanonnCodexPOI(Module):
             if (category := poi.get("hud_category")) is not None and category not in poi_categories:
                 warning("[Codex] Unexpected POI category in Canonn data: {}".format(poi))
                 continue
-            if poi.get("scanned", False) in ('false', False):       # без понятия, почему оно (иногда?) даётся строкой
+            if poi.get("scanned", False) in ('false', False):  # без понятия, почему оно (иногда?) даётся строкой
                 PluginContext.exp_visualizer.show(
                     caller=self,
                     location=poi.get("body"),
-                    text=poi.get("english_name"),
-                    category=category
+                    text=poi.get("english_name"),  # pyright: ignore[reportArgumentType]
+                    category=category,  # pyright: ignore[reportArgumentType]
                 )

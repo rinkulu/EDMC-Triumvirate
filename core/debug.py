@@ -15,7 +15,7 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class Debug:
-    log: logging.Logger = None
+    log: logging.Logger
     config_key: str = "EnableDebugging"
     debugvar = tk.BooleanVar(value=(saved if ((saved := config.get_bool(config_key)) is not None) else True))
 

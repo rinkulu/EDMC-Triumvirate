@@ -1,12 +1,7 @@
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Type, TypeVar
+import tkinter as tk
 
-
-if TYPE_CHECKING:
-    # для аннотаций типов
-    import tkinter as tk
-
-    from lib.journal import JournalEntry
+from lib.journal import JournalEntry
 
 
 class ModuleMeta(ABCMeta):
@@ -44,7 +39,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при старте плагина.
         """
 
-    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> 'tk.Misc':
+    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> tk.Misc | None:
         """
         Вызывается при отрисовки окна настроек.
         """
@@ -96,8 +91,7 @@ class Module(ABC, metaclass=ModuleMeta):
         """
 
 
-T = TypeVar('T', bound=Module)
-def get_module_instance(module_class: Type[T]) -> T | None:     # noqa: E302
+def get_module_instance[T](module_class: type[T]) -> T | None:
     return ModuleMeta._instances.get(module_class)
 
 

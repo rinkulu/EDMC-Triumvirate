@@ -189,16 +189,16 @@ class FactionTracker(Submodule):
 
     def on_data_update(self, new_data: list[list[str]]):
         def clean_row(row: list[str]):
-            row = [None if item == "" else item for item in row]
-            row[2] = float(row[2])                      # influence
-            row[4] = row[4] or None                     # conflict_type
-            row[5] = row[5] or None                     # conflict_status
-            row[6] = row[6] or None                     # conflict_enemy
-            row[7] = int(row[7]) if row[7] else None    # conflict_score
-            row[8] = int(row[8]) if row[8] else None    # conflict_score_enemy
-            row[9] = row[9] or None                     # conflict_stake
-            row[10] = row[10] or None                   # conflict_stake_enemy
-            return row
+            cleaned: list[str | int | float | None] = [None if item == "" else item for item in row]
+            cleaned[2] = float(row[2])                      # influence
+            cleaned[4] = row[4] or None                     # conflict_type
+            cleaned[5] = row[5] or None                     # conflict_status
+            cleaned[6] = row[6] or None                     # conflict_enemy
+            cleaned[7] = int(row[7]) if row[7] else None    # conflict_score
+            cleaned[8] = int(row[8]) if row[8] else None    # conflict_score_enemy
+            cleaned[9] = row[9] or None                     # conflict_stake
+            cleaned[10] = row[10] or None                   # conflict_stake_enemy
+            return cleaned
 
         with self._threadlock:
             PluginContext.logger.debug("Received updated factions data.")

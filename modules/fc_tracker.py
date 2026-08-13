@@ -13,7 +13,6 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from core.config import config as plugin_config
-from core.context import GameState
 from core.debug import debug, error, warning
 from lib.journal import JournalEntry
 from lib.module import Module
@@ -32,7 +31,7 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 def mainthread(func):
     @functools.wraps(func)
     def wrapper(*args):
-        from tkinter import _default_root
+        from tkinter import _default_root  # pyright: ignore[reportAttributeAccessIssue]
         _default_root.after(0, func, *args)
     return wrapper
 
@@ -122,7 +121,8 @@ class FCInfoFrame(tk.Frame):
             FCDockingAccess.FRIENDS: _translate("<DOCKING_ACCESS_FRIENDS>"),
             FCDockingAccess.SQUADRON: _translate("<DOCKING_ACCESS_SQUADRON>"),
             FCDockingAccess.SQUADRON_AND_FRIENDS: _translate("<DOCKING_ACCESS_SQUADRONFRIENDS>"),
-            FCDockingAccess.NONE: _translate("<DOCKING_ACCESS_NONE>")
+            FCDockingAccess.NONE: _translate("<DOCKING_ACCESS_NONE>"),
+            None: _translate("[UNKNOWN]"),
         }
         self.access_label = nb.Label(self, text=_translate("Docking access:"))
         self.access_field = nb.Label(self, text=self.access_localized.get(fc_data.docking_access, ""))
@@ -131,7 +131,8 @@ class FCInfoFrame(tk.Frame):
 
         self.notorious_access_localized = {
             True: _translate("<NOTORIOUS_ACCESS_ALLOWED>"),
-            False: _translate("<NOTORIOUS_ACCESS_NOT_ALLOWED>")
+            False: _translate("<NOTORIOUS_ACCESS_NOT_ALLOWED>"),
+            None: _translate("[UNKNOWN]"),
         }
         self.notorious_access_label = nb.Label(self, text=_translate("Docking permission for notorious:"))
         self.notorious_access_field = nb.Label(self, text=self.notorious_access_localized.get(fc_data.notorious_access, ""))
@@ -302,7 +303,8 @@ class FCModuleFrame(tk.Frame):
     def __clear(self):
         # декоратор не используется, чтобы при отображении экрана очистка не происходила после замаппивания новых виджетов
         for widget in self.winfo_children():
-            widget.pack_forget()
+            if not isinstance(widget, tk.Toplevel):
+                widget.pack_forget()
 
     @mainthread
     def show(self):
@@ -310,7 +312,7 @@ class FCModuleFrame(tk.Frame):
         self.grid(column=0, row=self.row, sticky="NWSE")
 
     @mainthread
-    def hide(self, event: tk.Event = None):
+    def hide(self, event: tk.Event | None = None):
         if not self.is_shown:
             return
         debug("[FCModuleFrame] Hidden.")
@@ -344,7 +346,7 @@ class FC_Tracker(Module):
             plugin_config.set(self.FC_ACCESS_WARNINGS_KEY, False)
         debug(f"[FC_Tracker] Unsafe docking access warnings are {'disabled' if self.disable_access_warnings else 'enabled'}.")
 
-        if self.fc_data.status == FCStatus.PENDING_DECOMMISSION:
+        if self.fc_data.status == FCStatus.PENDING_DECOMMISSION and self.fc_data.decommission_timestamp is not None:
             if datetime.now(UTC) > self.fc_data.decommission_timestamp:
                 debug(
                     "[FC_Tracker] Reached saved decommission timestamp ({}), clearing FC data.",
@@ -363,25 +365,25 @@ class FC_Tracker(Module):
 
     # Методы модуля
 
-    def on_journal_entry(self, journal_entry: JournalEntry):        # noqa: E301
-        if journal_entry.data.get("CarrierType") != "FleetCarrier":
+    def on_journal_entry(self, entry: JournalEntry):        # noqa: E301
+        if entry.data.get("CarrierType") != "FleetCarrier":
             return
-        event = journal_entry.data["event"]
+        event = entry.data["event"]
         match event:
-            case "CarrierBuy":                  self.carrier_bought(journal_entry)
-            case "CarrierStats":                self.carrier_stats(journal_entry)
-            case "CarrierDecommission":         self.carrier_planned_decommission(journal_entry)
-            case "CarrierCancelDecommission":   self.carrier_cancel_decommission(journal_entry)
-            case "CarrierDockingPermission":    self.carrier_docking_access_changed(journal_entry)
-            case "CarrierNameChanged":          self.carrier_name_changed(journal_entry)
+            case "CarrierBuy":                  self.carrier_bought(entry)
+            case "CarrierStats":                self.carrier_stats(entry)
+            case "CarrierDecommission":         self.carrier_planned_decommission(entry)
+            case "CarrierCancelDecommission":   self.carrier_cancel_decommission(entry)
+            case "CarrierDockingPermission":    self.carrier_docking_access_changed(entry)
+            case "CarrierNameChanged":          self.carrier_name_changed(entry)
             case _:
                 if (
-                    journal_entry.cmdr is not None
+                    entry.cmdr is not None
                     and self.fc_data.status == FCStatus.UNKNOWN
                     and not self.ui_frame.is_shown
                 ):
                     debug("[FC_Tracker] No FC info found.")
-                    self.fc_data.cmdr = journal_entry.cmdr
+                    self.fc_data.cmdr = entry.cmdr
                     self.ui_frame.show_no_fc_info_screen()
 
 
@@ -524,17 +526,13 @@ class FC_Tracker(Module):
     def check_docking_access(self):
         if self.fc_data.status not in (FCStatus.ACTIVE, FCStatus.PENDING_DECOMMISSION):
             return
-        if self.disable_access_warnings:
+        elif self.disable_access_warnings:
             self.ui_frame.hide()
             return
-
-        # TODO: перевести на нормальное определение "союзности", когда будет возможность
-        from modules.canonn_api import is_cec_fleetcarrier
-        if is_cec_fleetcarrier(self.fc_data.name) or GameState.squadron == "CLOSE ENCOUNTERS CORPS":
-            if self.fc_data.docking_access == FCDockingAccess.ALL:
-                self.ui_frame.show_unsafe_docking_access_warning()
-            else:
-                self.ui_frame.hide()
+        elif self.fc_data.docking_access == FCDockingAccess.ALL:
+            self.ui_frame.show_unsafe_docking_access_warning()
+        else:
+            self.ui_frame.hide()
 
 
     # Методы управления конфигом модуля

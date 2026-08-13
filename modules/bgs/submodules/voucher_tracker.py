@@ -5,18 +5,18 @@ from modules.legacy import URL_GOOGLE
 
 class VoucherTracker(Submodule):
     def __init__(self):
-        self.station_owner: str = None
-        self.redeemed_factions: list[str] = None
+        self.station_owner: str | None = None
+        self.redeemed_factions: list[str] = list()
 
     def on_journal_entry(self, entry: dict):
         event = entry["event"]
         if event == "Docked" or (event == "Location" and entry["Docked"] is True):
             self.station_owner = entry["StationFaction"]["Name"]
-            self.redeemed_factions = list()
+            self.redeemed_factions.clear()
             return
         elif event == "Undocked" or (event == "Location" and entry["Docked"] is False):
             self.station_owner = None
-            self.redeemed_factions = None
+            self.redeemed_factions.clear()
             return
         elif event != "RedeemVoucher":
             return
@@ -48,8 +48,8 @@ class VoucherTracker(Submodule):
         elif voucher_type == "bounty":
             PluginContext.logger.debug("Redeeming bounties:")
             for faction in entry["Factions"]:
-                faction_name = faction["Faction"]
-                amount = faction["Amount"]
+                faction_name: str = faction["Faction"]
+                amount: int = faction["Amount"]
                 if faction_name != "" and faction_name not in self.redeemed_factions:
                     PluginContext.logger.debug(f"Faction {faction_name}, amount: {amount} cr.")
                     params = {

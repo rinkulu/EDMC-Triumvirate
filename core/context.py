@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 
 class TranslateFunc(Protocol):
-    def __call__(self, x: str, filepath: str, lang: str = None) -> str:
+    def __call__(self, x: str, filepath: str, lang: str | None = None) -> str:
         """
         :param x: Ключ перевода
         :param filepath: Путь к файлу (__file__), в котором вызывается функция

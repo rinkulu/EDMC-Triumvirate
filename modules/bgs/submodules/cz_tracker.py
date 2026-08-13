@@ -23,7 +23,7 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 def mainthread(func):
     @functools.wraps(func)
     def wrapper(*args):
-        from tkinter import _default_root
+        from tkinter import _default_root  # pyright: ignore[reportAttributeAccessIssue]
         _default_root.after(0, func, *args)
     return wrapper
 
@@ -45,17 +45,17 @@ class Conflict:
     cmdr: str
     conflict_type: Literal['Space', 'OnFoot']
     system: str
-    intensity: Literal['Low', 'Medium', 'High'] = None
+    intensity: Literal['Low', 'Medium', 'High'] | None = None
     kills: int = 0
     bonds: int = 0
-    timestamp_started: datetime = None
-    timestamp_finished: datetime = None
-    ally_faction: str = None
-    enemy_faction: str = None
-    winner_faction: str = None
-    on_foot_body: str = None
-    on_foot_settlement: str = None
-    on_foot_deaths: int = None
+    timestamp_started: datetime | None = None
+    timestamp_finished: datetime | None = None
+    ally_faction: str | None = None
+    enemy_faction: str | None = None
+    winner_faction: str | None = None
+    on_foot_body: str | None = None
+    on_foot_settlement: str | None = None
+    on_foot_deaths: int | None = None
 
 
 class DisplayTimer:
@@ -66,7 +66,7 @@ class DisplayTimer:
         pattern: str,
         format: bool = True,
         increasing: bool = False,
-        callback: Callable = None,
+        callback: Callable | None = None,
         *args, **kwargs
     ):
         """
@@ -80,10 +80,8 @@ class DisplayTimer:
         """
         # Обновлять stringvar надо в главном потоке, потому что любимый наш tkinter.
         # Нужен .after. Чтобы не наследствовать таймер от виджета, ибо зачем,
-        # воспользуемся костылём с tk._default_root - мы можем это сделать лишь потому,
-        # что таймеры *не должны* создаваться до инициализации GUI. В противном случае будет "ой",
-        # т.к. tk._default_root окажется None.
-        self.__root: tk.Tk = tk._default_root
+        # воспользуемся костылём с tk._default_root.
+        self.__root: tk.Tk = tk._default_root  # pyright: ignore[reportAttributeAccessIssue]
 
         self.callback = callback
         self.callback_args = args
@@ -101,7 +99,7 @@ class DisplayTimer:
     def __tick(self):
         if self._stop:
             return
-        if self.step == -1 and self.value == 0:     # защита от increasing=True, initial_value=0
+        if self.step == -1 and self.value == 0:  # защита от increasing=True, initial_value=0
             if self.callback:
                 self.callback(*self.callback_args, **self.callback_kwargs)
             return
@@ -142,7 +140,7 @@ class ConflictInfoFrame(tk.Frame):
 
         # секундомер
         self.__time_label_text_var = tk.StringVar()
-        self.__time_label_timer: DisplayTimer = None
+        self.__time_label_timer: DisplayTimer | None = None
         self.time_label = tk.Label(self, textvariable=self.__time_label_text_var)
 
         # локация - система или тело (для пеших)
@@ -191,7 +189,7 @@ class ConflictInfoFrame(tk.Frame):
 
         # закрытие окна после завершения кз
         self.__close_button_text_var = tk.StringVar()
-        self.__close_button_timer: DisplayTimer = None
+        self.__close_button_timer: DisplayTimer | None = None
         self.close_button = ttk.Button(self, textvariable=self.__close_button_text_var, command=self.__close_button_callback)
 
         # заглушка неизвестных фракций-участников
@@ -217,15 +215,15 @@ class ConflictInfoFrame(tk.Frame):
         if conflict.conflict_type == "Space":
             self.__location_var.set(conflict.system)
             self.__map(self.location_label)
-            self.__intensity_var.set(INTENSITY_TRANSLATIONS[conflict.intensity])
+            self.__intensity_var.set(INTENSITY_TRANSLATIONS[conflict.intensity or "_unknown"])
             self.__map(self.intensity_label)
             self.__map(self.factions_unknown_label)
         else:
-            self.__location_var.set(conflict.on_foot_body)
+            self.__location_var.set(conflict.on_foot_body)  # pyright: ignore[reportArgumentType]
             self.__map(self.location_label)
             self.__intensity_var.set(INTENSITY_TRANSLATIONS["_unknown"])
             self.__map(self.intensity_label)
-            self.__settlement_var.set(conflict.on_foot_settlement)
+            self.__settlement_var.set(conflict.on_foot_settlement)  # pyright: ignore[reportArgumentType]
             self.__map(self.settlement_label)
             self.__deaths_counter_var.set(_translate("{n} deaths").format(n=0))
             self.__map(self.deaths_counter_label)
@@ -301,8 +299,9 @@ class ConflictInfoFrame(tk.Frame):
     ):
         if not self._in_conflict:
             return
-        self.__time_label_timer.stop()
-        self.__time_label_timer = None
+        if self.__time_label_timer:
+            self.__time_label_timer.stop()
+            self.__time_label_timer = None
         self.__status_var.set(_translate("Conflict ended"))
         self.__map(self.winner_unknown_label)
         self.choose_winner_button_left.configure(command=lambda: ally_callback(conflict))
@@ -335,20 +334,22 @@ class ConflictInfoFrame(tk.Frame):
 
 
     def __close_button_callback(self):
-        self.__close_button_timer.stop()
-        self.__close_button_timer = None
+        if self.__close_button_timer:
+            self.__close_button_timer.stop()
+            self.__close_button_timer = None
         self.__clear()
         self.__hide()
 
 
     def __clear(self):
         for child in self.winfo_children():
-            child.grid_forget()
+            if not isinstance(child, tk.Toplevel):
+                child.grid_forget()
         self.master.update()
 
 
     def __show(self):
-        self.master: 'BgsUiFrame'
+        self.master: 'BgsUiFrame'  # pyright: ignore[reportIncompatibleVariableOverride]
         self.master.show()
         self.grid(row=self.row, column=0, sticky="NWSE")
 
@@ -360,9 +361,9 @@ class ConflictInfoFrame(tk.Frame):
 class CZTracker(Submodule):
     def __init__(self):
         self.__gui = ConflictInfoFrame(self.core.ui_frame, self._ui_row)
-        self.conflict: Conflict = None
+        self.conflict: Conflict | None = None
         self.gamemode: Literal['Open', 'Group', 'Solo'] = 'Open'    # если наверняка не знаем, будем предполагать небезопасный вариант
-        self._on_foot_died: bool = None
+        self._on_foot_died: bool | None = None
 
 
     def on_journal_entry(self, entry: dict):
@@ -384,7 +385,7 @@ class CZTracker(Submodule):
             return
         if GameState.health == 0.0 and not self._on_foot_died:  # флаг нужен, чтобы только один раз смерть засчитать
             self._on_foot_died = True
-            self.conflict.on_foot_deaths += 1
+            self.conflict.on_foot_deaths += 1  # pyright: ignore[reportOperatorIssue]
             PluginContext.logger.debug(f"Detected in-conflict death ({self.conflict.on_foot_deaths} total).")
             self.__gui.conflict_updated(self.conflict)
 
@@ -394,14 +395,14 @@ class CZTracker(Submodule):
         if "$Warzone_PointRace" not in signal:
             return
         # "$Warzone_PointRace_High:#index=1;"
-        intensity = signal.removeprefix("$Warzone_PointRace_").split(":")[0]
+        intensity: str = signal.removeprefix("$Warzone_PointRace_").split(":")[0]
         if intensity == "Med":
             intensity = "Medium"
         self.conflict = Conflict(
             cmdr=GameState.cmdr,
             conflict_type='Space',
             system=GameState.system,
-            intensity=intensity,
+            intensity=intensity,  # pyright: ignore[reportArgumentType]
             timestamp_started=datetime.fromisoformat(entry["timestamp"])
         )
         PluginContext.logger.debug(f"Entered space conflict: system: {self.conflict.system}, intensity {self.conflict.intensity}.")
@@ -496,6 +497,13 @@ class CZTracker(Submodule):
             self.__gui.conflict_ended(self.conflict)
             self.conflict = None
             return
+        if self.conflict.timestamp_started is None:
+            PluginContext.logger.error("timestamp_finished was None on conflict end!")
+            PluginContext.notifier.send(_translate("Conflict's results couldn't be processed due to an internal error."))
+            self.__gui.conflict_ended(self.conflict)
+            self.conflict = None
+            return
+
         self.conflict.timestamp_finished = datetime.fromisoformat(entry["timestamp"])
         lasted_for = (self.conflict.timestamp_finished - self.conflict.timestamp_started).seconds
         PluginContext.logger.debug(f"Conflict lasted for {lasted_for} seconds.")

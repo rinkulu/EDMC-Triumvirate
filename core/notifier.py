@@ -10,10 +10,11 @@ from lib.timer import Timer
 
 
 class _Message(tk.Frame):
-    _cross_image: ImageTk.PhotoImage = None
-    _cross_image_white: ImageTk.PhotoImage = None
+    _cross_image: ImageTk.PhotoImage
+    _cross_image_white: ImageTk.PhotoImage
 
-    def __init__(self, master, text: str, timeout: int):
+    def __init__(self, master: 'Notifier', text: str, timeout: int):
+        self._notifier = master
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
 
@@ -29,7 +30,7 @@ class _Message(tk.Frame):
         )
         self._button.bind('<Button-1>', self._close)
         theme.button_bind(self._button_dark, self._close)
-        if theme.active == theme.THEME_DEFAULT:         # светлая тема
+        if theme.active == theme.THEME_DEFAULT:  # светлая тема
             self._button.grid(**grid_params)
         else:
             self._button_dark.grid(**grid_params)
@@ -45,7 +46,7 @@ class _Message(tk.Frame):
 
     def _close(self, event: tk.Event | None = None):
         if self._timer:
-            self._timer.kill()      # на случай, если уведомление скрыто раньше времени
+            self._timer.kill()  # на случай, если уведомление скрыто раньше времени
 
         # Это сделано для обхода бага в EDMC 6.0 - https://github.com/EDCD/EDMarketConnector/issues/2555
         # TODO: вернуть destroy с версии, когда будет выпущен фикс
@@ -54,11 +55,11 @@ class _Message(tk.Frame):
         else:
             self.destroy()
 
-        self.master._message_destroyed(self)
+        self._notifier._message_destroyed(self)
 
     @classmethod
     def _set_images(cls):
-        size = int(14 * (tk._default_root.winfo_screenheight() / 1080))
+        size = int(14 * (tk._default_root.winfo_screenheight() / 1080))  # pyright: ignore[reportAttributeAccessIssue]
         image = Image.open(PluginContext.plugin_dir / 'icons' / 'cross.png')
         image = image.resize((size, size))
         cls._cross_image = ImageTk.PhotoImage(image)
@@ -68,7 +69,7 @@ class _Message(tk.Frame):
 
     @staticmethod
     def _get_wraplength():
-        main_window: tk.Tk = tk._default_root
+        main_window: tk.Tk = tk._default_root  # pyright: ignore[reportAttributeAccessIssue]
         main_window.update()
         return max(main_window.winfo_width(), 275)
 

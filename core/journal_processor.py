@@ -62,9 +62,9 @@ class JournalProcessor(Thread):
         # ПРОВЕРКА КОМАНДИРА
         new_cmdr = GameState.cmdr
         if entry["event"] == "Commander":
-            new_cmdr = entry["Name"]
+            new_cmdr: str = entry["Name"]
         elif entry["event"] == "LoadGame":
-            new_cmdr = entry["Commander"]
+            new_cmdr: str = entry["Commander"]
         elif GameState.cmdr is None and cmdr:   # доверимся данным EDMC
             new_cmdr = cmdr
 
@@ -100,9 +100,17 @@ class JournalProcessor(Thread):
             PluginContext.logger.debug("Seems like the game is already running. Using EDMC's location data.")
             GameState.system = state.get("SystemName")
             GameState.system_address = state.get("SystemAddress")
-            GameState.system_coords = Coords(*state["StarPos"]) if "StarPos" in state and state["StarPos"] is not None else None
+            GameState.system_coords = (
+                Coords(*state["StarPos"])
+                if "StarPos" in state and state["StarPos"] is not None
+                else PluginContext.systems_cache.get_system_coords(GameState.system_address) if GameState.system_address is not None
+                else None
+            )
             if GameState.system_coords is None:
-                PluginContext.logger.debug("EDMC didn't provide us with the coordinates, showing user warning.")
+                PluginContext.logger.debug(
+                    "EDMC didn't provide us with the system coordinates, also failed to fetch them from system address "
+                    f"({GameState.system_address}). Showing user warning."
+                )
                 PluginContext.systems_cache.show_coords_warning()
             PluginContext.logger.debug(
                 f"Location change: system {GameState.system} (id {GameState.system_address}), coords {GameState.system_coords}."

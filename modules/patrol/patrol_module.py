@@ -222,7 +222,7 @@ class PatrolModule(Frame, Module):
     def on_start(self, plugin_dir):
         pass
 
-    def draw_settings(self, parent, cmdr, is_beta, gridrow):
+    def draw_settings(self, parent_widget, cmdr, is_beta, row):
         "Called to get a tk Frame for the settings dialog."
 
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
@@ -237,9 +237,9 @@ class PatrolModule(Frame, Module):
         self.edsm = self.edsmbtn.get()
         self.CopyPatrolAdr = self.copypatrolbtn.get()
 
-        frame = nb.Frame(parent)
+        frame = nb.Frame(parent_widget)
         frame.columnconfigure(1, weight=1)
-        frame.grid(row=gridrow, column=0, sticky="NSEW")
+        frame.grid(row=row, column=0, sticky="NSEW")
 
         nb.Label(frame, text="Настройки Патруля").grid(row=0, column=0, sticky="NW")
         nb.Checkbutton(frame, text="Скрыть Патруль", variable=self.canonnbtn).grid(
@@ -297,8 +297,8 @@ class PatrolModule(Frame, Module):
     def on_journal_entry(self, entry: JournalEntry):
         try:
             self._on_journal(entry=entry)
-        except:
-            PluginContext.logger.debug("error in patrol", exc_info=1)
+        except Exception as e:
+            PluginContext.logger.debug("error in patrol", exc_info=e)
 
     def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
