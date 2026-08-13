@@ -1,6 +1,6 @@
-from core.config import config as plugin_config
 from core.context import GameState
 from core.debug import debug
+from core.plugin_config import plugin_config
 from lib.journal import JournalEntry
 from lib.module import Module
 from modules import legacy

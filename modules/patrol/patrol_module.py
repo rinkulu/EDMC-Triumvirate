@@ -23,11 +23,12 @@ from tkinter import Frame
 from urllib.parse import quote_plus
 
 import myNotebook as nb  # type: ignore
+from config import config as edmc_config  # type: ignore
 from l10n import Locale  # type: ignore
 from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
 from core import settings
-from core.config import base_config, config
+from core.plugin_config import plugin_config
 from core.context import GameState, PluginContext
 from lib.journal import JournalEntry
 from lib.module import Module
@@ -132,7 +133,7 @@ class PatrolModule(Frame, Module):
 
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
-        # быстрый фикс для EDMC 6.0, где плагин может быть отключён в рантайме, и на base_config.shutting_down полагаться нельзя
+        # быстрый фикс для EDMC 6.0, где плагин может быть отключён в рантайме, и на edmc_config.shutting_down полагаться нельзя
         self.shutting_down = False
 
         self.ships = []
@@ -145,11 +146,11 @@ class PatrolModule(Frame, Module):
             file=os.path.join(plugin_dir, "icons", "right_arrow.gif")
         )
 
-        self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
-        self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
-        self.hideshipsbtn = tk.IntVar(value=config.getint("HideMyShips"))
-        self.edsmbtn = tk.IntVar(value=config.getint("HideEDSM"))
-        self.copypatrolbtn = tk.IntVar(value=config.getint("CopyPatrolAdr"))
+        self.canonnbtn = tk.IntVar(value=plugin_config.getint("HidePatrol"))
+        self.factionbtn = tk.IntVar(value=plugin_config.getint("Hidefactions"))
+        self.hideshipsbtn = tk.IntVar(value=plugin_config.getint("HideMyShips"))
+        self.edsmbtn = tk.IntVar(value=plugin_config.getint("HideEDSM"))
+        self.copypatrolbtn = tk.IntVar(value=plugin_config.getint("CopyPatrolAdr"))
 
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
@@ -225,11 +226,11 @@ class PatrolModule(Frame, Module):
     def draw_settings(self, parent_widget, cmdr, is_beta, row):
         "Called to get a tk Frame for the settings dialog."
 
-        self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
-        self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
-        self.hideshipsbtn = tk.IntVar(value=config.getint("HideMyShips"))
-        self.edsmbtn = tk.IntVar(value=config.getint("HideEDSM"))
-        self.copypatrolbtn = tk.IntVar(value=config.getint("CopyPatrolAdr"))
+        self.canonnbtn = tk.IntVar(value=plugin_config.getint("HidePatrol"))
+        self.factionbtn = tk.IntVar(value=plugin_config.getint("Hidefactions"))
+        self.hideshipsbtn = tk.IntVar(value=plugin_config.getint("HideMyShips"))
+        self.edsmbtn = tk.IntVar(value=plugin_config.getint("HideEDSM"))
+        self.copypatrolbtn = tk.IntVar(value=plugin_config.getint("CopyPatrolAdr"))
 
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
@@ -270,11 +271,11 @@ class PatrolModule(Frame, Module):
 
     def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set("HidePatrol", self.canonnbtn.get())
-        config.set("Hidefactions", self.factionbtn.get())
-        config.set("HideMyShips", self.hideshipsbtn.get())
-        config.set("HideEDSM", self.edsmbtn.get())
-        config.set("CopyPatrolAdr", self.copypatrolbtn.get())
+        plugin_config.set("HidePatrol", self.canonnbtn.get())
+        plugin_config.set("Hidefactions", self.factionbtn.get())
+        plugin_config.set("HideMyShips", self.hideshipsbtn.get())
+        plugin_config.set("HideEDSM", self.edsmbtn.get())
+        plugin_config.set("CopyPatrolAdr", self.copypatrolbtn.get())
 
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
@@ -570,7 +571,7 @@ class PatrolModule(Frame, Module):
         debug("Waiting for SQID event...")
         while not self.sqid_evt.is_set():
             self.sqid_evt.wait(timeout=5)
-            if base_config.shutting_down or self.shutting_down:
+            if edmc_config.shutting_down or self.shutting_down:
                 debug("Received shutdown command, aborting download.")
                 return
         debug("Downloading patrol data...")

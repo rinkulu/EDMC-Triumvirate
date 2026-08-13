@@ -30,4 +30,4 @@ class Config:
         base_config.set(f"{self.prefix}.{key}", val)
 
 
-config = Config()
+plugin_config = Config()

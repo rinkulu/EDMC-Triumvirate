@@ -2,8 +2,8 @@ import json
 
 from theme import theme  # type: ignore
 
-from core.config import config as plugin_config
 from core.debug import debug
+from core.plugin_config import plugin_config
 from lib.module import Module
 
 from ._dataitem import _DataItem
@@ -11,8 +11,8 @@ from .ui import VisualizerView, VSettingsFrame
 
 
 class VisualizerModel:
-    PLUGIN_CONFIG_KEY   = "Visualizer.config"
-    DEFAULT_CATEGORY    = "None"
+    PLUGIN_CONFIG_KEY = "Visualizer.config"
+    DEFAULT_CATEGORY = "None"
 
     def __init__(self, view_instance: VisualizerView):
         self.view = view_instance

@@ -8,7 +8,7 @@ from math import pow, sqrt
 from tkinter import Frame
 from urllib.parse import quote_plus, unquote
 
-from core.config import config
+from core.plugin_config import plugin_config
 from core.context import GameState, PluginContext
 from core.debug import debug, error
 from core.settings import canonn_cloud_url_us_central, edsm_url
@@ -97,7 +97,7 @@ class CodexTypes(Frame):
 
         self.parent = parent
         self.bind('<<POIData>>', self.evisualise)
-        self.hidecodexbtn = tk.IntVar(value=config.getint("CanonnHideCodex"))
+        self.hidecodexbtn = tk.IntVar(value=plugin_config.getint("CanonnHideCodex"))
         self.hidecodex = self.hidecodexbtn.get()
 
         self.container = Frame(self)
@@ -648,7 +648,7 @@ class CodexTypes(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.hidecodexbtn = tk.IntVar(value=config.getint("CanonnHideCodex"))
+        self.hidecodexbtn = tk.IntVar(value=plugin_config.getint("CanonnHideCodex"))
 
         self.hidecodex = self.hidecodexbtn.get()
 
@@ -663,7 +663,7 @@ class CodexTypes(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('CanonnHideCodex', self.hidecodexbtn.get())
+        plugin_config.set('CanonnHideCodex', self.hidecodexbtn.get())
 
         self.hidecodex = self.hidecodexbtn.get()
 

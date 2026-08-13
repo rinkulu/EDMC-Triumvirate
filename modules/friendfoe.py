@@ -4,10 +4,10 @@ import threading
 import tkinter as tk
 from tkinter import Frame
 
-import myNotebook as nb
-from ttkHyperlinkLabel import HyperlinkLabel
+import myNotebook as nb  # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 
-from core.config import config
+from core.plugin_config import plugin_config
 from core.debug import debug
 
 
@@ -107,7 +107,7 @@ class FriendFoe(Frame):
         Frame.__init__(self,
             parent)
 
-        self.hidden = tk.IntVar(value=config.getint('HideFF'))                
+        self.hidden = tk.IntVar(value=plugin_config.getint('HideFF'))                
         
         self.news_data = []
         self.columnconfigure(1, weight=1)
@@ -186,7 +186,7 @@ class FriendFoe(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         'Called to get a tk Frame for the settings dialog.'
 
-        self.hidden = tk.IntVar(value=config.getint('HideFF'))
+        self.hidden = tk.IntVar(value=plugin_config.getint('HideFF'))
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1,
@@ -207,6 +207,6 @@ class FriendFoe(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         'Called when the user clicks OK on the settings dialog.'
-        config.set('HideFF', self.hidden.get())      
+        plugin_config.set('HideFF', self.hidden.get())      
         if self.visible():
             self.news_update()

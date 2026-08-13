@@ -4,7 +4,7 @@ from sys import _getframe
 
 import myNotebook as nb  # type: ignore
 
-from core.config import config
+from core.plugin_config import plugin_config
 
 
 # isort: off
@@ -17,14 +17,14 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 class Debug:
     log: logging.Logger
     config_key: str = "EnableDebugging"
-    debugvar = tk.BooleanVar(value=(saved if ((saved := config.get_bool(config_key)) is not None) else True))
+    debugvar = tk.BooleanVar(value=(saved if ((saved := plugin_config.get_bool(config_key)) is not None) else True))
 
     @classmethod
     def setup(cls, log: logging.Logger):
         cls.log = log
         cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
-        if config.get_bool(cls.config_key) is None:
-            config.set(cls.config_key, cls.debugvar.get())
+        if plugin_config.get_bool(cls.config_key) is None:
+            plugin_config.set(cls.config_key, cls.debugvar.get())
             cls.log.debug("Debugging mode set to {}.".format(cls.debugvar.get()))
 
     @classmethod
@@ -66,7 +66,7 @@ class Debug:
     @classmethod
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
-        config.set(cls.config_key, cls.debugvar.get())
+        plugin_config.set(cls.config_key, cls.debugvar.get())
         cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
 
     @staticmethod

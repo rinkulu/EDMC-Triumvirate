@@ -12,8 +12,8 @@ from typing import Any
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
-from core.config import config as plugin_config
 from core.debug import debug, error, warning
+from core.plugin_config import plugin_config
 from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import BasicThread
