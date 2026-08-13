@@ -66,7 +66,7 @@ class CodexTypes(Frame):
         "Ring": _translate("Planetary Ring Resources"),
         "Other": _translate("Other Sites"),
         "Planets": _translate("Valuable Planets"),
-        "Tourist": _translate("Tourist Informatiom")
+        "Tourist": _translate("Tourist Information")
     }
 
     body_types = {

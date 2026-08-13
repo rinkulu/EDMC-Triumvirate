@@ -1,9 +1,19 @@
 {
+    "core\\debug.py": {
+        "Enable debugging mode": "Enable debugging mode"
+    },
+    "core\\plugin_init.py": {
+        "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
+    },
+    "core\\systems.py": {
+        "<SYSTEMS_MODULE_NO_COORDS_WARNING>": "System coordinates unknown; operability not guaranteed. An FSD jump or relog should resolve this issue."
+    },
     "load.py": {
         "Error: couldn't check for updates.": "Error: couldn't check for updates.",
         "An update is available ({v}). Please restart EDMC.": "An update is available ({v}). Please restart EDMC.",
         "Downloading an update...": "Downloading an update...",
         "Error: couldn't download an update.": "Error: couldn't download an update.",
+        "Failed to update the plugin - unexpected error!": "Failed to update the plugin - unexpected error!",
         "Installing an update...": "Installing an update...",
         "The update is installed. Please restart EDMC.": "The update is installed. Please restart EDMC.",
         "Error: plugin files are corrupted. Unable to start the plugin.": "Error: plugin files are corrupted. Unable to start the plugin.",
@@ -13,6 +23,29 @@
         "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta versions for testers of new updates. Stability is not guaranteed.\nPlease note that the main discussion of the testing process takes place in the closed CEC channel,\nso if you are not a member of the faction, using these versions is at your own risk.",
         "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
         "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
+    },
+    "modules\\bgs\\core.py": {
+        "BGS module": "BGS module",
+        "BGS module encountered an error during initialization and was disabled.": "BGS module encountered an error during initialization and was disabled."
+    },
+    "modules\\bgs\\submodules\\cz_tracker.py": {
+        "High intensity": "High intensity",
+        "Medium intensity": "Medium intensity",
+        "Low intensity": "Low intensity",
+        "??? intensity": "??? intensity",
+        "Winner": "Winner",
+        "Choose": "Choose",
+        "<FACTIONS_UNKNOWN_LABEL_TEXT>": "The factions participating in this conflict are yet unknown. This should be resolved after your first kill.",
+        "<INTENSITY_UNKNOWN_LABEL_TEXT>": "This intensity of this conflict is yet unknown. This should be resolved after your first kill.",
+        "<WINNER_UNKNOWN_LABEL_TEXT>": "The plugin failed to determine the winner of this conflict; perhaps you are in Open?",
+        "IN CONFLICT": "IN CONFLICT",
+        "{n} deaths": "{n} deaths",
+        "{n}cr": "{n}cr",
+        "{n} kills": "{n} kills",
+        "Conflict left early": "Conflict left early",
+        "Conflict ended": "Conflict ended",
+        "Close ({val})": "Close ({val})",
+        "Conflict's results couldn't be processed due to an internal error.": "Conflict's results couldn't be processed due to an internal error."
     },
     "modules\\codex.py": {
         "Geology: Vents and fumeroles": "Geology: Vents and fumeroles",
@@ -26,15 +59,12 @@
         "Planetary Ring Resources": "Planetary Ring Resources",
         "Other Sites": "Other Sites",
         "Valuable Planets": "Valuable Planets",
-        "Tourist Informatiom": "Tourist Informatiom",
+        "Tourist Information": "Tourist Information",
         "Настройки Кодекса": "Codex settings",
         "Скрыть иконки кодекса": "Hide Codex icons"
     },
     "modules\\colonisation.py": {
         "Colonisation delivery tracker": "Colonisation delivery tracker"
-    },
-    "modules\\debug.py": {
-        "Enable debugging mode": "Enable debugging mode"
     },
     "modules\\exploring\\canonn_codex_poi.py": {
         "Codex module": "Codex module"
@@ -70,6 +100,7 @@
         "<DOCKING_ACCESS_SQUADRON>": "squadron",
         "<DOCKING_ACCESS_SQUADRONFRIENDS>": "squadron and friends",
         "<DOCKING_ACCESS_NONE>": "none",
+        "[UNKNOWN]": "[UNKNOWN]",
         "Docking access:": "Docking access:",
         "<NOTORIOUS_ACCESS_ALLOWED>": "allowed",
         "<NOTORIOUS_ACCESS_NOT_ALLOWED>": "not allowed",
@@ -90,8 +121,5 @@
         "<FC_TRACKER_FINISH_CONFIGURING_TEXT>": "The data on the fleet carrier has been successfully received. You can review it and provide additional information about your carrier in the plugin settings.",
         "Close": "Close",
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ATTENTION: Docking on the fleet carrier is allowed for all pilots! To ensure the safety of the carrier, lower the docking access level!"
-    },
-    "plugin_init.py": {
-        "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
     }
 }
