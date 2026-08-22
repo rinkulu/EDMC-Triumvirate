@@ -6,7 +6,8 @@ max-line-length = 135
 # W503 Line break occurred before a binary operator
 extend-ignore = E303,W503
 
-# contex.py contains some enums which looks benefit greatly from their values being aligned
+# core/context.py and modules/fc_tracker.py contain some enums/dataclasses whose looks benefit greatly from their values being aligned
 # E221: multiple spaces before operator
 per-file-ignores =
     core/context.py: E221
+    modules/fc_tracker.py: E221

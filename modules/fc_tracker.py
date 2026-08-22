@@ -5,7 +5,7 @@ import traceback
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, fields
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from tkinter import ttk
 from typing import Any
 
@@ -40,7 +40,7 @@ def mainthread(func):
 # КЛАССЫ ДАННЫХ #
 #################
 
-class FCStatus(str, Enum):
+class FCStatus(StrEnum):
     UNKNOWN                 = "unknown"
     NOT_BOUGHT              = "not_bought"
     ACTIVE                  = "active"
@@ -48,7 +48,7 @@ class FCStatus(str, Enum):
     DECOMMISSIONED          = "decommissioned"
 
 
-class FCDockingAccess(str, Enum):
+class FCDockingAccess(StrEnum):
     ALL                     = "all"
     SQUADRON                = "squadron"
     FRIENDS                 = "friends"
@@ -56,7 +56,7 @@ class FCDockingAccess(str, Enum):
     NONE                    = "none"
 
 
-class FCVariant(str, Enum):
+class FCVariant(StrEnum):
     DRAKE                   = "Drake"
     FORTUNE                 = "Fortune"
     VICTORY                 = "Victory"
@@ -156,7 +156,7 @@ class FCInfoFrame(tk.Frame):
 
     def get_optional_fields_values(self):
         variant = FCVariant(self.variant_var.get())
-        role    = self.role_var.get()
+        role = self.role_var.get()
         comment = self.comment_var.get()
         return variant, role, comment
 
