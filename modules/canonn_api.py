@@ -54,10 +54,10 @@ class HDDetector:
         return cls._instance
 
     # возможные состояния
-    SAFE     = 1
-    MISJUMP  = 2
+    SAFE = 1
+    MISJUMP = 2
     THARGOID = 3
-    HOSTILE  = 4
+    HOSTILE = 4
 
     def __init__(self):
         self.departure_system: str | None = None
@@ -245,7 +245,7 @@ class CanonnRealtimeAPI(Module):
             if len(self.fss_signals_batch) > 0
             else entry["timestamp"]
         )
-        last_timestamp  = datetime.fromisoformat(entry["timestamp"])
+        last_timestamp = datetime.fromisoformat(entry["timestamp"])
         timestamp_diff: timedelta = last_timestamp - first_timestamp
         if (
             len(self.fss_signals_batch) == self._batch_maxlen                               # 0
@@ -302,9 +302,9 @@ class CanonnRealtimeAPI(Module):
             "systemName": journalEntry.system,
             "systemAddress": journalEntry.systemAddress,
             "systemCoordinates": [
-                journalEntry.coords.x,
-                journalEntry.coords.y,
-                journalEntry.coords.z
+                journalEntry.coords.x,  # pyright: ignore[reportOptionalMemberAccess]
+                journalEntry.coords.y,  # pyright: ignore[reportOptionalMemberAccess]
+                journalEntry.coords.z,  # pyright: ignore[reportOptionalMemberAccess]
             ],
             "clientVersion": PluginContext.client_version,
             "isBeta": journalEntry.is_beta

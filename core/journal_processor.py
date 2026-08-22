@@ -62,10 +62,10 @@ class JournalProcessor(Thread):
         # ПРОВЕРКА КОМАНДИРА
         new_cmdr = GameState.cmdr
         if entry["event"] == "Commander":
-            new_cmdr: str = entry["Name"]
+            new_cmdr = entry["Name"]
         elif entry["event"] == "LoadGame":
-            new_cmdr: str = entry["Commander"]
-        elif GameState.cmdr is None and cmdr:   # доверимся данным EDMC
+            new_cmdr = entry["Commander"]
+        elif GameState.cmdr is None and cmdr:  # доверимся данным EDMC
             new_cmdr = cmdr
 
         if new_cmdr != GameState.cmdr:

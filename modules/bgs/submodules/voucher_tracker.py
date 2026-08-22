@@ -43,7 +43,7 @@ class VoucherTracker(Submodule):
                 "entry.351553038": amount,
                 "usp": "pp_url",
             }
-            self.send_bgs_report(url, params, system)
+            self.send_bgs_report(url, params, system)  # pyright: ignore[reportArgumentType]
 
         elif voucher_type == "bounty":
             PluginContext.logger.debug("Redeeming bounties:")
@@ -62,4 +62,4 @@ class VoucherTracker(Submodule):
                         "usp": "pp_url",
                     }
                     self.redeemed_factions.append(faction_name)
-                    self.send_bgs_report(url, params, system)
+                    self.send_bgs_report(url, params, system)  # pyright: ignore[reportArgumentType]

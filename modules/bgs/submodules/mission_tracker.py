@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 
 from core.context import GameState, PluginContext
 from modules.bgs.submodule_base import Submodule
 from modules.legacy import URL_GOOGLE
 
 
-class MissionStatus(str, Enum):
+class MissionStatus(StrEnum):
     UNKNOWN = "UNKNOWN"
     ACTIVE = "ACTIVE"
     COMPLETED = "COMPLETED"
@@ -17,37 +17,35 @@ class MissionStatus(str, Enum):
 
 @dataclass
 class Mission:
-    # ОБЯЗАН полностью соответствовать структуре таблицы
+    # ОБЯЗАН полностью соответствовать структуре таблицы, т.к. при SELECT используется `Mission(*row)`
     mission_id: int
-    cmdr: str                   = None
-    status: MissionStatus       = None
-    mission_type: str           = None
-    timestamp_accepted: str     = None
-    timestamp_expires: str      = None
-    timestamp_finished: str     = None
-    origin_system: str          = None
-    origin_system_id: int       = None
-    origin_faction: str         = None
+    cmdr: str
+    status: MissionStatus
+    mission_type: str
+    origin_system: str | None = None
+    origin_system_id: int | None = None
+    origin_faction: str | None = None
+    timestamp_accepted: str | None = None
+    timestamp_expires: str | None = None
+    timestamp_finished: str | None = None
 
 
 class MissionTracker(Submodule):
     def __init__(self):
-        self.core.database.execute(
-            """
+        self.core.database.execute("""
             CREATE TABLE IF NOT EXISTS missions(
                 mission_id INTEGER PRIMARY KEY,
-                cmdr TEXT,
-                status TEXT,
-                mission_type TEXT,
-                timestamp_accepted TEXT,
-                timestamp_expires TEXT,
-                timestamp_finished TEXT,
+                cmdr TEXT NOT NULL,
+                status TEXT NOT NULL,
+                mission_type TEXT NOT NULL,
                 origin_system TEXT,
                 origin_system_id INT,
-                origin_faction TEXT
+                origin_faction TEXT,
+                timestamp_accepted TEXT,
+                timestamp_expires TEXT,
+                timestamp_finished TEXT
             )
-            """
-        )
+        """)
 
 
     def on_journal_entry(self, entry):
@@ -65,16 +63,21 @@ class MissionTracker(Submodule):
 
     def mission_accepted(self, entry: dict):
         mission_id = entry["MissionID"]
+        if (GameState.cmdr is None
+                or GameState.system is None
+                or GameState.system_address is None):
+            PluginContext.logger.error(f"Can't process accepted mission {mission_id} - missing cmdr/system info")
+            return
         mission_obj = Mission(
             mission_id,
             cmdr=GameState.cmdr,
             timestamp_accepted=entry["timestamp"],
             timestamp_expires=entry.get("Expiry"),
             status=MissionStatus.ACTIVE,
-            mission_type=entry.get("Name"),
+            mission_type=entry["Name"],
             origin_system=GameState.system,
             origin_system_id=GameState.system_address,
-            origin_faction=entry.get("Faction")
+            origin_faction=entry["Faction"]
         )
         self._insert_or_update(mission_obj)
         PluginContext.logger.debug(f"Mission {mission_id} accepted and saved to the database.")
@@ -87,13 +90,20 @@ class MissionTracker(Submodule):
         res = self._select_by_id(mission_id)
         if res is not None:
             mission_obj = Mission(*res)
+            mission_obj.status = MissionStatus.COMPLETED
+            mission_obj.timestamp_finished = entry["timestamp"]
         else:
             PluginContext.logger.warning(f"Mission {mission_id} not found in the database.")
-            mission_obj = Mission(mission_id)
-            mission_obj.cmdr = GameState.cmdr
-            mission_obj.mission_type = entry.get("Name")
-        mission_obj.status = MissionStatus.COMPLETED
-        mission_obj.timestamp_finished = entry["timestamp"]
+            if GameState.cmdr is None:
+                PluginContext.logger.error(f"Can't process failed mission {mission_id} - missing cmdr info")
+                return
+            mission_obj = Mission(
+                mission_id=mission_id,
+                cmdr=GameState.cmdr,
+                status=MissionStatus.COMPLETED,
+                mission_type=entry["Name"],
+                timestamp_finished=entry["timestamp"],
+            )
         self._insert_or_update(mission_obj)
 
         effects: list[dict] = entry.get("FactionEffects", [])
@@ -124,6 +134,7 @@ class MissionTracker(Submodule):
         PluginContext.logger.debug(f"Mission {mission_id} abandoned.")
         res = self._select_by_id(mission_id)
         if res is None:
+            PluginContext.logger.debug(f"Mission {mission_id} not found in the database. Unable to mark as abandoned.")
             return
         mission_obj = Mission(*res)
         mission_obj.timestamp_finished = entry["timestamp"]
@@ -142,7 +153,7 @@ class MissionTracker(Submodule):
         mission_obj.timestamp_finished = entry["timestamp"]
         mission_obj.status = MissionStatus.FAILED
         self._insert_or_update(mission_obj)
-        self._send_data(mission_obj, mission_obj.origin_faction, mission_obj.origin_system, -2)
+        self._send_data(mission_obj, mission_obj.origin_faction, mission_obj.origin_system, -2)  # pyright: ignore[reportArgumentType]
 
 
     def on_missions_event(self, entry: dict):
@@ -240,12 +251,14 @@ class MissionTracker(Submodule):
 
 
     def _find_expired_missions(self):
-        cur = self.core.database.execute("SELECT * FROM missions WHERE status = ?", (MissionStatus.ACTIVE,))
+        cur = self.core.database.execute(
+            "SELECT * FROM missions WHERE status = ? AND timestamp_expires != NULL", (MissionStatus.ACTIVE,)
+        )
         results = cur.fetchall()
         now = datetime.now(UTC).replace(microsecond=0)
         for res in results:
             mission_obj = Mission(*res)
-            expires = datetime.fromisoformat(mission_obj.timestamp_expires)
+            expires = datetime.fromisoformat(mission_obj.timestamp_expires)  # pyright: ignore[reportArgumentType]
             if expires < now:
                 mid = mission_obj.mission_id
                 self.core.database.execute("UPDATE missions SET status = ? WHERE mission_id = ?", (MissionStatus.UNKNOWN, mid))

@@ -34,4 +34,4 @@ class ExpDataTracker(Submodule):
             "usp": "pp_url"
         }
         PluginContext.logger.debug(f"Sold exploration data: station owner - {self.station_owner}, total amount - {amount} cr.")
-        self.send_bgs_report(url, params, GameState.system)
+        self.send_bgs_report(url, params, GameState.system)  # pyright: ignore[reportArgumentType]

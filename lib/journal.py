@@ -16,14 +16,14 @@ class Coords:
 class JournalEntry:
     def __init__(
         self,
-        cmdr: str,
+        cmdr: str | None,
         is_beta: bool,
-        system: str,
-        systemAddress: int,
-        station: str,
+        system: str | None,
+        systemAddress: int | None,
+        station: str | None,
         data: dict,
         state: dict,
-        coords: Coords
+        coords: Coords | None,
     ):
         self.cmdr = cmdr
         self.is_beta = is_beta
@@ -47,5 +47,5 @@ class JournalEntry:
                 "x": self.coords.x,
                 "y": self.coords.y,
                 "z": self.coords.z,
-            },
+            } if self.coords is not None else None,
         }

@@ -399,9 +399,9 @@ class CZTracker(Submodule):
         if intensity == "Med":
             intensity = "Medium"
         self.conflict = Conflict(
-            cmdr=GameState.cmdr,
+            cmdr=GameState.cmdr,  # pyright: ignore[reportArgumentType]
             conflict_type='Space',
-            system=GameState.system,
+            system=GameState.system,  # pyright: ignore[reportArgumentType]
             intensity=intensity,  # pyright: ignore[reportArgumentType]
             timestamp_started=datetime.fromisoformat(entry["timestamp"])
         )
@@ -418,9 +418,9 @@ class CZTracker(Submodule):
         ):
             return
         self.conflict = Conflict(
-            cmdr=GameState.cmdr,
+            cmdr=GameState.cmdr,  # pyright: ignore[reportArgumentType]
             conflict_type='OnFoot',
-            system=GameState.system,
+            system=GameState.system,  # pyright: ignore[reportArgumentType]
             on_foot_body=entry["BodyName"],
             on_foot_settlement=entry["Name"],
             on_foot_deaths=0

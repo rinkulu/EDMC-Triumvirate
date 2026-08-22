@@ -1,24 +1,22 @@
+import logging
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum, StrEnum
+from pathlib import Path
+from queue import Queue
 from semantic_version import Version
 from typing import TYPE_CHECKING, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
+from lib.journal import Coords
 from lib.module import get_active_modules
 
 
 if TYPE_CHECKING:
-    # им можно, они тут для аннотаций типов и в рантайме не импортируются
-    import logging
-    from pathlib import Path
-    from queue import Queue
-
     from core.journal_processor import JournalProcessor
     from core.notifier import Notifier
     from core.sound_player import Player
     from core.systems import SystemsCache
-    from lib.journal import Coords
     from lib.module import Module
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
@@ -56,32 +54,34 @@ class PluginContext:
     """
     Хранит параметры плагина и ссылки на его компоненты.
     """
-    # параметры
-    plugin_name: str                = None
-    plugin_version: Version         = None
-    client_version: str             = None
-    edmc_version: Version           = None
-    plugin_dir: 'Path'              = None
+    # начальные параметры - заполняются загрузчиком в load.py
+    plugin_name: str
+    plugin_version: Version
+    client_version: str
+    edmc_version: Version
+    plugin_dir: 'Path'
 
-    # объекты
-    logger: 'logging.Logger'        = None
-    _event_queue: 'Queue'           = None
-    _tr_template: TranslateFunc     = None
-    journal_processor: 'JournalProcessor'   = None
-    notifier: 'Notifier'            = None
-    sound_player: 'Player'          = None
-    systems_cache: 'SystemsCache'   = None
+    # core-объекты - заполняются загрузчиком в load.py
+    logger: logging.Logger
+    _event_queue: Queue
+    _tr_template: TranslateFunc
 
-    # модули
-    bgs_module: 'BGS'               = None
-    canonn_api: 'CanonnRealtimeAPI' = None
-    canonn_codex_poi: 'CanonnCodexPOI'  = None
-    sq_tracker: 'SquadronTracker'  = None
-    fc_tracker: 'FC_Tracker'        = None
-    colonisation_tracker: 'DeliveryTracker' = None
-    friendfoe                       = None      # TODO: оживить
-    patrol_module: 'PatrolModule'   = None
-    exp_visualizer: 'Visualizer'    = None
+    # core-объекты - создаются в core/plugin_init.py
+    journal_processor: 'JournalProcessor'
+    notifier: 'Notifier'
+    sound_player: 'Player'
+    systems_cache: 'SystemsCache'
+
+    # модули - создаются в core/plugin_init.py
+    bgs_module: 'BGS'
+    canonn_api: 'CanonnRealtimeAPI'
+    canonn_codex_poi: 'CanonnCodexPOI'
+    sq_tracker: 'SquadronTracker'
+    fc_tracker: 'FC_Tracker'
+    colonisation_tracker: 'DeliveryTracker'
+    # friendfoe None
+    patrol_module: 'PatrolModule'
+    exp_visualizer: 'Visualizer'
 
     @_ClassProperty
     def active_modules(cls) -> list['Module']:
@@ -90,7 +90,7 @@ class PluginContext:
 
 # вспомогательные классы
 
-class LegalState(str, Enum):
+class LegalState(StrEnum):
     CLEAN               = "Clean"
     ILLEGAL_CARGO       = "IllegalCargo"
     SPEEDING            = "Speeding"
@@ -100,10 +100,10 @@ class LegalState(str, Enum):
     WARRANT             = "Warrant"
 
 
-class GuiFocus(int, Enum):
+class GuiFocus(IntEnum):
     NO_FOCUS            = 0
-    INTERNAL_PANEL      = 1     # левая панель
-    EXTERNAL_PANEL      = 2     # правая панель
+    INTERNAL_PANEL      = 1  # левая панель
+    EXTERNAL_PANEL      = 2  # правая панель
     COMMS_PANEL         = 3
     ROLE_PANEL          = 4
     STATION_SERVICES    = 5
@@ -153,14 +153,14 @@ class Flags(_FlagsBase):
     FSD_MASS_LOCKED         = _Flag(1 << 16)
     FSD_CHARGING            = _Flag(1 << 17)
     FSD_COOLDOWN            = _Flag(1 << 18)
-    LOW_FUEL                = _Flag(1 << 19)    # <25%
-    OVERHEATING             = _Flag(1 << 20)    # >100%
+    LOW_FUEL                = _Flag(1 << 19)  # <25%
+    OVERHEATING             = _Flag(1 << 20)  # >100%
     HAS_LAT_LONG            = _Flag(1 << 21)
     IS_IN_DANGER            = _Flag(1 << 22)
     BEING_INTERDICTED       = _Flag(1 << 23)
     IN_MAIN_SHIP            = _Flag(1 << 24)
     IN_FIGHTER              = _Flag(1 << 25)
-    IN_SRV                  = _Flag(1 << 26)
+    IN_SRV                  = _Flag(1 << 26)  # или в SLV, то есть Nomad-е :brab_fun:
     HUD_IN_ANALYSIS_MODE    = _Flag(1 << 27)
     NIGHT_VISION            = _Flag(1 << 28)
     ALT_FROM_AVERAGE_RADIUS = _Flag(1 << 29)
@@ -170,8 +170,8 @@ class Flags(_FlagsBase):
 
 class Flags2(_FlagsBase):
     ON_FOOT                 = _Flag(1 << 0)
-    IN_TAXI                 = _Flag(1 << 1)     # или в десантном шаттле
-    IN_MULTICREW            = _Flag(1 << 2)     # т.е. в чужом корабле
+    IN_TAXI                 = _Flag(1 << 1)  # или в десантном шаттле
+    IN_MULTICREW            = _Flag(1 << 2)  # т.е. в чужом корабле
     ON_FOOT_IN_STATION      = _Flag(1 << 3)
     ON_FOOT_ON_PLANET       = _Flag(1 << 4)
     AIM_DOWN_SIGHT          = _Flag(1 << 5)
@@ -200,41 +200,41 @@ class GameState:
     Хранит текущее состояние игры, включая полную репрезентацию status.json.
     """
     # параметры
-    cmdr: str                   = None
-    squadron: str               = None
-    legacy_sqid: str            = None
+    cmdr: str | None            = None
+    squadron: str | None        = None
+    legacy_sqid: str | None     = None
 
-    odyssey: bool               = None
-    game_in_beta: bool          = None
-    pips: list[int, int, int]   = None
-    firegroup: int              = None
-    gui_focus: GuiFocus         = None
-    fuel_main: float            = None
-    fuel_reservoir: float       = None
-    cargo: int                  = None
-    legal_state: LegalState     = None
-    balance: int                = None
-    destination: str            = None
+    odyssey: bool | None                = None
+    game_in_beta: bool | None           = None
+    pips: tuple[int, int, int] | None   = None
+    firegroup: int | None               = None
+    gui_focus: GuiFocus | None          = None
+    fuel_main: float | None             = None
+    fuel_reservoir: float | None        = None
+    cargo: int | None                   = None
+    legal_state: LegalState | None      = None
+    balance: int | None                 = None
+    destination: str | None             = None
 
-    system: str                 = None
-    system_address: int         = None
-    system_coords: 'Coords'     = None
-    pending_jump_system: str    = None
-    pending_jump_system_id: int = None
-    station: str                = None
-    body_name: str              = None
-    latitude: float             = None
-    longitude: float            = None
-    altitude: int               = None
-    heading: int                = None
-    planet_radius: float        = None
+    system: str | None                  = None
+    system_address: int | None          = None
+    system_coords: Coords | None        = None
+    pending_jump_system: str | None     = None
+    pending_jump_system_id: int | None  = None
+    station: str | None                 = None
+    body_name: str | None               = None
+    latitude: float | None              = None
+    longitude: float | None             = None
+    altitude: int | None                = None
+    heading: int | None                 = None
+    planet_radius: float | None         = None
 
     # пешие параметры
-    oxygen: float               = None      # (0.0 .. 1.0)
-    health: float               = None      # (0.0 .. 1.0)
-    temperature: int            = None      # в кельвинах
-    selected_weapon: str        = None
-    gravity: float              = None
+    oxygen: float | None        = None  # (0.0 .. 1.0)
+    health: float | None        = None  # (0.0 .. 1.0)
+    temperature: int | None     = None  # в кельвинах
+    selected_weapon: str | None = None
+    gravity: float | None       = None
 
     # флаги
     flags = Flags()

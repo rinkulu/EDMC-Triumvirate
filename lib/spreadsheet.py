@@ -42,7 +42,7 @@ class Spreadsheet:
     def __iter__(self):
         if not self.response:
             self.download()
-        stream = BytesDecoder(self.response.raw)
+        stream = BytesDecoder(self.response.raw)  # pyright: ignore[reportOptionalMemberAccess]
         reader = csv.reader(stream)
         try:
             next(reader)    # пропускаем заголовок
@@ -53,9 +53,9 @@ class Spreadsheet:
     def __getitem__(self, num):
         if self.data is None:
             self.download()
-        return self.data[num]
+        return self.data[num]  # pyright: ignore[reportOptionalSubscript]
 
     def __len__(self):
         if self.data is None:
             self.download()
-        return len(self.data)
+        return len(self.data)  # pyright: ignore[reportArgumentType]

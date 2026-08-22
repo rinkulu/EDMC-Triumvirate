@@ -5,3 +5,8 @@ max-line-length = 135
 # E303 Too many blank lines (3): Two blank lines are expected between functions and classes and one blank line is expected between methods of a class.
 # W503 Line break occurred before a binary operator
 extend-ignore = E303,W503
+
+# contex.py contains some enums which looks benefit greatly from their values being aligned
+# E221: multiple spaces before operator
+per-file-ignores =
+    core/context.py: E221

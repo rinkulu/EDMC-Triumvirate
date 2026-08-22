@@ -69,7 +69,10 @@ class DeliveryTracker(Module):
 
     def _report(self, delivered: dict[str, int]):
         if self.construction_type is None:
-            PluginContext.logger.error("Can't report colonisation delivery: construction_type is None.")
+            PluginContext.logger.error("Can't report colonisation delivery: construction_type is None")
+            return
+        if GameState.system is None:
+            PluginContext.logger.error("Can't report colonisation delivery: GameState.system is None")
             return
         debug(
             "Detected colonisation delivery: "
