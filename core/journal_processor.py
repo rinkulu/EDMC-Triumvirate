@@ -69,10 +69,14 @@ class JournalProcessor(Thread):
             new_cmdr = cmdr
 
         if new_cmdr != GameState.cmdr:
-            GameState.cmdr = new_cmdr
-            PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching the squadron.")
-            GameState.squadron, GameState.legacy_sqid = legacy.fetch_squadron()
-            PluginContext.logger.debug(f"Squadron set to {GameState.squadron}, SQID set to {GameState.legacy_sqid}.")
+            if new_cmdr is None:
+                PluginContext.logger.debug("CMDR and squadron info are reset to None.")
+                GameState.cmdr, GameState.squadron, GameState.legacy_sqid = None, None, None
+            else:
+                GameState.cmdr = new_cmdr
+                PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching the squadron.")
+                GameState.squadron, GameState.legacy_sqid = legacy.fetch_squadron()
+                PluginContext.logger.debug(f"Squadron set to {GameState.squadron}, SQID set to {GameState.legacy_sqid}.")
 
         # РЕПОРТ ВЕРСИИ ПЛАГИНА ПРИ ЗАПУСКЕ
         if self._startup and GameState.cmdr is not None:
@@ -127,10 +131,11 @@ class JournalProcessor(Thread):
         # 4) Прыжок совершён, но FSD/CarrierJump ещё не было, а данные из новой системы уже пошли
         elif entry["event"] == "FSSSignalDiscovered" and entry["SystemAddress"] != GameState.system_address:
             PluginContext.logger.debug("Detected SystemAddress mismatch in FSSSignalDiscovered event.")
-            if (system_id := entry["SystemAddress"]) == GameState.pending_jump_system_id:
+            system_id: int = entry["SystemAddress"]
+            if system_id == GameState.pending_jump_system_id:
                 GameState.system = GameState.pending_jump_system
                 GameState.system_address = GameState.pending_jump_system_id
-                GameState.system_coords = PluginContext.systems_cache.get_system_coords(GameState.system_address)
+                GameState.system_coords = PluginContext.systems_cache.get_system_coords(system_id)
                 PluginContext.logger.debug(
                     f"New id ({system_id}) corresponds with the pending jump. Current system set to {GameState.system}, "
                     f"coords = {GameState.system_coords}."

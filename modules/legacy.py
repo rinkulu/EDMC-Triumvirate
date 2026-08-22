@@ -367,24 +367,29 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # noqa: E302
 
 def report_version():
     try:
-        resp = requests.get('https://api.ipify.org')
+        resp = requests.get('https://api.ipify.org', timeout=3)
         resp.raise_for_status()
-        ip = resp.text
+        ipv4 = resp.text
     except requests.RequestException as e:
-        PluginContext.logger.error("Couldn't fetch IP address. Exception info:", exc_info=e)
-        return
+        PluginContext.logger.error("Couldn't fetch IPv4 address. Exception info:", exc_info=e)
+        ipv4 = None
     try:
-        ip6 = requests.get('https://api6.ipify.org').text
-    except requests.RequestException:
-        ip6 = None
-
+        resp = requests.get('https://api6.ipify.org', timeout=3)
+        resp.raise_for_status()
+        ipv6 = resp.text
+    except requests.RequestException as e:
+        PluginContext.logger.debug("Couldn't fetch IPv6 address. Exception info:", exc_info=e)
+        ipv6 = None
+    if ipv4 is None and ipv6 is None:
+        PluginContext.logger.error("Neither IPv4 nor IPv6 are determined. Skipping sending plugin version report.")
+        return
     url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse"
     params = {
         "usp": "pp_url",
         "entry.1181808218": GameState.cmdr,
         "entry.254549730":  str(PluginContext.plugin_version),
-        "entry.1622540328": ip,
-        "entry.488844173":  ip6 or "0",
+        "entry.1622540328": ipv4 or "0",
+        "entry.488844173":  ipv6 or "0",
         "entry.1210213202": 1
     }
     GoogleReporter(url, params).start()
@@ -394,6 +399,8 @@ def fetch_squadron() -> tuple[str | None, str | None]:
     """
     Возвращает название и ID сквадрона командира из имеющихся у нас данных.
     """
+    if GameState.cmdr is None:
+        return None, None
     debug("Community Check started")
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"  # noqa: E501
     with closing(requests.get(url, stream=True)) as r:
