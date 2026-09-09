@@ -7,9 +7,9 @@ from lib.module import Module
 class _DataItem:
     def __init__(self, module: Module, category: str, location: str, text: str):
         self.m_qualname = module.__class__.__qualname__
-        self.category   = category
-        self.location   = location
-        self.text       = text
+        self.category = category
+        self.location = location
+        self.text = text
 
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, _DataItem):

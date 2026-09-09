@@ -1,21 +1,23 @@
-canonn_patrols_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=csv"
-bgs_tasks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=csv"
+canonn_patrols_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=csv"  # noqa: E501
+bgs_tasks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=csv"  # noqa: E501
 edsm_poi_url = "https://www.edsm.net/en/galactic-mapping/json"
 edsm_url = "https://www.edsm.net"
 
-#####################
-### CEC ENDPOINTS ###
-#####################
+#################
+# CEC ENDPOINTS #
+#################
 cec_url = "https://closeencounterscorps.org"
 galaxy_url = "https://api-galaxy.closeencounterscorps.org"
 
-###################
-### CANONN URLS ###
-###################
+###############
+# CANONN URLS #
+###############
 canonn_cloud_url_us_central = "https://us-central1-canonn-api-236217.cloudfunctions.net"
 canonn_cloud_url_europe_west = "https://europe-west1-canonn-api-236217.cloudfunctions.net"
 
-ships = {  #Некоторые корабли имеют "а" перед названием, потому что этот словарь используется  для подстановки типов в сообщение с учетом женского рода
+# Некоторые корабли имеют "а" перед названием, потому что этот словарь используется для подстановки типов в сообщение
+# с учетом женского рода
+ships = {
     "adder": " Adder",
     "typex_3": " Alliance Challenger",
     "typex": " Alliance Chieftain",
