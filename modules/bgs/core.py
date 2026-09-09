@@ -63,8 +63,9 @@ class BgsUiFrame(tk.Frame):
 
 
 class FilterUpdater(Thread):
-    REFRESH_TIME = 30 * 60  # s
-    FETCH_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTDY_aCGkppsZVZI_XhjBo_E3dxvGWilsOjpti9bPpqFLHM7Ar47pHfTeeSUfjLW3lI3hzsfy0YVCl7/pub?gid=1163755226&single=true&output=csv"  # noqa: E501
+    REFRESH_TIME = 30 * 60  # 30 min
+    RETRY_TIME = 30  # sec
+    TIMEOUT = 10  # sec
 
     def __init__(self, callback: Callable[[list[str]], Any]):
         self._callback = callback
@@ -76,17 +77,44 @@ class FilterUpdater(Thread):
             self.sleep(self.REFRESH_TIME)
 
     def fetch(self):
-        PluginContext.logger.debug("Starting BGS systems data updating process...")
-        try:
-            resp = requests.get(self.FETCH_URL)
-            resp.raise_for_status()
-        except requests.RequestException as e:
-            PluginContext.logger.error("Couldn't fetch the systems list. Exception info:", exc_info=e)
-            return
-        systems = resp.text.splitlines()
-        if len(systems) == 0:
-            PluginContext.logger.error("The systems list was empty, skipping the update.")
-            return
+        attempts = 0
+        systems = []
+        while True:
+            attempts += 1
+            PluginContext.logger.debug(f"Trying to retrieve the list of tracked systems, attempt {attempts}")
+            url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
+            try:
+                response = requests.get(url, timeout=self.TIMEOUT)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error("Couldnt't get the list of tracked systems from GitHub, exception info:", exc_info=e)
+            else:
+                systems = str(response.json()["files"]["systems"]["content"]).splitlines()
+                if not systems:
+                    PluginContext.logger.error("Received list of tracked systems from GitHub was empty.")
+                else:
+                    PluginContext.logger.info(f"Got the list of tracked systems ({len(systems)} items) from GitHub.")
+                    break
+            # вторая попытка аналогично из другого источника
+            url = "https://gitlab.com/api/v4/snippets/4888705/raw"
+            try:
+                response = requests.get(url, timeout=self.TIMEOUT)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error(
+                    "Couldn't get the list of tracked systems from GitLab either, expection info:", exc_info=e
+                )
+            else:
+                systems = response.text.splitlines()
+                if not systems:
+                    PluginContext.logger.error("Received list of tracked systems from GitLab was empty.")
+                else:
+                    PluginContext.logger.info(f"Got the list of tracked systems ({len(systems)} items) from GitLab.")
+                    break
+            # если не получилось, ждём и пробуем снова
+            PluginContext.logger.warning(f"All sources for BGS systems list failed, next attempt in {self.RETRY_TIME} seconds.")
+            self.sleep(self.RETRY_TIME)
+        # список получен
         self._callback(systems)
 
 
