@@ -8,12 +8,11 @@ from threading import Lock
 from typing import Any
 
 from core.context import PluginContext
-from lib.journal import JournalEntry
 from lib.module import Module
 from lib.thread import Thread
 from modules.legacy import GoogleReporter
 
-from . import submodule_base
+from .submodules import BGSSubmodule, CZTracker, ExpDataTracker, MissionTracker, VoucherTracker
 
 
 # isort: off
@@ -124,7 +123,7 @@ class Filter:
         if not self.bgs_reports_queue.empty():
             PluginContext.logger.debug("Processing delayed BGS report checks:")
             while not self.bgs_reports_queue.empty():
-                self.process_bgs_report(self.bgs_reports_queue.get())
+                self.process_bgs_report(self.bgs_reports_queue.get_nowait())
 
 
 class BGSCore(Module):
@@ -138,47 +137,22 @@ class BGSCore(Module):
         self.filter = Filter()
         self.database = sqlite3.connect(self.DB_PATH, check_same_thread=False)
         self.ui_frame = BgsUiFrame(parent, row, 0)
-        submodule_base.init_submodules(self)
-        self.submodules = submodule_base.get_submodules()
-        if self.submodules:
-            PluginContext.logger.info(
-                f"{len(self.submodules)} submodules initiated: " + ', '.join(s.__class__.__qualname__ for s in self.submodules)
-            )
-        else:
-            PluginContext.logger.error("No submodules found. Disabling the BGS module.")
-            self.enabled = False
-            PluginContext.notifier.display(_translate("BGS module encountered an error during initialization and was disabled."), 0)
+        BGSSubmodule.core = self
+        self.submodules = [
+            CZTracker(ui_row=0),
+            ExpDataTracker(),
+            MissionTracker(),
+            VoucherTracker(),
+        ]
 
     def on_close(self):
         for mod in self.submodules:
             mod.on_close()
         self.database.close()
 
-    def on_journal_entry(self, entry: JournalEntry):
-        for subm in self.submodules:
-            try:
-                subm.on_journal_entry(entry.data)
-            except Exception as e:
-                PluginContext.logger.error(
-                    f"Exception in BGS submodule {subm} while processing a journal entry:",
-                    exc_info=e
-                )
-
-    def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
-        for subm in self.submodules:
-            try:
-                subm.on_dashboard_entry()
-            except Exception as e:
-                PluginContext.logger.error(
-                    f"Exception in BGS submodule {subm} while processing a dashboard entry:",
-                    exc_info=e
-                )
-
     def _send_data(self, url: str, params: dict, affected_systems: str | list[str], submodule_src: str):
         """
-        Метод для субмодулей для отправки данных через фильтр.
-        Субмодули используют его через обёртку в своём метаклассе; submodule_src задаётся там же
-        (см. `SubmoduleMeta.init_submodules`)
+        Метод для субмодулей для отправки данных через фильтр. См. `BGSSubmodule.send_bgs_report`
         """
         if isinstance(affected_systems, str):
             affected_systems = [affected_systems]

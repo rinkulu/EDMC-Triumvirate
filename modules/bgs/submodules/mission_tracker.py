@@ -3,7 +3,9 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 from core.context import GameState, PluginContext
-from modules.bgs.submodule_base import Submodule
+from lib.journal import JournalEntry
+from lib.module import Module
+from modules.bgs.submodules.base import BGSSubmodule
 from modules.legacy import URL_GOOGLE
 
 
@@ -30,8 +32,9 @@ class Mission:
     timestamp_finished: str | None = None
 
 
-class MissionTracker(Submodule):
+class MissionTracker(Module, BGSSubmodule):
     def __init__(self):
+        self._closed = False
         self.core.database.execute("""
             CREATE TABLE IF NOT EXISTS missions(
                 mission_id INTEGER PRIMARY KEY,
@@ -48,16 +51,20 @@ class MissionTracker(Submodule):
         """)
 
 
-    def on_journal_entry(self, entry):
-        match entry["event"]:
-            case "Missions": self.on_missions_event(entry)
-            case "MissionAccepted": self.mission_accepted(entry)
-            case "MissionCompleted": self.mission_completed(entry)
-            case "MissionAbandoned": self.mission_abandoned(entry)
-            case "MissionFailed": self.mission_failed(entry)
+    def on_journal_entry(self, entry: JournalEntry):
+        raw = entry.data
+        match raw["event"]:
+            case "Missions": self.on_missions_event(raw)
+            case "MissionAccepted": self.mission_accepted(raw)
+            case "MissionCompleted": self.mission_completed(raw)
+            case "MissionAbandoned": self.mission_abandoned(raw)
+            case "MissionFailed": self.mission_failed(raw)
 
 
     def on_close(self):
+        if self._closed:
+            return
+        self._closed = True
         self._find_expired_missions()
 
 

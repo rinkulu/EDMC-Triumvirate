@@ -1,20 +1,23 @@
 from core.context import GameState, PluginContext
-from modules.bgs.submodule_base import Submodule
+from lib.journal import JournalEntry
+from lib.module import Module
+from modules.bgs.submodules.base import BGSSubmodule
 from modules.legacy import URL_GOOGLE
 
 
-class VoucherTracker(Submodule):
+class VoucherTracker(Module, BGSSubmodule):
     def __init__(self):
         self.station_owner: str | None = None
         self.redeemed_factions: list[str] = list()
 
-    def on_journal_entry(self, entry: dict):
-        event = entry["event"]
-        if event == "Docked" or (event == "Location" and entry["Docked"] is True):
-            self.station_owner = entry["StationFaction"]["Name"]
+    def on_journal_entry(self, entry: JournalEntry):
+        raw = entry.data
+        event = raw["event"]
+        if event == "Docked" or (event == "Location" and raw["Docked"] is True):
+            self.station_owner = raw["StationFaction"]["Name"]
             self.redeemed_factions.clear()
             return
-        elif event == "Undocked" or (event == "Location" and entry["Docked"] is False):
+        elif event == "Undocked" or (event == "Location" and raw["Docked"] is False):
             self.station_owner = None
             self.redeemed_factions.clear()
             return
@@ -22,17 +25,17 @@ class VoucherTracker(Submodule):
             return
 
         # игнорируем флитаки и юристов
-        if self.station_owner == "FleetCarrier" or "BrokerPercentage" in entry:
+        if self.station_owner == "FleetCarrier" or "BrokerPercentage" in raw:
             return
 
         url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
-        voucher_type = entry["Type"]
+        voucher_type = raw["Type"]
         cmdr = GameState.cmdr
         system = GameState.system
 
         if voucher_type == "CombatBond":
-            faction_name = entry["Faction"]
-            amount = entry["Amount"]
+            faction_name = raw["Faction"]
+            amount = raw["Amount"]
             PluginContext.logger.debug(f"Redeeming combat bonds: faction {faction_name}, amount: {amount} cr.")
             params = {
                 "entry.503143076": cmdr,
@@ -47,7 +50,7 @@ class VoucherTracker(Submodule):
 
         elif voucher_type == "bounty":
             PluginContext.logger.debug("Redeeming bounties:")
-            for faction in entry["Factions"]:
+            for faction in raw["Factions"]:
                 faction_name: str = faction["Faction"]
                 amount: int = faction["Amount"]
                 if faction_name != "" and faction_name not in self.redeemed_factions:

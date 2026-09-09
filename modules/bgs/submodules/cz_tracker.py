@@ -6,7 +6,9 @@ from tkinter import ttk
 from typing import TYPE_CHECKING, Any, Literal
 
 from core.context import GameState, PluginContext
-from modules.bgs.submodule_base import Submodule
+from lib.journal import JournalEntry
+from lib.module import Module
+from modules.bgs.submodules.base import BGSSubmodule
 from modules.legacy import URL_GOOGLE
 
 
@@ -358,29 +360,30 @@ class ConflictInfoFrame(tk.Frame):
         self.grid_forget()
 
 
-class CZTracker(Submodule):
-    def __init__(self):
-        self.__gui = ConflictInfoFrame(self.core.ui_frame, self._ui_row)
+class CZTracker(Module, BGSSubmodule):
+    def __init__(self, ui_row: int):
+        self.__gui = ConflictInfoFrame(self.core.ui_frame, ui_row)
         self.conflict: Conflict | None = None
         self.gamemode: Literal['Open', 'Group', 'Solo'] = 'Open'    # если наверняка не знаем, будем предполагать небезопасный вариант
         self._on_foot_died: bool | None = None
 
 
-    def on_journal_entry(self, entry: dict):
-        event = entry["event"]
+    def on_journal_entry(self, entry: JournalEntry):
+        raw = entry.data
+        event = raw["event"]
         match event:
-            case "LoadGame": self.gamemode = entry["GameMode"]
-            case "SupercruiseDestinationDrop": self.on_supercruise_drop(entry)
-            case "ApproachSettlement": self.on_settlement_approached(entry)
-            case "DropshipDeploy": self.on_dropship_deploy(entry)
-            case "FactionKillBond": self.on_kill(entry)
-            case "StartJump": self.end_conflict(entry)
-            case "BookDropship" | "BookTaxi": self.on_book_dropship(entry)
-            case "Music": self.on_music_event(entry)
-            case "Shutdown" | "Died" | "SelfDestruct": self.end_conflict(entry, early=True)
+            case "LoadGame": self.gamemode = raw["GameMode"]
+            case "SupercruiseDestinationDrop": self.on_supercruise_drop(raw)
+            case "ApproachSettlement": self.on_settlement_approached(raw)
+            case "DropshipDeploy": self.on_dropship_deploy(raw)
+            case "FactionKillBond": self.on_kill(raw)
+            case "StartJump": self.end_conflict(raw)
+            case "BookDropship" | "BookTaxi": self.on_book_dropship(raw)
+            case "Music": self.on_music_event(raw)
+            case "Shutdown" | "Died" | "SelfDestruct": self.end_conflict(raw, early=True)
 
 
-    def on_dashboard_entry(self):
+    def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
         if self.conflict is None or self.conflict.conflict_type != "OnFoot":
             return
         if GameState.health == 0.0 and not self._on_foot_died:  # флаг нужен, чтобы только один раз смерть засчитать
