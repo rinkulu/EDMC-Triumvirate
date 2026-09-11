@@ -57,27 +57,27 @@ class poiTypes(threading.Thread):
 
 class CodexTypes(Frame):
     tooltips = {
-        "Geology": _translate("Geology: Vents and fumeroles"),
+        "Geology": _translate("Geology: Gas vents and fumaroles"),
         "Cloud": _translate("Lagrange Clouds"),
         "Anomaly": _translate("Anomalous stellar phenomena"),
         "Thargoid": _translate("Thargoid sites or barnacles"),
         "Biology": _translate("Biological surface signals"),
         "Guardian": _translate("Guardian sites"),
         "None": _translate("Unclassified codex entry"),
-        "Human": _translate("Human Sites"),
-        "Ring": _translate("Planetary Ring Resources"),
-        "Other": _translate("Other Sites"),
-        "Planets": _translate("Valuable Planets"),
-        "Tourist": _translate("Tourist Information")
+        "Human": _translate("Human sites"),
+        "Ring": _translate("Planetary ring resources"),
+        "Other": _translate("Other sites"),
+        "Planets": _translate("Valuable planets"),
+        "Tourist": _translate("Tourist information")
     }
 
     body_types = {
-        'Metal-rich body': _translate('Metal-Rich Body'),
-        'Metal rich body': _translate('Metal-Rich Body'),
-        'Earth-like world': _translate('Earthlike World'),
-        'Earthlike body': _translate('Earthlike World'),
-        'Water world': _translate('Water World'),
-        'Ammonia world': _translate('Ammonia World')
+        'Metal-rich body': _translate('Metal-rich body'),
+        'Metal rich body': _translate('Metal-rich body'),
+        'Earth-like world': _translate('Earthlike world'),
+        'Earthlike body': _translate('Earthlike world'),
+        'Water world': _translate('Water world'),
+        'Ammonia world': _translate('Ammonia world')
     }
 
     bodycount = 0
