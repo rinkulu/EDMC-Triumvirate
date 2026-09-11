@@ -1,26 +1,17 @@
-*.suo
-*.pyo
-*.patrol
-/*.bat
-/EDMC.log
-/.venv
-/venv
-*.pyc
-/.vs/slnx.sqlite
-/.vs
-/git
-/github
-*.asc
-*.log
-#/CanonnMigration
-*.pyproj
-/EDMC-Triumvirate.sln
-/modules/modules.zip
-/settings_local.py
+# IDE garbage
 .vscode
-/EDMC-Triumvirate.pyproj.user
-test*.*
-.python-version
 
-deploy.ps1
-todo.txt
+# Python garbage
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Development garbage
+*.sh
+*.ps1
+.python-version
+test*.*
+TODO.md
