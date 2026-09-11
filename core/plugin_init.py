@@ -43,7 +43,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     """
     frame = tk.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
-    PluginContext.notifier = Notifier(frame, 4)    # его надо инициализировать первым, но маппить в самый низ
+    PluginContext.notifier = Notifier(frame, 5)    # его надо инициализировать первым, но маппить в самый низ
     PluginContext.systems_cache = SystemsCache(frame, 0)
     PluginContext.exp_visualizer = Visualizer(frame, 1)
     PluginContext.patrol_module = PatrolModule(frame, 2)
