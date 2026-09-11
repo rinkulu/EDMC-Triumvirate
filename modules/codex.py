@@ -360,10 +360,9 @@ class CodexTypes(Frame):
         self.tooltiplist.grid_remove()
 
     def addimage(self, name, col):
-
         grey = "{}_grey".format(name)
-        self.images[name] = tk.PhotoImage(file=os.path.join(CodexTypes.plugin_dir, "icons", "{}.gif".format(name)))
-        self.images[grey] = tk.PhotoImage(file=os.path.join(CodexTypes.plugin_dir, "icons", "{}.gif".format(grey)))
+        self.images[name] = tk.PhotoImage(file=PluginContext.plugin_dir / 'assets' / 'icons' / f'{name}.gif')
+        self.images[grey] = tk.PhotoImage(file=PluginContext.plugin_dir / 'assets' / 'icons' / f'{grey}.gif')
         self.labels[name] = tk.Label(self.container, image=self.images.get(grey), text=name)
         self.labels[name].grid(row=0, column=col)
 
@@ -642,10 +641,6 @@ class CodexTypes(Frame):
         # we can do this on every event can't we
         self.visualise()
         #debug(json.dumps(self.poidata))
-
-    @classmethod
-    def plugin_start(cls, plugin_dir):
-        cls.plugin_dir = plugin_dir
 
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
