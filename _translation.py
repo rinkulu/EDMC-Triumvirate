@@ -1,27 +1,68 @@
+import ast
 import json
-import re
 from pathlib import Path
 
 
 base_dir = Path(".").resolve()
 translations_dir = Path(".").resolve() / "translations"
 template_file = translations_dir / "en.template.json"
-exclude_dirs = [".venv", ".vscode", ".git"]
-function_name = "_translate"
-tr_call_pattern = re.compile(r"(?:^|^[^\#\n]*[^\#\n\w\.])" + function_name + r"\([\n\s]*[rf]?\"([^\"]+)\"\)")
-template_tr_call_pattern = re.compile(r"^[^\#\n]*PluginContext\._tr_template\([\n\s]*[rf]?\"([^\"]+)\",[\n\s]*filepath=__file__[\n\s]*\)")  # noqa: E501
+exclude_dirs = {".venv", ".vscode", ".git", "__pycache__"}
+
+TARGET_FUNCTIONS = {"_translate", "_tr_template"}
+
+
+class TranslationExtractor(ast.NodeVisitor):
+    def __init__(self, path: Path):
+        self.path = path
+        self.rel_path = path.relative_to(base_dir)
+        self.result: dict[str, str] = {}
+        self.has_errors = False
+
+    def _warn(self, lineno: int, message: str):
+        print(f"{'\n' if not self.has_errors else ''}  WARN: {message} in file {self.rel_path}, line {lineno}")
+        self.has_errors = True
+
+    def _extract_x(self, node: ast.Call) -> ast.AST | None:
+        if node.args:
+            return node.args[0]
+        for kw in node.keywords:
+            if kw.arg == "x":
+                return kw.value
+        return None
+
+    def visit_Call(self, node: ast.Call):
+        """
+        Парсит вызовы _translate и PluginContext._tr_template
+        """
+        func_name = None
+        match node.func:
+            case ast.Name(id=name) | ast.Attribute(attr=name):
+                func_name = name
+        if func_name in TARGET_FUNCTIONS:
+            x_val = self._extract_x(node)
+            match x_val:
+                # строковый литерал
+                case ast.Constant(value=str(text)):
+                    self.result[text] = text
+                # что-то другое
+                case ast.AST():
+                    self._warn(node.lineno, f"potential incorrect usage of {func_name!r}. Cannot determine the translation key")
+                # вообще без аргументов
+                case None:
+                    self._warn(node.lineno, f"potential call to {func_name!r} without arguments; overlapping function name?")
+        self.generic_visit(node)
 
 
 def parse_file(path: Path) -> dict[str, str]:
     print(f"Parsing {path.relative_to(base_dir)}... ", end='')
-    result = {}
-    with open(path, 'r', encoding="utf-8") as f:
-        for line in f:
-            if (match := re.match(tr_call_pattern, line) or re.match(template_tr_call_pattern, line)) is not None:
-                if (string := match.group(1)) not in result:
-                    result[string] = string
-    print(f"{len(result)} line{'' if len(result) == 1 else 's'} added")
-    return result
+    tree = ast.parse(path.read_text(encoding='utf-8'))
+    extractor = TranslationExtractor(path)
+    extractor.visit(tree)
+    if not extractor.has_errors:
+        print(f"{len(extractor.result)} line{'' if len(extractor.result) == 1 else 's'} added")
+    else:
+        print(f"Parsed {path.relative_to(base_dir)}, {len(extractor.result)} line{'' if len(extractor.result) == 1 else 's'} added")
+    return extractor.result
 
 
 def travel_dir(path: Path, output: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
@@ -30,7 +71,7 @@ def travel_dir(path: Path, output: dict[str, dict[str, str]]) -> dict[str, dict[
             travel_dir(obj, output)
         elif obj.is_file() and not obj.is_symlink() and obj.name.endswith(".py"):
             if (strings := parse_file(obj)):
-                relative_path = str(obj.relative_to(base_dir))
+                relative_path = obj.relative_to(base_dir).as_posix()
                 output[relative_path] = strings
     return output
 

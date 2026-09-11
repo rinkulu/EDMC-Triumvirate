@@ -1,11 +1,11 @@
 {
-    "core\\debug.py": {
+    "core/debug.py": {
         "Enable debugging mode": "Включить отладочные логи"
     },
-    "core\\plugin_init.py": {
+    "core/plugin_init.py": {
         "<SETTINGS_SUPPORT_MESSAGE>": "Если у вас возникнут проблемы с плагином, свяжитесь с нами по электронной почте help@cec.org."
     },
-    "core\\systems.py": {
+    "core/systems.py": {
         "<SYSTEMS_MODULE_NO_COORDS_WARNING>": "Координаты текущей системы неизвестны; работоспособность плагина не гарантирована. Прыжок в другую систему или релог должны решить эту проблему."
     },
     "load.py": {
@@ -24,11 +24,10 @@
         "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Development - версии для разработчиков, не предназначенные для публичного использования.\nЕсли вы не знаете, почему у вас в меню появился этот пункт - выберите стабильный канал обновлений и сообщите нам о баге.",
         "This plugin requires EDMC version 5.11.0 or later.": "Плагин поддерживает только версии EDMC 5.11.0 и новее."
     },
-    "modules\\bgs\\core.py": {
-        "BGS module": "Модуль БГС",
-        "BGS module encountered an error during initialization and was disabled.": "Модуль БГС столкнулся с неожиданной ошибкой во время инициализации и был отключён."
+    "modules/bgs/core.py": {
+        "BGS module": "Модуль БГС"
     },
-    "modules\\bgs\\submodules\\cz_tracker.py": {
+    "modules/bgs/submodules/cz_tracker.py": {
         "High intensity": "Высокая интенсивность",
         "Medium intensity": "Средняя интенсивность",
         "Low intensity": "Низкая интенсивность",
@@ -47,10 +46,10 @@
         "Close ({val})": "Закрыть ({val})",
         "Conflict's results couldn't be processed due to an internal error.": "Не удалось определить результаты конфликта из-за внутренней ошибки."
     },
-    "modules\\canonn_api.py": {
+    "modules/canonn_api.py": {
         "Canonn API client": "Клиент Canonn API"
     },
-    "modules\\codex.py": {
+    "modules/codex.py": {
         "Geology: Vents and fumeroles": "Geology: Vents and fumeroles",
         "Lagrange Clouds": "Lagrange Clouds",
         "Anomalous stellar phenomena": "Anomalous stellar phenomena",
@@ -63,19 +62,23 @@
         "Other Sites": "Other Sites",
         "Valuable Planets": "Valuable Planets",
         "Tourist Information": "Tourist Information",
+        "Metal-Rich Body": "Metal-Rich Body",
+        "Earthlike World": "Earthlike World",
+        "Water World": "Water World",
+        "Ammonia World": "Ammonia World",
         "Настройки Кодекса": "Настройки Кодекса",
         "Скрыть иконки кодекса": "Скрыть иконки кодекса"
     },
-    "modules\\colonisation.py": {
+    "modules/colonisation.py": {
         "Colonisation deliveries tracker": "Трекер колонизационных доставок"
     },
-    "modules\\exploring\\canonn_codex_poi.py": {
+    "modules/exploring/canonn_codex_poi.py": {
         "Codex module": "Модуль кодекса"
     },
-    "modules\\exploring\\visualizer\\controller.py": {
+    "modules/exploring/visualizer/controller.py": {
         "Visualizer": "Визуализатор"
     },
-    "modules\\exploring\\visualizer\\ui.py": {
+    "modules/exploring/visualizer/ui.py": {
         "Anomaly": "Аномалии",
         "Biology": "Биология",
         "Cloud": "Облака",
@@ -97,7 +100,7 @@
         "Location": "Локация",
         "POI": "POI"
     },
-    "modules\\fc_tracker.py": {
+    "modules/fc_tracker.py": {
         "unknown": "неизвестно",
         "Carrier name:": "Название корабля-носителя:",
         "Carrier class:": "Класс корабля-носителя:",
@@ -129,10 +132,10 @@
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ВНИМАНИЕ: стыковка на корабле-носителе разрешена для всех пилотов! Для обеспечения безопасности носителя понизьте уровень доступа к стыковке!",
         "Fleet carrier tracker": "Трекер корабля-носителя"
     },
-    "modules\\patrol\\patrol_module.py": {
+    "modules/patrol/patrol_module.py": {
         "Patrol module": "Модуль Патруля"
     },
-    "modules\\squadron.py": {
+    "modules/squadron.py": {
         "Squadron tracker": "Трекер эскадрильи"
     }
 }
