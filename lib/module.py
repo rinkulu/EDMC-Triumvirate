@@ -10,13 +10,12 @@ class ModuleMeta(ABCMeta):
     def __new__(cls, name, bases, dct):
         """
         Модификация определения модулей.
-        Задаёт дефолтные значения полям `enabled` и `localized_name`,
-        если они отсутствуют в определении класса.
+        Задаёт дефолтное значения полю `enabled`, если оно отсутствует в определении класса.
+        `localized_name` не задаётся, потому что будьте добры нормально его прописать
+        и не ломать скрипт поиска строк перевода.
         """
         if "enabled" not in dct:
             dct["enabled"] = True
-        if "localized_name" not in dct:
-            dct["localized_name"] = name
         return super().__new__(cls, name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
