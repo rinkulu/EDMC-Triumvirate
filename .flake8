@@ -9,5 +9,5 @@ extend-ignore = E303,W503
 # core/context.py and modules/fc_tracker.py contain some enums/dataclasses whose looks benefit greatly from their values being aligned
 # E221: multiple spaces before operator
 per-file-ignores =
-    core/context.py: E221
-    modules/fc_tracker.py: E221
+    Triumvirate/core/context.py: E221
+    Triumvirate/modules/fc_tracker.py: E221

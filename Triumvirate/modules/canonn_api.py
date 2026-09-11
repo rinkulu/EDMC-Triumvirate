@@ -1,0 +1,376 @@
+import functools
+import json
+import requests
+from datetime import datetime, timedelta
+
+from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.debug import debug, error
+from Triumvirate.core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
+from Triumvirate.lib.journal import JournalEntry
+from Triumvirate.lib.module import Module
+from Triumvirate.lib.thread import BasicThread, Thread
+from Triumvirate.lib.timer import Timer
+
+
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
+
+
+class CanonnReporter(BasicThread):
+    """Смесь Reporter и Canonn-овского Emitter"""
+    # https://github.com/canonn-science/EDMC-Canonn/blob/05a5d9c4f842ad4fdb52b1a04ffc01ac623eba2b/canonn/emitter.py
+
+    def __init__(self, url: str, payload: dict):
+        super().__init__()
+        self.url = url
+        self.payload = payload
+
+    def run(self):
+        if None in self.payload.values():
+            error("[CanonnReporter] None detected in params! {}", self.payload)
+            return
+        try:
+            res = requests.post(
+                self.url,
+                data=json.dumps(self.payload, ensure_ascii=False).encode('utf-8'),
+                headers={"content-type": "application/json"}
+            )
+            res.raise_for_status()
+        except requests.RequestException as e:
+            PluginContext.logger.error(
+                f"[CanonnReporter] Couldn't send data to Canonn Cloud. Url: {self.url}, payload: {self.payload} Exception info:",
+                exc_info=e
+            )
+        else:
+            debug("[CanonnReporter] Data sent successfully: url {!r}, payload {!r}.", self.url, self.payload)
+
+
+class HDDetector:
+    """Отслеживает гиперперехваты таргоидами."""
+
+    _instance = None
+    def __new__(cls):       # noqa: E301
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    # возможные состояния
+    SAFE = 1
+    MISJUMP = 2
+    THARGOID = 3
+    HOSTILE = 4
+
+    def __init__(self):
+        self.departure_system: str | None = None
+        self.destination_system_id: int | None = None
+        self.departure_timestamp: datetime | None = None
+        self.status = self.SAFE
+        self._timer: Timer | None = None
+
+
+    def journal_entry(self, journal_entry: JournalEntry):
+        entry = journal_entry.data
+        event = entry["event"]
+
+        if event == "StartJump" and entry["JumpType"] == "Hyperspace":
+            self.departure_system = journal_entry.system
+            self.destination_system_id = entry["SystemAddress"]
+            self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
+
+        elif event == "FSDJump":
+            arrived_to = entry["StarSystem"]
+            if self.departure_system == arrived_to:
+                # 99%, что проделки таргов, но на всякий случай перепроверим
+                debug("[HDDetector] Detected a misjump.")
+                self.status = self.MISJUMP
+            else:
+                self.status = self.SAFE
+
+        elif (
+            event == "Music"
+            and self.status in (self.MISJUMP, self.THARGOID)
+            and entry.get("MusicTrack") in ("Unknown_Encounter", "Combat_Unknown", "Combat_Dogfight", "Combat_Hunters")
+        ):
+            if self.status < self.THARGOID:
+                debug("[HDDetector] Hyperdiction confirmed.")
+            self.status = self.THARGOID
+
+            if entry["MusicTrack"] in ("Unknown_Encounter"):
+                # подождём, ожидая агрессии со стороны таргоида
+                debug("[HDDetector] Waiting for the signs of aggression...")
+                if not self._timer:
+                    self._timer = Timer(20, lambda: self._reportHD(journal_entry))
+                    self._timer.start()
+
+            elif entry["MusicTrack"] in ("Combat_Unknown", "Combat_Dogfight", "Combat_Hunters"):
+                debug("[HDDetector] Detected an attack on a player.")
+                self.status = self.HOSTILE
+                if self._timer:
+                    self._timer.kill()
+                    self._timer = None
+                self._reportHD(journal_entry)
+
+
+    def _reportHD(self, journal_entry: JournalEntry):
+        if not self.status == self.HOSTILE:
+            debug("[HDDetector] Aggression against the player not detected.")
+        debug("[HDDetector] Reporting the hyperdiction to Canonn.")
+
+        if self.destination_system_id is None:
+            PluginContext.logger.error("Detected hyperdiction, but destination_system_id was None!")
+            self.status = self.SAFE
+            return
+
+        current_coords = GameState.system_coords
+        dest_coords = PluginContext.systems_cache.get_system_coords(self.destination_system_id)
+        dest_name = PluginContext.systems_cache.get_system_name(self.destination_system_id)
+
+        if current_coords is None:
+            PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
+        elif dest_coords is None or dest_name is None:
+            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords or name.")
+        else:
+            x, y, z = current_coords
+            dx, dy, dz = dest_coords
+            url = f"{canonn_cloud_url_europe_west}/postHDDetected"
+            params = {
+                "cmdr": journal_entry.cmdr,
+                "system": journal_entry.system,
+                "timestamp": journal_entry.data["timestamp"],
+                "x": x, "y": y, "z": z,
+                "destination": dest_name,
+                "dx": dx, "dy": dy, "dz": dz,
+                "client": PluginContext.client_version,
+                "odyssey": GameState.odyssey,
+                "hostile": (self.status == self.HOSTILE)
+            }
+            CanonnReporter(url, params).start()
+
+        # сбрасываем состояние до следующего перехвата
+        self.status = self.SAFE
+
+
+    @classmethod
+    def check_last_encounter(cls, journalEntry: JournalEntry):
+        entry = journalEntry.data
+        if entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM"):
+            debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
+            system = entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
+            if system == "Pleiades Sector IR-W d1-55":
+                system = "Delphi"
+
+            coords = PluginContext.systems_cache.get_system_coords(system)
+            if coords is None:
+                PluginContext.logger.warning(f"Can't report last encounter to Canonn: system coordinates unknown ({system!r})")
+                return
+
+            x, y, z = coords
+            gametime = entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
+            year, remainder = gametime.split("-", 1)
+            timestamp = "{}-{}".format(str(int(year) - 1286), remainder)
+
+            debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
+
+            url = f"{canonn_cloud_url_europe_west}/postHD"
+            params = {
+                "cmdr": journalEntry.cmdr,
+                "system": system,
+                "timestamp": timestamp,
+                "x": x, "y": y, "z": z
+            }
+            CanonnReporter(url, params).start()
+
+
+
+class CanonnRealtimeAPI(Module):
+    """Проверяет и отправляет интересные для Canonn-ов игровые события."""
+    _instance = None
+    _hdtracker = HDDetector()
+    whitelist = dict()
+
+    @property
+    def localized_name(self) -> str:
+        return _translate("Canonn API client")
+
+    def __init__(self):
+        super().__init__()
+        self.fss_signals_batch = list()
+        self._batch_maxlen = 30         # каноны рекомендуют 40 во избежание таймаута, мы перестрахуемся
+        self.fss_signals_timer: Timer | None = None
+        WhitelistUpdater().start()
+
+
+    def on_journal_entry(self, entry: JournalEntry):
+        if entry.data["event"] == "Statistics":
+            self._hdtracker.check_last_encounter(entry)
+        if not entry.system:
+            return
+        # проверяем:
+        # сигналы в системе
+        self._check_fss_signal(entry)
+        # таргоидские гиперперехваты
+        self._hdtracker.journal_entry(entry)
+        # всё остальное
+        if entry.data["event"] != "FSSSignalDiscovered":
+            self._check_whitelisted_events(entry)
+
+
+    def on_close(self):
+        if len(self.fss_signals_batch) > 0:
+            self._dump_batch()
+
+
+    def _check_fss_signal(self, journalEntry: JournalEntry):
+        entry = journalEntry.data
+        event = entry["event"]
+
+        if event == "FSSSignalDiscovered":
+            isStation = entry.get("IsStation", False)
+            isCecFc = (
+                entry.get("SignalType") == "FleetCarrier"
+                and is_cec_fleetcarrier(entry.get("SignalName", ""))
+            )
+            if isStation and not isCecFc:
+                self.fss_signals_batch.append(journalEntry)
+
+        """
+        Отправлять FSS сигналы в системе будем при одном из следующих условий:
+        0) Очередь заполнена
+        1) Мы покинули систему
+        2) Мы вышли из игры
+        3) Мы закрываем плагин      <-- реализовано в on_close()
+        4) Прошло достаточно времени
+        """
+        first_timestamp = datetime.fromisoformat(
+            self.fss_signals_batch[0].data["timestamp"]
+            if len(self.fss_signals_batch) > 0
+            else entry["timestamp"]
+        )
+        last_timestamp = datetime.fromisoformat(entry["timestamp"])
+        timestamp_diff: timedelta = last_timestamp - first_timestamp
+        if (
+            len(self.fss_signals_batch) == self._batch_maxlen                               # 0
+            or (event == "StartJump" and entry["JumpType"] == "Hyperspace")                 # 1
+            or event in ["Died", "SelfDestruct", "Resurrect"]                               # 1
+            or event == "Shutdown"                                                          # 2
+            or event == "Music" and entry["MusicTrack"] == "MainMenu"                       # 2
+            or (event != "FSSSignalDiscovered" and timestamp_diff > timedelta(minutes=1))   # 4
+        ):
+            self._dump_batch()
+
+
+    def _check_whitelisted_events(self, journalEntry: JournalEntry):
+        entry = journalEntry.data
+        valuable = False
+        for accepted_event in self.whitelist:
+            if all(entry.get(key) == value for key, value in accepted_event["definition"].items()):
+                valuable = True
+                break
+        if not valuable:
+            return
+        # если все пары ключей-значений совпадают, каноны в этом заинтересованы
+        debug("[CanonnAPI] Sending the {!r} event to Canonn.", entry["event"])
+        url = f"{canonn_cloud_url_us_central}/postEvent"
+        gamestate = self._get_gamestate(journalEntry)
+        params = {
+            "gameState": gamestate,
+            "rawEvents": [entry],
+            "cmdrName": journalEntry.cmdr
+        }
+        CanonnReporter(url, params).start()
+
+
+    def _dump_batch(self):
+        if len(self.fss_signals_batch) == 0:
+            return
+        debug("[CanonnAPI] Dumping the batch, len={}.", len(self.fss_signals_batch))
+        url = f"{canonn_cloud_url_us_central}/postEvent"
+        gamestate = self._get_gamestate(self.fss_signals_batch[0])
+        params = {
+            "gameState": gamestate,
+            "rawEvents": [entry.data for entry in self.fss_signals_batch],
+            "cmdrName": self.fss_signals_batch[0].cmdr
+        }
+        CanonnReporter(url, params.copy()).start()
+        self.fss_signals_batch.clear()
+
+
+    def _get_gamestate(self, journalEntry: JournalEntry):
+        entry = journalEntry.data
+
+        # обязательные параметры
+        gamestate = {
+            "systemName": journalEntry.system,
+            "systemAddress": journalEntry.systemAddress,
+            "systemCoordinates": [
+                journalEntry.coords.x,  # pyright: ignore[reportOptionalMemberAccess]
+                journalEntry.coords.y,  # pyright: ignore[reportOptionalMemberAccess]
+                journalEntry.coords.z,  # pyright: ignore[reportOptionalMemberAccess]
+            ],
+            "clientVersion": PluginContext.client_version,
+            "isBeta": journalEntry.is_beta
+        }
+
+        # дополнительные, которые мы 100% знаем
+        gamestate["platform"] = "PC"
+
+        # дополнительные, которые мы, возможно, знаем
+        if GameState.odyssey is not None:
+            gamestate["odyssey"] = GameState.odyssey
+        if entry.get("BodyID"):
+            gamestate["bodyId"] = entry["BodyID"]
+        if GameState.body_name:
+            gamestate["bodyName"] = GameState.body_name
+        if GameState.temperature:
+            gamestate["temperature"] = GameState.temperature
+        if GameState.gravity:
+            gamestate["gravity"] = GameState.gravity
+
+        if GameState.latitude and GameState.longitude:
+            gamestate["latitude"] = GameState.latitude
+            gamestate["longitude"] = GameState.longitude
+
+        return gamestate
+
+
+class WhitelistUpdater(Thread):
+    STANDARD_RETRY_DELAY = 20
+    LONG_RETRY_DELAY = 10 * 60
+
+    def __init__(self):
+        super().__init__(name="Canonn whitelist updater")
+
+    def do_run(self):
+        attempts = 0
+        while True:
+            attempts += 1
+            PluginContext.logger.debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
+            url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error("Couldnt't get the list of tracked events from GitHub, exception info:", exc_info=e)
+            else:
+                PluginContext.logger.info("Got the list of tracked events from GitHub.")
+                CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
+                return
+            # вторая попытка аналогично из другого источника
+            url = "https://gitlab.com/api/v4/snippets/4888707/raw"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error(
+                    "Couldn't get the list of tracked events from GitLab either, expection info:", exc_info=e
+                )
+                self.sleep(self.STANDARD_RETRY_DELAY)
+                continue
+            else:
+                PluginContext.logger.info("Got the list of tracked events from GitLab.")
+                CanonnRealtimeAPI.whitelist = json.loads(response.text)
+                return
+
+
+def is_cec_fleetcarrier(signalName: str) -> bool:
+    name = signalName.strip().upper().replace('С', 'C').replace('Е', 'E')
+    return name[0:4] == "CEC "

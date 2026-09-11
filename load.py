@@ -210,7 +210,7 @@ class Updater:
 
     def __init__(self):
         self.updater_thread: UpdateCycle | None = None
-        self.version_file_path = Path(context.plugin_dir) / self.VERSION_FILE_NAME
+        self.version_file_path = Path(context.plugin_dir) / "Triumvirate" / self.VERSION_FILE_NAME
         self.local_version = Version(self.version_file_path.read_text())
 
         saved_rt = edmc_config.get_str(self.RELEASE_TYPE_KEY)
@@ -379,13 +379,13 @@ class Updater:
                 logger.error("`context` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
-            if not Path(context.plugin_dir, "core", "plugin_init.py").exists():
+            if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
 
             # сначала инициализируем контекст версии уже созданными объектами
-            from core.context import PluginContext as VersionContext
+            from Triumvirate.core.context import PluginContext as VersionContext
             VersionContext.logger = logger
             VersionContext.plugin_dir = context.plugin_dir
             VersionContext.plugin_name = context.plugin_name
@@ -396,7 +396,7 @@ class Updater:
             VersionContext._event_queue = context.event_queue
 
             # и лишь теперь мы можем стартовать саму версию
-            import core.plugin_init as plugin_init
+            import Triumvirate.plugin_init as plugin_init
             context.plugin_stop_hook = plugin_init.plugin_stop
             context.plugin_prefs_hook = plugin_init.plugin_prefs
             context.prefs_changed_hook = plugin_init.prefs_changed
