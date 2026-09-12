@@ -7,7 +7,7 @@ from l10n import Locale  # type: ignore
 
 from Triumvirate.core import settings
 from Triumvirate.core.context import PluginContext
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.spreadsheet import Spreadsheet
 from Triumvirate.modules.patrol.patrol import build_patrol
 

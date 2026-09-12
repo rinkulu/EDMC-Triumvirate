@@ -8,7 +8,7 @@ from math import pow, sqrt
 from urllib.parse import quote_plus
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.debug import debug, error
+from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.lib.thread import BasicThread
 
 

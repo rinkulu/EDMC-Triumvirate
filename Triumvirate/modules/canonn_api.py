@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timedelta
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.debug import debug, error
+from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module

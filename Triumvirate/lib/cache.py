@@ -1,4 +1,4 @@
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.thread import Thread
 
 

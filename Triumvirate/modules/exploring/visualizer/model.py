@@ -2,7 +2,7 @@ import json
 
 from theme import theme  # type: ignore
 
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.core.plugin_config import plugin_config
 from Triumvirate.lib.module import Module
 

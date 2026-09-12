@@ -10,7 +10,7 @@ from urllib.parse import quote_plus, unquote
 import myNotebook as nb  # type: ignore
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.debug import debug, error
+from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.core.plugin_config import plugin_config
 from Triumvirate.core.settings import canonn_cloud_url_us_central, edsm_url
 

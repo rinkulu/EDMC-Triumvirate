@@ -2,7 +2,7 @@
 import threading
 import time
 
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 
 
 class BasicThread(threading.Thread):

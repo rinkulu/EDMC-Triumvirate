@@ -5,7 +5,6 @@ import myNotebook as nb  # type: ignore
 from config import config as edmc_config  # type: ignore
 
 from Triumvirate.core.context import PluginContext
-from Triumvirate.core.debug import Debug
 from Triumvirate.core.journal_processor import JournalProcessor
 from Triumvirate.core.notifier import Notifier
 from Triumvirate.core.sound_player import Player
@@ -23,7 +22,6 @@ from Triumvirate.modules.squadron import SquadronTracker
 
 
 def init_version():
-    Debug.setup(PluginContext.logger)
     PluginContext.sound_player = Player()
 
     # очистка устаревших ключей конфигурации
@@ -34,6 +32,7 @@ def init_version():
     # edmc_config.delete("Triumvirate.DisableAutoUpdate", suppress=True)
     # edmc_config.delete("Triumvirate.RemoveBackup", suppress=True)
     # edmc_config.delete("Triumvirate.Updater.LocalVersion", supress=True)
+    # edmc_config.delete("Triumvirate.EnableDebugging", supress=True)
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
@@ -74,7 +73,7 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
     # TODO: перейти на pack
 
     def rowgen():
-        row = 1     # Debug.plugin_prefs всегда занимает нулевой ряд
+        row = 0
         while True:
             yield row
             row += 1
@@ -82,7 +81,6 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
 
     frame = tk.Frame(parent, bg="white")
     frame.grid_columnconfigure(0, weight=1)
-    Debug.plugin_prefs(frame)
     ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     for mod in PluginContext.active_modules:
@@ -101,7 +99,6 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     """
     EDMC вызывает эту функцию при сохранении настроек пользователем.
     """
-    Debug.prefs_changed()
     for mod in PluginContext.active_modules:
         mod.on_settings_changed(cmdr, is_beta)
 

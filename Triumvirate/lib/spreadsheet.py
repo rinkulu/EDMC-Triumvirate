@@ -2,7 +2,7 @@ import csv
 import requests
 from contextlib import closing
 
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 
 
 class BytesDecoder:

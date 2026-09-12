@@ -2,7 +2,7 @@ import tkinter as tk
 from collections.abc import Callable
 from typing import Any
 
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.thread import Thread, ThreadExit
 
 

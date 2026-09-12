@@ -1,5 +1,5 @@
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.legacy import GoogleReporter

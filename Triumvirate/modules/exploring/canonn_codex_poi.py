@@ -1,7 +1,7 @@
 import requests
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.debug import debug, warning
+from Triumvirate.core.shortcuts import debug, warning
 from Triumvirate.core.settings import canonn_cloud_url_us_central, poi_categories
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module

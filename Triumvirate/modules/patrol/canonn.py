@@ -2,7 +2,7 @@ import csv
 import requests
 from contextlib import closing
 
-from Triumvirate.core.debug import debug, error
+from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.core.settings import canonn_patrols_url
 from Triumvirate.lib.spreadsheet import Spreadsheet
 

@@ -7,7 +7,7 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from Triumvirate.core.context import PluginContext
-from Triumvirate.core.debug import debug
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.core.settings import poi_categories as CATEGORIES
 
 from ._dataitem import _DataItem
