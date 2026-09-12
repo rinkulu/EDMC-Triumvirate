@@ -1,33 +1,11 @@
 {
-    "core/debug.py": {
-        "Enable debugging mode": "Включить отладочные логи"
-    },
-    "core/plugin_init.py": {
-        "<SETTINGS_SUPPORT_MESSAGE>": "Если у вас возникнут проблемы с плагином, свяжитесь с нами по электронной почте help@cec.org."
-    },
-    "core/systems.py": {
+    "Triumvirate/core/systems.py": {
         "<SYSTEMS_MODULE_NO_COORDS_WARNING>": "Координаты текущей системы неизвестны; работоспособность плагина не гарантирована. Прыжок в другую систему или релог должны решить эту проблему."
     },
-    "load.py": {
-        "Error: couldn't check for updates.": "Ошибка: не удалось получить список обновлений.",
-        "An update is available ({v}). Please restart EDMC.": "Доступно обновление ({v}). Перезапустите EDMC для установки.",
-        "Downloading an update...": "Загрузка обновления...",
-        "Error: couldn't download an update.": "Ошибка: не удалось загрузить обновление.",
-        "Failed to update the plugin - unexpected error!": "Не удалось обновить плагин - непредвиденная ошибка!",
-        "Installing an update...": "Установка обновления...",
-        "The update is installed. Please restart EDMC.": "Обновление установлено. Требуется перезапуск EDMC.",
-        "Error: plugin files are corrupted. Unable to start the plugin.": "Ошибка: файлы плагина повреждены. Запуск невозможен.",
-        "Version:": "Версия:",
-        "Release channel:": "Канал обновлений:",
-        "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Stable - стабильные номерные версии плагина. В большинстве случаев это рекомендуемый выбор.",
-        "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta - версии для тестировщиков новых обновлений. Стабильность не гарантируется.\nОбратите внимание, что основное обсуждение процесса тестирования проходит в закрытом канале CEC,\nпоэтому если вы не состоите во фракции, использование данных версий остаётся на ваш страх и риск.",
-        "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Development - версии для разработчиков, не предназначенные для публичного использования.\nЕсли вы не знаете, почему у вас в меню появился этот пункт - выберите стабильный канал обновлений и сообщите нам о баге.",
-        "This plugin requires EDMC version 5.11.0 or later.": "Плагин поддерживает только версии EDMC 5.11.0 и новее."
-    },
-    "modules/bgs/core.py": {
+    "Triumvirate/modules/bgs/core.py": {
         "BGS module": "Модуль БГС"
     },
-    "modules/bgs/submodules/cz_tracker.py": {
+    "Triumvirate/modules/bgs/submodules/cz_tracker.py": {
         "High intensity": "Высокая интенсивность",
         "Medium intensity": "Средняя интенсивность",
         "Low intensity": "Низкая интенсивность",
@@ -44,12 +22,22 @@
         "Conflict left early": "Конфликт покинут досрочно",
         "Conflict ended": "Конфликт завершён",
         "Close ({val})": "Закрыть ({val})",
+        "Combat zones tracker": "Трекер зон конфликта",
         "Conflict's results couldn't be processed due to an internal error.": "Не удалось определить результаты конфликта из-за внутренней ошибки."
     },
-    "modules/canonn_api.py": {
+    "Triumvirate/modules/bgs/submodules/exp_data_tracker.py": {
+        "Exploration data tracker": "Трекер продажи исследовательских данных"
+    },
+    "Triumvirate/modules/bgs/submodules/mission_tracker.py": {
+        "Missions tracker": "Трекер миссий"
+    },
+    "Triumvirate/modules/bgs/submodules/voucher_tracker.py": {
+        "Voucher tracker": "Трекер обналичивания выплат"
+    },
+    "Triumvirate/modules/canonn_api.py": {
         "Canonn API client": "Клиент Canonn API"
     },
-    "modules/codex.py": {
+    "Triumvirate/modules/codex.py": {
         "Geology: Gas vents and fumaroles": "Геология: Газовые воронки и фумаролы",
         "Lagrange Clouds": "Облака Лагранжа",
         "Anomalous stellar phenomena": "Аномальные звёздные феномены",
@@ -69,16 +57,16 @@
         "Настройки Кодекса": "Настройки Кодекса",
         "Скрыть иконки кодекса": "Скрыть иконки кодекса"
     },
-    "modules/colonisation.py": {
+    "Triumvirate/modules/colonisation.py": {
         "Colonisation deliveries tracker": "Трекер колонизационных доставок"
     },
-    "modules/exploring/canonn_codex_poi.py": {
+    "Triumvirate/modules/exploring/canonn_codex_poi.py": {
         "Codex module": "Модуль кодекса"
     },
-    "modules/exploring/visualizer/controller.py": {
+    "Triumvirate/modules/exploring/visualizer/controller.py": {
         "Visualizer": "Визуализатор"
     },
-    "modules/exploring/visualizer/ui.py": {
+    "Triumvirate/modules/exploring/visualizer/ui.py": {
         "Anomaly": "Аномалии",
         "Biology": "Биология",
         "Cloud": "Облака",
@@ -100,7 +88,7 @@
         "Location": "Локация",
         "POI": "POI"
     },
-    "modules/fc_tracker.py": {
+    "Triumvirate/modules/fc_tracker.py": {
         "unknown": "неизвестно",
         "Carrier name:": "Название корабля-носителя:",
         "Carrier class:": "Класс корабля-носителя:",
@@ -132,10 +120,29 @@
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ВНИМАНИЕ: стыковка на корабле-носителе разрешена для всех пилотов! Для обеспечения безопасности носителя понизьте уровень доступа к стыковке!",
         "Fleet carrier tracker": "Трекер корабля-носителя"
     },
-    "modules/patrol/patrol_module.py": {
+    "Triumvirate/modules/patrol/patrol_module.py": {
         "Patrol module": "Модуль Патруля"
     },
-    "modules/squadron.py": {
+    "Triumvirate/modules/squadron.py": {
         "Squadron tracker": "Трекер эскадрильи"
+    },
+    "Triumvirate/plugin_init.py": {
+        "<SETTINGS_SUPPORT_MESSAGE>": "Если у вас возникнут проблемы с плагином, свяжитесь с нами по электронной почте help@cec.org."
+    },
+    "load.py": {
+        "Error: couldn't check for updates.": "Ошибка: не удалось получить список обновлений.",
+        "An update is available ({v}). Please restart EDMC.": "Доступно обновление ({v}). Перезапустите EDMC для установки.",
+        "Downloading an update...": "Загрузка обновления...",
+        "Error: couldn't download an update.": "Ошибка: не удалось загрузить обновление.",
+        "Failed to update the plugin - unexpected error!": "Не удалось обновить плагин - непредвиденная ошибка!",
+        "Installing an update...": "Установка обновления...",
+        "The update is installed. Please restart EDMC.": "Обновление установлено. Требуется перезапуск EDMC.",
+        "Error: plugin files are corrupted. Unable to start the plugin.": "Ошибка: файлы плагина повреждены. Запуск невозможен.",
+        "Version:": "Версия:",
+        "Release channel:": "Канал обновлений:",
+        "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Stable - стабильные номерные версии плагина. В большинстве случаев это рекомендуемый выбор.",
+        "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta - версии для тестировщиков новых обновлений. Стабильность не гарантируется.\nОбратите внимание, что основное обсуждение процесса тестирования проходит в закрытом канале CEC,\nпоэтому если вы не состоите во фракции, использование данных версий остаётся на ваш страх и риск.",
+        "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Development - версии для разработчиков, не предназначенные для публичного использования.\nЕсли вы не знаете, почему у вас в меню появился этот пункт - выберите стабильный канал обновлений и сообщите нам о баге.",
+        "This plugin requires EDMC version 5.11.0 or later.": "Плагин поддерживает только версии EDMC 5.11.0 и новее."
     }
 }

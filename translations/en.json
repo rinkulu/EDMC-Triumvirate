@@ -1,33 +1,11 @@
 {
-    "core/debug.py": {
-        "Enable debugging mode": "Enable debugging mode"
-    },
-    "core/plugin_init.py": {
-        "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
-    },
-    "core/systems.py": {
+    "Triumvirate/core/systems.py": {
         "<SYSTEMS_MODULE_NO_COORDS_WARNING>": "System coordinates unknown; operability not guaranteed. An FSD jump or relog should resolve this issue."
     },
-    "load.py": {
-        "Error: couldn't check for updates.": "Error: couldn't check for updates.",
-        "An update is available ({v}). Please restart EDMC.": "An update is available ({v}). Please restart EDMC.",
-        "Downloading an update...": "Downloading an update...",
-        "Error: couldn't download an update.": "Error: couldn't download an update.",
-        "Failed to update the plugin - unexpected error!": "Failed to update the plugin - unexpected error!",
-        "Installing an update...": "Installing an update...",
-        "The update is installed. Please restart EDMC.": "The update is installed. Please restart EDMC.",
-        "Error: plugin files are corrupted. Unable to start the plugin.": "Error: plugin files are corrupted. Unable to start the plugin.",
-        "Version:": "Version:",
-        "Release channel:": "Release channel:",
-        "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Official numbered versions of the plugin. In most cases, this is the recommended choice.",
-        "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta versions for testers of new updates. Stability is not guaranteed.\nPlease note that the main discussion of the testing process takes place in the closed CEC channel,\nso if you are not a member of the faction, using these versions is at your own risk.",
-        "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
-        "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
-    },
-    "modules/bgs/core.py": {
+    "Triumvirate/modules/bgs/core.py": {
         "BGS module": "BGS module"
     },
-    "modules/bgs/submodules/cz_tracker.py": {
+    "Triumvirate/modules/bgs/submodules/cz_tracker.py": {
         "High intensity": "High intensity",
         "Medium intensity": "Medium intensity",
         "Low intensity": "Low intensity",
@@ -44,12 +22,22 @@
         "Conflict left early": "Conflict left early",
         "Conflict ended": "Conflict ended",
         "Close ({val})": "Close ({val})",
+        "Combat zones tracker": "Combat zones tracker",
         "Conflict's results couldn't be processed due to an internal error.": "Conflict's results couldn't be processed due to an internal error."
     },
-    "modules/canonn_api.py": {
+    "Triumvirate/modules/bgs/submodules/exp_data_tracker.py": {
+        "Exploration data tracker": "Exploration data tracker"
+    },
+    "Triumvirate/modules/bgs/submodules/mission_tracker.py": {
+        "Missions tracker": "Missions tracker"
+    },
+    "Triumvirate/modules/bgs/submodules/voucher_tracker.py": {
+        "Voucher tracker": "Voucher tracker"
+    },
+    "Triumvirate/modules/canonn_api.py": {
         "Canonn API client": "Canonn API client"
     },
-    "modules/codex.py": {
+    "Triumvirate/modules/codex.py": {
         "Geology: Gas vents and fumaroles": "Geology: Gas vents and fumaroles",
         "Lagrange Clouds": "Lagrange Clouds",
         "Anomalous stellar phenomena": "Anomalous stellar phenomena",
@@ -69,16 +57,16 @@
         "Настройки Кодекса": "Codex settings",
         "Скрыть иконки кодекса": "Hide Codex icons"
     },
-    "modules/colonisation.py": {
+    "Triumvirate/modules/colonisation.py": {
         "Colonisation deliveries tracker": "Colonisation deliveries tracker"
     },
-    "modules/exploring/canonn_codex_poi.py": {
+    "Triumvirate/modules/exploring/canonn_codex_poi.py": {
         "Codex module": "Codex module"
     },
-    "modules/exploring/visualizer/controller.py": {
+    "Triumvirate/modules/exploring/visualizer/controller.py": {
         "Visualizer": "Visualizer"
     },
-    "modules/exploring/visualizer/ui.py": {
+    "Triumvirate/modules/exploring/visualizer/ui.py": {
         "Anomaly": "Anomaly",
         "Biology": "Biology",
         "Cloud": "Cloud",
@@ -100,7 +88,7 @@
         "Location": "Location",
         "POI": "POI"
     },
-    "modules/fc_tracker.py": {
+    "Triumvirate/modules/fc_tracker.py": {
         "unknown": "unknown",
         "Carrier name:": "Carrier name:",
         "Carrier class:": "Carrier class:",
@@ -132,10 +120,29 @@
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ATTENTION: Docking on the fleet carrier is allowed for all pilots! To ensure the safety of the carrier, lower the docking access level!",
         "Fleet carrier tracker": "Fleet carrier tracker"
     },
-    "modules/patrol/patrol_module.py": {
+    "Triumvirate/modules/patrol/patrol_module.py": {
         "Patrol module": "Patrol module"
     },
-    "modules/squadron.py": {
+    "Triumvirate/modules/squadron.py": {
         "Squadron tracker": "Squadron tracker"
+    },
+    "Triumvirate/plugin_init.py": {
+        "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
+    },
+    "load.py": {
+        "Error: couldn't check for updates.": "Error: couldn't check for updates.",
+        "An update is available ({v}). Please restart EDMC.": "An update is available ({v}). Please restart EDMC.",
+        "Downloading an update...": "Downloading an update...",
+        "Error: couldn't download an update.": "Error: couldn't download an update.",
+        "Failed to update the plugin - unexpected error!": "Failed to update the plugin - unexpected error!",
+        "Installing an update...": "Installing an update...",
+        "The update is installed. Please restart EDMC.": "The update is installed. Please restart EDMC.",
+        "Error: plugin files are corrupted. Unable to start the plugin.": "Error: plugin files are corrupted. Unable to start the plugin.",
+        "Version:": "Version:",
+        "Release channel:": "Release channel:",
+        "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Official numbered versions of the plugin. In most cases, this is the recommended choice.",
+        "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta versions for testers of new updates. Stability is not guaranteed.\nPlease note that the main discussion of the testing process takes place in the closed CEC channel,\nso if you are not a member of the faction, using these versions is at your own risk.",
+        "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
+        "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
     }
 }
