@@ -375,11 +375,11 @@ class Updater:
 
         def __inner():
             logger.info(f"Loading local version {self.local_version} the in main thread...")
-            if not Path(context.plugin_dir, "core", "context.py").exists():
+            if not Path(context.plugin_dir, "Triumvirate", "core", "context.py").exists():
                 logger.error("`context` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
-            if not Path(context.plugin_dir, "plugin_init.py").exists():
+            if not Path(context.plugin_dir, "Triumvirate", "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
