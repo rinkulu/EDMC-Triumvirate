@@ -1,3 +1,4 @@
+import functools
 import tkinter as tk
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -6,6 +7,7 @@ from tkinter import ttk
 from typing import TYPE_CHECKING, Any, Literal
 
 from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.bgs.submodules.base import BGSSubmodule
@@ -14,12 +16,6 @@ from Triumvirate.modules.legacy import URL_GOOGLE
 
 if TYPE_CHECKING:
     from modules.bgs.core import BgsUiFrame
-
-
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 def mainthread(func):
@@ -361,6 +357,10 @@ class ConflictInfoFrame(tk.Frame):
 
 
 class CZTracker(Module, BGSSubmodule):
+    @property
+    def localized_name(self) -> str:
+        return _translate("Combat zones tracker")
+
     def __init__(self, ui_row: int):
         self.__gui = ConflictInfoFrame(self.core.ui_frame, ui_row)
         self.conflict: Conflict | None = None

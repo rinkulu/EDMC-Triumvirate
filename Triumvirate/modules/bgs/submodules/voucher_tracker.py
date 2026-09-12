@@ -1,4 +1,5 @@
 from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.bgs.submodules.base import BGSSubmodule
@@ -6,6 +7,10 @@ from Triumvirate.modules.legacy import URL_GOOGLE
 
 
 class VoucherTracker(Module, BGSSubmodule):
+    @property
+    def localized_name(self) -> str:
+        return _translate("Voucher tracker")
+
     def __init__(self):
         self.station_owner: str | None = None
         self.system_factions: list[str] = list()  # we don't care about redeems for foreign factions, they won't affect local bgs

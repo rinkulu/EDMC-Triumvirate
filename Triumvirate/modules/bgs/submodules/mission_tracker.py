@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.bgs.submodules.base import BGSSubmodule
@@ -33,6 +34,11 @@ class Mission:
 
 
 class MissionTracker(Module, BGSSubmodule):
+    @property
+    def localized_name(self) -> str:
+        return _translate("Missions tracker")
+
+
     def __init__(self):
         self._closed = False
         self.core.database.execute("""
