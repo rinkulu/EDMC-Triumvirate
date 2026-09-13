@@ -32,5 +32,5 @@ class Cache(Thread):
         if size_to_remove >= 0:
             for i in range(size_to_remove or 1):
                 key = self._key_order.pop(i)
-                debug("[Cache] Removing key {}", key)
+                debug(f"Removing key {key}")
                 del self.items[key]

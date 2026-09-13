@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import csv
 import requests
-import traceback
 import webbrowser
 from contextlib import closing
 from math import pow, sqrt
@@ -30,45 +28,32 @@ class GoogleReporter(BasicThread):
         while n_attempt != self.MAX_ATTEMPTS + 1:
             try:
                 response = requests.post(self.url, self.params)
-            except Exception:
-                error("[GoogleReporter] Couldn't send data: url {!r}, params {!r}:", self.url, self.params)
-                error(traceback.format_exc())
+            except Exception as e:
+                error(f"Couldn't send data: url {self.url!r}, params {self.params!r}, exception info:", exc_info=e)
                 return
 
             if response.ok:
-                debug(
-                    "[GoogleReporter] Data sent successfully: url {!r}, params {!r} ({} attempts).",
-                    self.url, self.params, n_attempt
-                )
+                debug(f"Data sent successfully: url {self.url!r}, params {self.params!r} ({n_attempt} attempts).")
                 return
 
             elif response.status_code == 408:  # таймаут, есть смысл попытаться ещё
-                error(
-                    "[GoogleReporter] Couldn't send data (418 Timeout): url {!r}, params {!r} ({} attempts).",
-                    self.url, self.params, n_attempt
-                )
+                error(f"Couldn't send data (418 Timeout): url {self.url!r}, params {self.params!r} ({n_attempt} attempts).")
                 n_attempt += 1
                 self.sleep(self.STANDARD_RETRY_DELAY)
 
             elif response.status_code == 429:  # слишком много запросов, подождём подольше
-                error(
-                    "[GoogleReporter] Couldn't send data (429 Too many requests): url {!r}, params {!r} ({} attempts).",
-                    self.url, self.params, n_attempt
-                )
+                error(f"Couldn't send data (429 Too many requests): url {self.url!r}, params {self.params!r} ({n_attempt} attempts).")
                 n_attempt += 1
                 self.sleep(self.LONG_RETRY_DELAY)
 
             elif response.status_code < 500:  # всё остальное из 4XX пытаться повторять смысла нет
-                error(
-                    "[GoogleReporter] Coundn't send data (code {}): url {!r}, params {!r}. Aborting.",
-                    response.status_code, self.url, self.params
-                )
+                error(f"Coundn't send data (code {response.status_code}): url {self.url!r}, params {self.params!r}. Aborting.")
                 return
 
             else:  # 5XX можно попытаться повторить
                 error(
-                    "[GoogleReporter] Coundn't send data (code {}): url {!r}, params {!r} ({} attempts).",
-                    response.status_code, self.url, self.params, n_attempt
+                    f"Coundn't send data (code {response.status_code}): "
+                    f"url {self.url!r}, params {self.params!r} ({n_attempt} attempts)."
                 )
                 n_attempt += 1
                 self.sleep(self.STANDARD_RETRY_DELAY)
@@ -371,17 +356,17 @@ def report_version():
         resp.raise_for_status()
         ipv4 = resp.text
     except requests.RequestException as e:
-        PluginContext.logger.error("Couldn't fetch IPv4 address. Exception info:", exc_info=e)
+        error("Couldn't fetch IPv4 address. Exception info:", exc_info=e)
         ipv4 = None
     try:
         resp = requests.get('https://api6.ipify.org', timeout=3)
         resp.raise_for_status()
         ipv6 = resp.text
     except requests.RequestException as e:
-        PluginContext.logger.debug("Couldn't fetch IPv6 address. Exception info:", exc_info=e)
+        debug("Couldn't fetch IPv6 address. Exception info:", exc_info=e)
         ipv6 = None
     if ipv4 is None and ipv6 is None:
-        PluginContext.logger.error("Neither IPv4 nor IPv6 are determined. Skipping sending plugin version report.")
+        error("Neither IPv4 nor IPv6 are determined. Skipping sending plugin version report.")
         return
     url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse"
     params = {

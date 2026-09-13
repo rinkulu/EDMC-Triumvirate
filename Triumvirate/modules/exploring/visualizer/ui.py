@@ -205,7 +205,7 @@ class VisualizerView(tk.Frame):
 
     def change_visibility(self, visible: bool):
         self.after(0, self.__change_visibility, visible)
-        debug("[VisualizerView] Visibility set to {}.", visible)
+        debug(f"Visibility set to {visible}.")
 
 
     @property

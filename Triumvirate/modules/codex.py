@@ -1,7 +1,6 @@
 import requests
 import threading
 import tkinter as tk
-import traceback
 from math import pow, sqrt
 from tkinter import Frame
 from urllib.parse import quote_plus, unquote
@@ -163,11 +162,11 @@ class CodexTypes(Frame):
             if r.status_code == 200:
                 poidata = r.json().get("codex")
                 if not poidata:
-                    debug("[codex] Nothing interesting here.")
+                    debug("Nothing interesting here.")
                     self.event_generate('<<POIData>>', when='tail')
                     return
             else:
-                debug("[codex] Error while fetching data: response code {}.")
+                debug(f"Error while fetching data: response code {r.status_code}.")
 
             for r in poidata:
                 self.merge_poi(
@@ -292,9 +291,8 @@ class CodexTypes(Frame):
             else:
                 CodexTypes.bodycount = 0
                 debug("bodycount: {}".format(CodexTypes.bodycount))
-        except:
-            debug("Error fetching data")
-            debug(traceback.format_exc())
+        except Exception as e:
+            debug("Error fetching data", exc_info=e)
 
         CodexTypes.waiting = False
         debug("event_generate")

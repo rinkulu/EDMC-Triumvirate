@@ -63,22 +63,17 @@ class Timer(Thread):
 
     def do_run(self):
         self.is_active = True
-        debug(
-            "[Timer] New timer {!r}: target {!r} will be called in {} seconds.",
-            self.name,
-            self.target,
-            self.duration
-        )
+        debug(f"New timer {self.name!r}: target {self.target!r} will be called in {self.duration} seconds.")
         try:
             self.sleep(self.duration)
         except ThreadExit:      # бросается sleep-ом, если EDMC закрывается
             self.is_active = False
             if self.run_on_closing:
-                debug("[Timer] {!r}: detected EDMC closing, calling target {!r} ahead of schedule.", self.name, self.target)
+                debug(f"Timer {self.name!r}: detected EDMC closing, calling target {self.target!r} ahead of schedule.")
                 self.__execute()
         else:                   # а тут мы нормально дождались окончания таймера
             self.is_active = False
-            debug("[Timer] {!r}: calling target {!r}, delayed by {} seconds.", self.name, self.target, self.duration)
+            debug(f"Timer {self.name!r}: calling target {self.target!r}, delayed by {self.duration} seconds.")
             self.__execute()
 
 
@@ -87,11 +82,7 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False     # чтобы случайно дважды target не вызвать
             self.STOP = True
-            debug(
-                "[Timer.execute_now] {!r} has been stopped, calling target {!r} ahead of schedule.",
-                self.name,
-                self.target
-            )
+            debug(f"Timer {self.name!r} has been stopped, calling target {self.target!r} ahead of schedule.")
             self.__execute()
 
 
@@ -100,7 +91,7 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False
             self.STOP = True
-            debug("[Timer.kill] {!r} has been cancelled.", self.name)
+            debug(f"Timer {self.name!r} has been cancelled.")
 
 
     @property

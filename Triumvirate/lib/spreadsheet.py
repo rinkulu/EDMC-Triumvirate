@@ -12,7 +12,7 @@ class BytesDecoder:
     def __iter__(self):
         for line in self.stream:
             line = line.decode()
-            # debug("Processing {}", line)
+            # debug(f"Processing {line}")
             yield line
 
 
@@ -25,11 +25,9 @@ class Spreadsheet:
     def download(self):
         with closing(requests.get(self.url, stream=True)) as resp:
             if not resp.ok:
-                debug("Original URL: {}", self.url)
-                debug("Spreadsheets response: {}:\n{}", resp, resp.text)
-                raise AssertionError(
-                    f"Response from Google Spreadsheets ({resp.request.url!r}) is not OK."
-                )
+                debug(f"Original URL: {self.url}")
+                debug(f"Spreadsheets response: {resp}:\n{resp.text}")
+                raise AssertionError(f"Response from Google Spreadsheets ({resp.request.url!r}) is not OK.")
             self.response = resp
             self.process()
 

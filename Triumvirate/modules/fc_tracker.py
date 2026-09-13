@@ -1,7 +1,6 @@
 import json
 import requests
 import tkinter as tk
-import traceback
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, fields
 from datetime import UTC, datetime
@@ -224,7 +223,7 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show_no_fc_info_screen(self):
-        debug("[FCModuleFrame] Showing 'No info' screen.")
+        debug("Showing 'No info' screen.")
         self.__clear()
         frame = tk.Frame(self)
         label = tk.Label(frame, wraplength=400, justify="left", text=_translate("<FC_TRACKER_NO_INFO_TEXT>"))
@@ -251,7 +250,7 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show_carrier_bought_screen(self):
-        debug("[FCModuleFrame] Showing 'Carrier bought' screen.")
+        debug("Showing 'Carrier bought' screen.")
         self.__clear()
         label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_BOUGHT_TEXT>"))
         label.pack(side="top", fill="both")
@@ -259,7 +258,7 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show_unexpected_event_screen(self):
-        debug("[FCModuleFrame] Showing 'Unexpected event' screen.")
+        debug("Showing 'Unexpected event' screen.")
         self.__clear()
         label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>"))
         label.pack(side="top", fill="both")
@@ -267,7 +266,7 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show_finish_configuring_screen(self):
-        debug("[FCModuleFrame] Showing 'Finish configuring' screen.")
+        debug("Showing 'Finish configuring' screen.")
         self.__clear()
         frame = tk.Frame(self)
         label = tk.Label(frame, wraplength=400, justify="left", text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT>"))
@@ -294,7 +293,7 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show_unsafe_docking_access_warning(self):
-        debug("[FCModuleFrame] Showing unsafe docking access warning.")
+        debug("Showing unsafe docking access warning.")
         self.__clear()
         label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>"))
         label.pack(side="top", fill="both")
@@ -308,14 +307,14 @@ class FCModuleFrame(tk.Frame):
 
     @mainthread
     def show(self):
-        debug("[FCModuleFrame] Mapped.")
+        debug("Mapped.")
         self.grid(column=0, row=self.row, sticky="NWSE")
 
     @mainthread
     def hide(self, event: tk.Event | None = None):
         if not self.is_shown:
             return
-        debug("[FCModuleFrame] Hidden.")
+        debug("Hidden.")
         self.__clear()
         self.grid_forget()
         self.master.update()
@@ -348,14 +347,11 @@ class FC_Tracker(Module):
         if self.disable_access_warnings is None:
             self.disable_access_warnings = False
             plugin_config.set(self.FC_ACCESS_WARNINGS_KEY, False)
-        debug(f"[FC_Tracker] Unsafe docking access warnings are {'disabled' if self.disable_access_warnings else 'enabled'}.")
+        debug(f"Unsafe docking access warnings are {'disabled' if self.disable_access_warnings else 'enabled'}.")
 
         if self.fc_data.status == FCStatus.PENDING_DECOMMISSION and self.fc_data.decommission_timestamp is not None:
             if datetime.now(UTC) > self.fc_data.decommission_timestamp:
-                debug(
-                    "[FC_Tracker] Reached saved decommission timestamp ({}), clearing FC data.",
-                    self.fc_data.decommission_timestamp.isoformat()
-                )
+                debug(f"Reached saved decommission timestamp ({self.fc_data.decommission_timestamp.isoformat()}), clearing FC data.")
                 cmdr, callsign = self.fc_data.cmdr, self.fc_data.callsign
                 self.fc_data.reset()
                 self.fc_data.status = FCStatus.DECOMMISSIONED
@@ -386,7 +382,7 @@ class FC_Tracker(Module):
                     and self.fc_data.status == FCStatus.UNKNOWN
                     and not self.ui_frame.is_shown
                 ):
-                    debug("[FC_Tracker] No FC info found.")
+                    debug("No FC info found.")
                     self.fc_data.cmdr = entry.cmdr
                     self.ui_frame.show_no_fc_info_screen()
 
@@ -403,7 +399,7 @@ class FC_Tracker(Module):
         self.fc_data.role = role
         self.fc_data.comment = comment
         self.save_fc_data()
-        debug(("[FC_Tracker] New config: "
+        debug(("New config: "
                f"unsafe access warnings {'disabled' if self.disable_access_warnings else 'enabled'}, "
                f"FC optional data: variant '{variant}', role '{role}', comment '{comment}'."))
 
@@ -414,7 +410,7 @@ class FC_Tracker(Module):
     # Методы-обработчики ивентов флитака
 
     def carrier_bought(self, journal_entry: JournalEntry):      # noqa: E301
-        debug("[FC_Tracker] Detected CarrierBuy.")
+        debug("Detected CarrierBuy.")
         self.just_bought = True
         self.fc_data.reset()
         self.fc_data.status = FCStatus.ACTIVE
@@ -426,7 +422,7 @@ class FC_Tracker(Module):
 
 
     def carrier_stats(self, journal_entry: JournalEntry):
-        debug("[FC_Tracker] Detected CarrierStats.")
+        debug("Detected CarrierStats.")
 
         # для этого ивента unexpected простительно - просто дадим юзеру потом заполнить доп.инфу
         unexpected = self.fc_data.status in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED)
@@ -446,7 +442,7 @@ class FC_Tracker(Module):
         else:
             self.fc_data.status = FCStatus.PENDING_DECOMMISSION
             if self.fc_data.decommission_timestamp is None:
-                debug("[FC_Tracker] FC is pending decommission, but no saved timestamp found.")
+                debug("FC is pending decommission, but no saved timestamp found.")
                 # CarrierStats не даёт timestamp списания флитака - посчитаем его сами
                 # предположительно это ближайший четверг, 07:00 UTC, но требуются дополнительные проверки
                 # например, я не уверен, что произойдёт, если запросить списание за ~24 часа до чт7:00
@@ -456,7 +452,7 @@ class FC_Tracker(Module):
                 timestamp -= timestamp % 604800     # находим его
                 timestamp += 25200                  # добавляем обратно 7 часов
                 self.fc_data.decommission_timestamp = datetime.fromtimestamp(timestamp, UTC)
-                debug("[FC_Tracker] Calculated decommission timestamp: {}.", self.fc_data.decommission_timestamp.isoformat())
+                debug(f"Calculated decommission timestamp: {self.fc_data.decommission_timestamp.isoformat()}.")
 
         self.save_fc_data()
         if unexpected or self.just_bought:
@@ -468,10 +464,10 @@ class FC_Tracker(Module):
 
 
     def carrier_planned_decommission(self, journal_entry: JournalEntry):
-        debug("[FC_Tracker] Detected CarrierDecommission.")
+        debug("Detected CarrierDecommission.")
         if self.fc_data.status in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
             # unexpected event
-            warning("[FC_Tracker] Last event was unexpected.")
+            warning("Last event was unexpected.")
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
@@ -484,7 +480,7 @@ class FC_Tracker(Module):
     def carrier_cancel_decommission(self, journal_entry: JournalEntry):
         if self.fc_data.status in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
             # unexpected event
-            warning("[FC_Tracker] Last event was unexpected.")
+            warning("Last event was unexpected.")
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
@@ -497,7 +493,7 @@ class FC_Tracker(Module):
     def carrier_docking_access_changed(self, journal_entry: JournalEntry):
         if self.fc_data.status in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
             # unexpected event
-            warning("[FC_Tracker] Last event was unexpected.")
+            warning("Last event was unexpected.")
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
@@ -516,9 +512,9 @@ class FC_Tracker(Module):
             and self.fc_data.callsign != journal_entry.data["Callsign"]
         )
         if unexpected_status or callsign_mismatch:
-            warning("[FC_Tracker] Last event was unexpected.")
+            warning("Last event was unexpected.")
             if callsign_mismatch:
-                warning("[FC_Tracker] Callsign mismatch. New CMDR?")
+                warning("Callsign mismatch. New CMDR?")
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
@@ -544,16 +540,16 @@ class FC_Tracker(Module):
     def load_fc_data(self):     # noqa: E301
         saved = plugin_config.get_str(self.FC_DATA_KEY)
         if saved:
-            debug("[FC_Tracker] Loading saved FC data.")
+            debug("Loading saved FC data.")
             data = json.loads(saved)
             if isinstance(data["decommission_timestamp"], str):
                 data["decommission_timestamp"] = datetime.fromisoformat(data["decommission_timestamp"])
         else:
-            debug("[FC_Tracker] No saved data found, setting the default values.")
+            debug("No saved data found, setting the default values.")
             data = {}
 
         self.fc_data = FCData(**data)
-        debug(f"[FC_Tracker] Loaded FC data: {self.fc_data}.")
+        debug(f"Loaded FC data: {self.fc_data}.")
         # на случай первого запуска
         if data == {}:
             self.save_fc_data()
@@ -564,7 +560,7 @@ class FC_Tracker(Module):
         saved = plugin_config.get_str(self.FC_DATA_KEY)
         if str_repr != saved:
             plugin_config.set(self.FC_DATA_KEY, str_repr)
-            debug(f"[FC_Tracker] Updated saved FC data: {str_repr}.")
+            debug(f"Updated saved FC data: {str_repr}.")
             if self.fc_data.status not in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT):
                 self.send_fc_data()
 
@@ -606,21 +602,18 @@ class FC_Tracker(Module):
 
         try:
             res = requests.get(url, allow_redirects=False)
-        except requests.RequestException:
-            error("[FC_Tracker] Couldn't check for account on fleetcarrier.space:\n" + traceback.format_exc())
+        except requests.RequestException as e:
+            error("Couldn't check for account on fleetcarrier.space. Exception info:", exc_info=e)
             fc_account_link = ""
         else:
             if res.status_code == 200:
-                debug("[FC_Tracker] Account on fleetcarrier.space wan't found.")
+                debug("Account on fleetcarrier.space wan't found.")
                 fc_account_link = ""
             elif res.status_code == 302:
-                debug("[FC_Tracker] Found account on fleetcarrier.space.")
+                debug("Found account on fleetcarrier.space.")
                 fc_account_link = f"https://fleetcarrier.space/carrier/{self.fc_data.callsign}"
             else:
-                error(
-                    "[FC_Tracker] Unexpected status code {} when checking for account on fleetcarrier.space:\n{}",
-                    res.status_code, res.text
-                )
+                error(f"Unexpected status code {res.status_code} when checking for account on fleetcarrier.space:\n{res.text}")
                 fc_account_link = ""
 
         self.fc_data._fcspace_link = fc_account_link
@@ -632,7 +625,7 @@ class FC_Tracker(Module):
 
     def __no_carrier_callback(self, event: tk.Event):        # noqa: E301
         # пользователь указал, что флитака во владении не имеет
-        debug("[FC_Tracker] User claims not to own a fleet carrier.")
+        debug("User claims they do not own a fleet carrier.")
         cmdr = self.fc_data.cmdr
         self.fc_data.reset()
         self.fc_data.status = FCStatus.NOT_BOUGHT

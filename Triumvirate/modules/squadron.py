@@ -20,7 +20,7 @@ class SquadronTracker(Module):
 
     def __init__(self):
         self.saved_squadron = plugin_config.get_str(self.SQUADRON_KEY) or None
-        debug("Saved squadron: {}", self.saved_squadron)
+        debug(f"Saved squadron: {self.saved_squadron}")
         # При запуске плагина сквадрон определяется данными из нашей таблички,
         # поэтому здесь контекст не редактируем.
 
@@ -36,10 +36,10 @@ class SquadronTracker(Module):
         squadron = journal_entry.data["SquadronName"].upper()
         GameState.squadron = squadron
         if squadron != self.saved_squadron:
-            debug("Saved squadron doesn't match the in-game.")
+            debug("Saved squadron doesn't match the in-game data.")
             plugin_config.set(self.SQUADRON_KEY, squadron)
             self.saved_squadron = squadron
-            debug("New saved squadron: {}. Reporting.", self.saved_squadron)
+            debug(f"New saved squadron: {self.saved_squadron}. Reporting.")
             self.report_sq()
 
 
@@ -48,7 +48,7 @@ class SquadronTracker(Module):
         GameState.squadron = squadron
         plugin_config.set(self.SQUADRON_KEY, squadron)
         self.saved_squadron = squadron
-        debug("Joined the squadron {}. Reporting.", self.saved_squadron)
+        debug(f"Joined the squadron {self.saved_squadron}. Reporting.")
         self.report_sq()
 
 

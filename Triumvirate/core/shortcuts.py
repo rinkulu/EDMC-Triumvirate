@@ -1,5 +1,3 @@
-import functools
-import logging
 import sys
 from typing import TYPE_CHECKING
 
@@ -19,16 +17,12 @@ if TYPE_CHECKING:
     critical = PluginContext.logger.critical
 else:
     def __make_logger_proxy(level_name: str):
-        func = getattr(logging, level_name)
-
-        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             kwargs["stacklevel"] = kwargs.get("stacklevel", 1) + 1
             # Чиним неправильное определение функции, пишущей логи. Спасибо разрабам EDMC, игнорящим stacklevel.
             extra = kwargs.setdefault("extra", {})
             extra["qualname"] = sys._getframe(1).f_code.co_qualname
             return getattr(PluginContext.logger, level_name)(*args, **kwargs)
-
         return wrapper
 
     debug = __make_logger_proxy("debug")

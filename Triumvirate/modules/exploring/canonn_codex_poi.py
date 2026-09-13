@@ -2,7 +2,7 @@ import requests
 
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.settings import canonn_cloud_url_us_central, poi_categories
-from Triumvirate.core.shortcuts import debug, warning
+from Triumvirate.core.shortcuts import debug, error, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 
@@ -51,24 +51,24 @@ class CanonnCodexPOI(Module):
             res = requests.get(self.URL, params=params)
             res.raise_for_status()
         except requests.RequestException as e:
-            PluginContext.logger.error("[Codex] Couldn't fetch system POIs from Canonn. Exception info:", exc_info=e)
+            error("Couldn't fetch system POIs from Canonn. Exception info:", exc_info=e)
             return
 
         data: list[dict] = res.json().get("codex")
         if not data:
-            debug("[Codex] No POIs from Canonn in this system.")
+            debug("No POIs from Canonn in this system.")
             return
 
-        debug("[Codex] Got POI data from Canonn.")
+        debug("Got POI data from Canonn.")
         for poi in data:
             if poi.get("body") is None:
-                warning("[Codex] Canonn POI entry contains null body: {}".format(poi))
+                warning(f"Canonn POI entry contains null body: {poi}")
                 continue
             if poi.get("english_name") is None:
-                warning("[Codex] Canonn POI entry contains null name: {}".format(poi))
+                warning(f"Canonn POI entry contains null name: {poi}")
                 continue
             if (category := poi.get("hud_category")) is not None and category not in poi_categories:
-                warning("[Codex] Unexpected POI category in Canonn data: {}".format(poi))
+                warning(f"Unexpected POI category in Canonn data: {poi}")
                 continue
             if poi.get("scanned", False) in ('false', False):  # без понятия, почему оно (иногда?) даётся строкой
                 PluginContext.exp_visualizer.show(

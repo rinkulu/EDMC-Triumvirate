@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
-from Triumvirate.core.shortcuts import debug, error
+from Triumvirate.core.shortcuts import debug, error, info, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import BasicThread, Thread
@@ -26,7 +26,7 @@ class CanonnReporter(BasicThread):
 
     def run(self):
         if None in self.payload.values():
-            error("[CanonnReporter] None detected in params! {}", self.payload)
+            error(f"None detected in params! {self.payload}")
             return
         try:
             res = requests.post(
@@ -36,12 +36,9 @@ class CanonnReporter(BasicThread):
             )
             res.raise_for_status()
         except requests.RequestException as e:
-            PluginContext.logger.error(
-                f"[CanonnReporter] Couldn't send data to Canonn Cloud. Url: {self.url}, payload: {self.payload} Exception info:",
-                exc_info=e
-            )
+            error(f"Couldn't send data to Canonn Cloud. Url: {self.url}, payload: {self.payload} Exception info:", exc_info=e)
         else:
-            debug("[CanonnReporter] Data sent successfully: url {!r}, payload {!r}.", self.url, self.payload)
+            debug(f"Data sent successfully: url {self.url!r}, payload {self.payload!r}.")
 
 
 class HDDetector:
@@ -80,7 +77,7 @@ class HDDetector:
             arrived_to = entry["StarSystem"]
             if self.departure_system == arrived_to:
                 # 99%, что проделки таргов, но на всякий случай перепроверим
-                debug("[HDDetector] Detected a misjump.")
+                debug(f"Detected a misjump: departure and arrival systems are the same ({arrived_to}).")
                 self.status = self.MISJUMP
             else:
                 self.status = self.SAFE
@@ -91,18 +88,18 @@ class HDDetector:
             and entry.get("MusicTrack") in ("Unknown_Encounter", "Combat_Unknown", "Combat_Dogfight", "Combat_Hunters")
         ):
             if self.status < self.THARGOID:
-                debug("[HDDetector] Hyperdiction confirmed.")
+                debug(f"Hyperdiction confirmed: music track {entry['MusicTrack']!r}")
             self.status = self.THARGOID
 
             if entry["MusicTrack"] in ("Unknown_Encounter"):
                 # подождём, ожидая агрессии со стороны таргоида
-                debug("[HDDetector] Waiting for the signs of aggression...")
+                debug("Waiting for the signs of aggression...")
                 if not self._timer:
                     self._timer = Timer(20, lambda: self._reportHD(journal_entry))
                     self._timer.start()
 
             elif entry["MusicTrack"] in ("Combat_Unknown", "Combat_Dogfight", "Combat_Hunters"):
-                debug("[HDDetector] Detected an attack on a player.")
+                debug(f"Detected an attack on the player: music track {entry['MusicTrack']!r}")
                 self.status = self.HOSTILE
                 if self._timer:
                     self._timer.kill()
@@ -112,11 +109,11 @@ class HDDetector:
 
     def _reportHD(self, journal_entry: JournalEntry):
         if not self.status == self.HOSTILE:
-            debug("[HDDetector] Aggression against the player not detected.")
-        debug("[HDDetector] Reporting the hyperdiction to Canonn.")
+            debug("Aggression against the player not detected.")
+        debug("Reporting the hyperdiction to Canonn.")
 
         if self.destination_system_id is None:
-            PluginContext.logger.error("Detected hyperdiction, but destination_system_id was None!")
+            error("Detected hyperdiction, but destination_system_id was None!")
             self.status = self.SAFE
             return
 
@@ -125,9 +122,9 @@ class HDDetector:
         dest_name = PluginContext.systems_cache.get_system_name(self.destination_system_id)
 
         if current_coords is None:
-            PluginContext.logger.warning("Unable to send hyperdiction report: no current coords.")
+            warning("Unable to send hyperdiction report: no current coords.")
         elif dest_coords is None or dest_name is None:
-            PluginContext.logger.warning("Unable to send hyperdiction report: no target coords or name.")
+            warning("Unable to send hyperdiction report: no target coords or name.")
         else:
             x, y, z = current_coords
             dx, dy, dz = dest_coords
@@ -153,14 +150,14 @@ class HDDetector:
     def check_last_encounter(cls, journalEntry: JournalEntry):
         entry = journalEntry.data
         if entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM"):
-            debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
+            debug(f"Detected {entry['event']!r} event, sending the last thargoid encounter to Canonn.")
             system = entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
 
             coords = PluginContext.systems_cache.get_system_coords(system)
             if coords is None:
-                PluginContext.logger.warning(f"Can't report last encounter to Canonn: system coordinates unknown ({system!r})")
+                warning(f"Can't report last encounter to Canonn: system coordinates unknown ({system!r})")
                 return
 
             x, y, z = coords
@@ -168,7 +165,7 @@ class HDDetector:
             year, remainder = gametime.split("-", 1)
             timestamp = "{}-{}".format(str(int(year) - 1286), remainder)
 
-            debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
+            debug(f"Last encounter: timestamp {timestamp!r}, system {system!r}.")
 
             url = f"{canonn_cloud_url_europe_west}/postHD"
             params = {
@@ -268,7 +265,7 @@ class CanonnRealtimeAPI(Module):
         if not valuable:
             return
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
-        debug("[CanonnAPI] Sending the {!r} event to Canonn.", entry["event"])
+        debug(f"Sending {entry['event']!r} event to Canonn.")
         url = f"{canonn_cloud_url_us_central}/postEvent"
         gamestate = self._get_gamestate(journalEntry)
         params = {
@@ -282,7 +279,7 @@ class CanonnRealtimeAPI(Module):
     def _dump_batch(self):
         if len(self.fss_signals_batch) == 0:
             return
-        debug("[CanonnAPI] Dumping the batch, len={}.", len(self.fss_signals_batch))
+        debug(f"Dumping the batch, len={len(self.fss_signals_batch)}.")
         url = f"{canonn_cloud_url_us_central}/postEvent"
         gamestate = self._get_gamestate(self.fss_signals_batch[0])
         params = {
@@ -343,15 +340,15 @@ class WhitelistUpdater(Thread):
         attempts = 0
         while True:
             attempts += 1
-            PluginContext.logger.debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
+            debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
             url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
             try:
                 response = requests.get(url)
                 response.raise_for_status()
             except requests.RequestException as e:
-                PluginContext.logger.error("Couldnt't get the list of tracked events from GitHub, exception info:", exc_info=e)
+                error("Couldnt't get the list of tracked events from GitHub, exception info:", exc_info=e)
             else:
-                PluginContext.logger.info("Got the list of tracked events from GitHub.")
+                info("Got the list of tracked events from GitHub.")
                 CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
                 return
             # вторая попытка аналогично из другого источника
@@ -360,13 +357,11 @@ class WhitelistUpdater(Thread):
                 response = requests.get(url)
                 response.raise_for_status()
             except requests.RequestException as e:
-                PluginContext.logger.error(
-                    "Couldn't get the list of tracked events from GitLab either, expection info:", exc_info=e
-                )
+                error("Couldn't get the list of tracked events from GitLab either, expection info:", exc_info=e)
                 self.sleep(self.STANDARD_RETRY_DELAY)
                 continue
             else:
-                PluginContext.logger.info("Got the list of tracked events from GitLab.")
+                info("Got the list of tracked events from GitLab.")
                 CanonnRealtimeAPI.whitelist = json.loads(response.text)
                 return
 
