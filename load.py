@@ -79,7 +79,7 @@ class BasicContext:
     plugin_loaded: bool = False
     plugin_version: Version | None = None
     version_frame: "VersionFrame | None" = None
-    plugin_ui: tk.Misc | None = None
+    plugin_ui: tk.Frame | None = None
     plugin_stop_hook: Callable | None = None
     plugin_prefs_hook: Callable | None = None
     prefs_changed_hook: Callable | None = None
@@ -375,37 +375,28 @@ class Updater:
 
         def __inner():
             logger.info(f"Loading local version {self.local_version} the in main thread...")
-            if not Path(context.plugin_dir, "Triumvirate", "core", "context.py").exists():
-                logger.error("`context` module not found. Aborting.")
-                context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
-                return
             if not Path(context.plugin_dir, "Triumvirate", "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
 
-            # сначала инициализируем контекст версии уже созданными объектами
-            from Triumvirate.core.context import PluginContext as VersionContext
-            VersionContext.logger = logger
-            VersionContext.plugin_dir = context.plugin_dir
-            VersionContext.plugin_name = context.plugin_name
-            VersionContext.plugin_version = self.local_version
-            VersionContext.client_version = f"{context.plugin_name}.{self.local_version}"
-            VersionContext.edmc_version = context.edmc_version
-            VersionContext._tr_template = _Translation.translate
-            VersionContext._event_queue = context.event_queue
-
-            # и лишь теперь мы можем стартовать саму версию
             import Triumvirate.plugin_init as plugin_init
             context.plugin_stop_hook = plugin_init.plugin_stop
             context.plugin_prefs_hook = plugin_init.plugin_prefs
             context.prefs_changed_hook = plugin_init.prefs_changed
 
-            plugin_init.init_version()
-
             context.status_label.clear()
             context.version_frame = VersionFrame(context.plugin_frame, self.local_version)
-            context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
+            context.plugin_ui = plugin_init.initialize(
+                edmc_version=context.edmc_version,
+                plugin_name=context.plugin_name,
+                plugin_version=self.local_version,
+                plugin_root_dir=context.plugin_dir,
+                ui_parent=context.plugin_frame,
+                logger=logger,
+                event_queue=context.event_queue,
+                translation_fn=_Translation.translate,
+            )
             theme.register(context.version_frame)
             theme.register(context.plugin_ui)
             # theme.register и theme.update не проверяют пары виджетов,

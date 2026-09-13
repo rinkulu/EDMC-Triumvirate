@@ -10,9 +10,9 @@ from Triumvirate.modules import legacy
 # чтобы избежать остановки обработчика до того, как он закончит разбирать очередь.
 
 class JournalProcessor(Thread):
-    def __init__(self):
+    def __init__(self, event_queue: Queue[dict]):
         super().__init__(name="Triumvirate journal entry processor")
-        self.queue: Queue[dict] = PluginContext._event_queue
+        self.queue = event_queue
         self._startup = True
         self._stop = Event()  # флаг остановки потока
 

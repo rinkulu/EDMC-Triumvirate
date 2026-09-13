@@ -1,30 +1,75 @@
+import logging
+import queue
 import tkinter as tk
+from collections.abc import Callable
+from pathlib import Path
+from semantic_version import Version
 from tkinter import ttk
 
 import myNotebook as nb  # type: ignore
 from config import config as edmc_config  # type: ignore
 
 from Triumvirate.core.context import PluginContext
-from Triumvirate.core.journal_processor import JournalProcessor
-from Triumvirate.core.notifier import Notifier
-from Triumvirate.core.sound_player import Player
-from Triumvirate.core.systems import SystemsCache
 from Triumvirate.lib import thread
 from Triumvirate.lib.module import Module
-from Triumvirate.modules.bgs import BGS
-from Triumvirate.modules.canonn_api import CanonnRealtimeAPI
-from Triumvirate.modules.colonisation import DeliveryTracker
-from Triumvirate.modules.exploring.canonn_codex_poi import CanonnCodexPOI
-from Triumvirate.modules.exploring.visualizer import Visualizer
-from Triumvirate.modules.fc_tracker import FC_Tracker
-from Triumvirate.modules.patrol import PatrolModule
-from Triumvirate.modules.squadron import SquadronTracker
 
 
-def init_version():
+def initialize(
+    edmc_version: Version,
+    plugin_name: str,
+    plugin_version: Version,
+    plugin_root_dir: Path,
+    ui_parent: tk.Frame,
+    logger: logging.Logger,
+    event_queue: queue.Queue,
+    translation_fn: Callable,
+) -> tk.Frame:
+    # 1) Заполнение начальных параметров
+    PluginContext.plugin_name = plugin_name
+    PluginContext.plugin_version = plugin_version
+    PluginContext.user_agent = f"{plugin_name}.{plugin_version}"
+    PluginContext.edmc_version = edmc_version
+    PluginContext.plugin_dir = plugin_root_dir
+    PluginContext.logger = logger
+    PluginContext._tr_template = translation_fn
+
+    # 2) Создание объектов ядра
+    from Triumvirate.core.journal_processor import JournalProcessor
+    from Triumvirate.core.notifier import Notifier
+    from Triumvirate.core.sound_player import Player
+    from Triumvirate.core.systems import SystemsCache
+    frame = tk.Frame(ui_parent)
+    PluginContext.journal_processor = JournalProcessor(event_queue)
     PluginContext.sound_player = Player()
+    PluginContext.notifier = Notifier(frame, 5)  # его надо инициализировать первым, но маппить в самый низ
+    PluginContext.systems_cache = SystemsCache(frame, 0)
 
-    # очистка устаревших ключей конфигурации
+    # 3) Создание модулей
+    from Triumvirate.modules.bgs import BGS
+    from Triumvirate.modules.canonn_api import CanonnRealtimeAPI
+    from Triumvirate.modules.colonisation import DeliveryTracker
+    from Triumvirate.modules.exploring.canonn_codex_poi import CanonnCodexPOI
+    from Triumvirate.modules.exploring.visualizer import Visualizer
+    from Triumvirate.modules.fc_tracker import FC_Tracker
+    from Triumvirate.modules.patrol import PatrolModule
+    from Triumvirate.modules.squadron import SquadronTracker
+    PluginContext.exp_visualizer = Visualizer(frame, 1)
+    PluginContext.patrol_module = PatrolModule(frame, 2)
+    PluginContext.fc_tracker = FC_Tracker(frame, 3)
+    PluginContext.bgs_module = BGS(frame, 4)
+    PluginContext.canonn_api = CanonnRealtimeAPI()
+    PluginContext.colonisation_tracker = DeliveryTracker()
+    PluginContext.sq_tracker = SquadronTracker()
+    PluginContext.canonn_codex_poi = CanonnCodexPOI()
+
+    # 4) Запуск обработки событий
+    clear_old_config_keys()
+    PluginContext.journal_processor.start()
+
+    return frame
+
+
+def clear_old_config_keys():
     edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
     edmc_config.delete("Triumvirate.Canonn", suppress=True)
     # TODO: раскомментить после релиза 1.12.0
@@ -33,33 +78,6 @@ def init_version():
     # edmc_config.delete("Triumvirate.RemoveBackup", suppress=True)
     # edmc_config.delete("Triumvirate.Updater.LocalVersion", supress=True)
     # edmc_config.delete("Triumvirate.EnableDebugging", supress=True)
-
-
-def plugin_app(parent: tk.Misc) -> tk.Frame:
-    """
-    Updater вызывает эту функцию для получения UI плагина,
-    который затем будет размещён в главном окне EDMC.
-    """
-    frame = tk.Frame(parent)
-    frame.grid_columnconfigure(0, weight=1)
-    PluginContext.notifier = Notifier(frame, 5)    # его надо инициализировать первым, но маппить в самый низ
-    PluginContext.systems_cache = SystemsCache(frame, 0)
-    PluginContext.exp_visualizer = Visualizer(frame, 1)
-    PluginContext.patrol_module = PatrolModule(frame, 2)
-    PluginContext.fc_tracker = FC_Tracker(frame, 3)
-    PluginContext.bgs_module = BGS(frame, 4)
-
-    # эти модули не имеют UI, но стартуем их здесь же
-    PluginContext.canonn_api = CanonnRealtimeAPI()
-    PluginContext.colonisation_tracker = DeliveryTracker()
-    PluginContext.sq_tracker = SquadronTracker()
-    PluginContext.canonn_codex_poi = CanonnCodexPOI()
-
-    # в последнюю очередь запускаем обработчик событий
-    PluginContext.journal_processor = JournalProcessor()
-    PluginContext.journal_processor.start()
-
-    return frame
 
 
 def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:

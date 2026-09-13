@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from pathlib import Path
-from queue import Queue
 from semantic_version import Version
 from typing import TYPE_CHECKING, Protocol
 
@@ -54,32 +53,28 @@ class PluginContext:
     """
     Хранит параметры плагина и ссылки на его компоненты.
     """
-    # начальные параметры - заполняются загрузчиком в load.py
+    # начальные параметры
     plugin_name: str
     plugin_version: Version
-    client_version: str
+    user_agent: str
     edmc_version: Version
     plugin_dir: 'Path'
-
-    # core-объекты - заполняются загрузчиком в load.py
     logger: logging.Logger
-    _event_queue: Queue
     _tr_template: TranslateFunc
 
-    # core-объекты - создаются в core/plugin_init.py
+    # объекты ядра
     journal_processor: 'JournalProcessor'
     notifier: 'Notifier'
     sound_player: 'Player'
     systems_cache: 'SystemsCache'
 
-    # модули - создаются в core/plugin_init.py
+    # модули
     bgs_module: 'BGS'
     canonn_api: 'CanonnRealtimeAPI'
     canonn_codex_poi: 'CanonnCodexPOI'
     sq_tracker: 'SquadronTracker'
     fc_tracker: 'FC_Tracker'
     colonisation_tracker: 'DeliveryTracker'
-    # friendfoe None
     patrol_module: 'PatrolModule'
     exp_visualizer: 'Visualizer'
 
