@@ -1,4 +1,3 @@
-import os
 import requests
 import threading
 import tkinter as tk
@@ -10,9 +9,9 @@ from urllib.parse import quote_plus, unquote
 import myNotebook as nb  # type: ignore
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.core.plugin_config import plugin_config
 from Triumvirate.core.settings import canonn_cloud_url_us_central, edsm_url
+from Triumvirate.core.shortcuts import debug, error
 
 
 # isort: off

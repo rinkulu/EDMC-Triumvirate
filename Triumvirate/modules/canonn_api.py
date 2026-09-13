@@ -4,8 +4,8 @@ import requests
 from datetime import datetime, timedelta
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
+from Triumvirate.core.shortcuts import debug, error
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import BasicThread, Thread
@@ -139,7 +139,7 @@ class HDDetector:
                 "x": x, "y": y, "z": z,
                 "destination": dest_name,
                 "dx": dx, "dy": dy, "dz": dz,
-                "client": PluginContext.client_version,
+                "client": PluginContext.user_agent,
                 "odyssey": GameState.odyssey,
                 "hostile": (self.status == self.HOSTILE)
             }
@@ -306,7 +306,7 @@ class CanonnRealtimeAPI(Module):
                 journalEntry.coords.y,  # pyright: ignore[reportOptionalMemberAccess]
                 journalEntry.coords.z,  # pyright: ignore[reportOptionalMemberAccess]
             ],
-            "clientVersion": PluginContext.client_version,
+            "clientVersion": PluginContext.user_agent,
             "isBeta": journalEntry.is_beta
         }
 

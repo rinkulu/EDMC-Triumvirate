@@ -2,8 +2,8 @@ import json
 
 from theme import theme  # type: ignore
 
-from Triumvirate.core.shortcuts import debug
 from Triumvirate.core.plugin_config import plugin_config
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.module import Module
 
 from ._dataitem import _DataItem

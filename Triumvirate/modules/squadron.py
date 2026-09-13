@@ -1,8 +1,8 @@
 import functools
 
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.shortcuts import debug
 from Triumvirate.core.plugin_config import plugin_config
+from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules import legacy

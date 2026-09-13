@@ -12,8 +12,8 @@ from typing import Any
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
-from Triumvirate.core.shortcuts import debug, error, warning
 from Triumvirate.core.plugin_config import plugin_config
+from Triumvirate.core.shortcuts import debug, error, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import BasicThread
