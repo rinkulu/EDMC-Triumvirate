@@ -50,12 +50,17 @@ class BgsUiFrame(tk.Frame):
         self.grid(row=self._grid_row, column=self._grid_column)
 
     def __on_event_map(self, event: tk.Event):
-        if event.widget in self.winfo_children():
+        # микрооптимизация - так быстрее, чем через winfo_children
+        if getattr(event.widget, "master", None) is self:
             self._children_mapped += 1
             self.grid(row=self._grid_row, column=self._grid_column)
 
     def __on_event_unmap(self, event: tk.Event):
-        if event.widget not in self.winfo_children():
+        # при закрытии EDMC виджет получает unmap-ивент в том числе на самого себя и бросает эксепшен
+        if not self.winfo_exists():
+            return
+        # микрооптимизация - так быстрее, чем через winfo_children
+        if getattr(event.widget, "master", None) is not self:
             return
         self._children_mapped -= 1
         if self._children_mapped == 0:
