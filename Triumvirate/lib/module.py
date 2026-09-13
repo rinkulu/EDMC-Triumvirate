@@ -35,11 +35,6 @@ class Module(ABC, metaclass=ModuleMeta):
 
     enabled: bool
 
-    def on_start(self, plugin_dir: str):
-        """
-        Вызывается при старте плагина.
-        """
-
     def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> tk.Frame | None:
         """
         Вызывается при отрисовки окна настроек.

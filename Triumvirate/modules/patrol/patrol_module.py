@@ -223,9 +223,6 @@ class PatrolModule(Frame, Module):
     ############# MODULE HOOKS #############
     ########################################
 
-    def on_start(self, plugin_dir):
-        pass
-
     def draw_settings(self, parent_widget, cmdr, is_beta, row):
         "Called to get a tk Frame for the settings dialog."
 
