@@ -145,9 +145,8 @@ class PatrolModule(Frame, Module):
 
         self.ships = []
         self.bind("<<PatrolDone>>", self.update)
-        plugin_dir = PluginContext.plugin_dir
-        self.IMG_PREV = tk.PhotoImage(file=PluginContext.plugin_dir / "assets" / "icons" / "left_arrow.gif")
-        self.IMG_NEXT = tk.PhotoImage(file=PluginContext.plugin_dir / "assets" / "icons" / "right_arrow.gif")
+        self.IMG_PREV = tk.PhotoImage(file=PluginContext.paths.assets_dir / "icons" / "left_arrow.gif")
+        self.IMG_NEXT = tk.PhotoImage(file=PluginContext.paths.assets_dir / "icons" / "right_arrow.gif")
 
         self.canonnbtn = tk.IntVar(value=plugin_config.getint("HidePatrol"))
         self.factionbtn = tk.IntVar(value=plugin_config.getint("Hidefactions"))

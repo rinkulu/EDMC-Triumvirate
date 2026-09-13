@@ -360,8 +360,8 @@ class CodexTypes(Frame):
 
     def addimage(self, name, col):
         grey = "{}_grey".format(name)
-        self.images[name] = tk.PhotoImage(file=PluginContext.plugin_dir / 'assets' / 'icons' / f'{name}.gif')
-        self.images[grey] = tk.PhotoImage(file=PluginContext.plugin_dir / 'assets' / 'icons' / f'{grey}.gif')
+        self.images[name] = tk.PhotoImage(file=PluginContext.paths.assets_dir / 'icons' / f'{name}.gif')
+        self.images[grey] = tk.PhotoImage(file=PluginContext.paths.assets_dir / 'icons' / f'{grey}.gif')
         self.labels[name] = tk.Label(self.container, image=self.images.get(grey), text=name)
         self.labels[name].grid(row=0, column=col)
 

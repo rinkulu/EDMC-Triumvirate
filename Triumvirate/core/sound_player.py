@@ -7,8 +7,8 @@ from Triumvirate.lib.thirdparty.playsound import playsound
 
 
 class Player:
-    DEFAULT_SOUNDS_LOCATION = PluginContext.plugin_dir / "assets" / "sounds"
-    USER_CUSTOM_SOUNDS_LOCATION = PluginContext.plugin_dir / "userdata" / "sounds"
+    DEFAULT_SOUNDS_LOCATION = PluginContext.paths.assets_dir / "sounds"
+    USER_CUSTOM_SOUNDS_LOCATION = PluginContext.paths.userdata_dir / "sounds"
 
     def play_info(self, block: bool = False):
         playsound(self.DEFAULT_SOUNDS_LOCATION / "info.wav", block)

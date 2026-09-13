@@ -9,7 +9,7 @@ from tkinter import ttk
 import myNotebook as nb  # type: ignore
 from config import config as edmc_config  # type: ignore
 
-from Triumvirate.core.context import PluginContext
+from Triumvirate.core.context import PluginContext, _PluginPaths
 from Triumvirate.lib import thread
 from Triumvirate.lib.module import Module
 
@@ -29,9 +29,14 @@ def initialize(
     PluginContext.plugin_version = plugin_version
     PluginContext.user_agent = f"{plugin_name}.{plugin_version}"
     PluginContext.edmc_version = edmc_version
-    PluginContext.plugin_dir = plugin_root_dir
     PluginContext.logger = logger
     PluginContext._tr_template = translation_fn
+    PluginContext.paths = _PluginPaths(
+        _loader_dir=plugin_root_dir,
+        plugin_dir=plugin_root_dir / "Triumvirate",
+        assets_dir=plugin_root_dir / "Triumvirate" / "assets",
+        userdata_dir=plugin_root_dir / "userdata",
+    )
 
     # 2) Создание объектов ядра
     from Triumvirate.core.journal_processor import JournalProcessor

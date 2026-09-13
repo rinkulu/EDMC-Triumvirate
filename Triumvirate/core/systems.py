@@ -28,7 +28,7 @@ class SystemsCache(tk.Frame):
         self._mapped = False    # вместо winfo_mapped, чтобы без задержек между потоками
         self._message = tk.Label(self, text=_translate("<SYSTEMS_MODULE_NO_COORDS_WARNING>"))
         self._message.pack(side="left")
-        self._cache = sqlite3.connect(PluginContext.plugin_dir / "userdata" / "cache.db", check_same_thread=False)
+        self._cache = sqlite3.connect(PluginContext.paths.userdata_dir / "cache.db", check_same_thread=False)
         self._cache.execute("CREATE TABLE IF NOT EXISTS systems (id INTEGER PRIMARY KEY, name TEXT, x REAL, y REAL, z REAL)")
         self._cache.execute("CREATE INDEX IF NOT EXISTS idx_systems_name ON systems(name)")
         self._cache.commit()

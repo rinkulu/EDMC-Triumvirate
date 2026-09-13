@@ -49,6 +49,14 @@ class _ClassProperty:
 
 
 @dataclass
+class _PluginPaths:
+    _loader_dir: Path
+    plugin_dir: Path
+    assets_dir: Path
+    userdata_dir: Path
+
+
+@dataclass
 class PluginContext:
     """
     Хранит параметры плагина и ссылки на его компоненты.
@@ -58,7 +66,7 @@ class PluginContext:
     plugin_version: Version
     user_agent: str
     edmc_version: Version
-    plugin_dir: 'Path'
+    paths: _PluginPaths
     logger: logging.Logger
     _tr_template: TranslateFunc
 

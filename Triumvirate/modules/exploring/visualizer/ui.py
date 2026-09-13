@@ -116,7 +116,7 @@ class _IconButton(tk.Frame):
         self.category = category
         self.__callback = callback
 
-        icons_path = PluginContext.plugin_dir / "assets" / "icons"
+        icons_path = PluginContext.paths.assets_dir / "icons"
         self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
         self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 

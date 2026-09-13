@@ -155,7 +155,7 @@ class Filter:
 
 
 class BGSCore(Module):
-    DB_PATH = PluginContext.plugin_dir / "userdata" / "BGSdata.db"
+    DB_PATH = PluginContext.paths.userdata_dir / "BGSdata.db"
 
     @property
     def localized_name(self) -> str:
