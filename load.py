@@ -211,7 +211,14 @@ class Updater:
     def __init__(self):
         self.updater_thread: UpdateCycle | None = None
         self.version_file_path = Path(context.plugin_dir) / "Triumvirate" / self.VERSION_FILE_NAME
-        self.local_version = Version(self.version_file_path.read_text())
+        try:
+            self.local_version = Version(self.version_file_path.read_text())
+        except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
+            logger.error(f"Failed to read the local .version file: {e}")
+            self.local_version = None
+        except ValueError as e:
+            logger.error(f"Failed to parse the local .version file: {e}")
+            self.local_version = None
 
         saved_rt = edmc_config.get_str(self.RELEASE_TYPE_KEY)
         if saved_rt not in ReleaseType:
@@ -386,11 +393,11 @@ class Updater:
             context.prefs_changed_hook = plugin_init.prefs_changed
 
             context.status_label.clear()
-            context.version_frame = VersionFrame(context.plugin_frame, self.local_version)
+            context.version_frame = VersionFrame(context.plugin_frame, self.local_version)  # pyright: ignore[reportArgumentType]
             context.plugin_ui = plugin_init.initialize(
                 edmc_version=context.edmc_version,
                 plugin_name=context.plugin_name,
-                plugin_version=self.local_version,
+                plugin_version=self.local_version,  # pyright: ignore[reportArgumentType]
                 plugin_root_dir=context.plugin_dir,
                 ui_parent=context.plugin_frame,
                 logger=logger,
