@@ -98,7 +98,7 @@ class _Translation:
     _strings: dict[str, dict[str, dict[str, str]]] = {}     # {"lang": {"file": {"key": "value"}}}
 
     @classmethod
-    def setup(cls):
+    def read_system_language(cls):
         sys_lang: str = Locale.preferred_languages()[0]
         if sys_lang.startswith("en-"):
             cls.system_language = "en"
@@ -110,6 +110,8 @@ class _Translation:
             logger.debug(f"Unsupported system language ({sys_lang}).")
             cls.system_language = sys_lang
 
+    @classmethod
+    def read_translations(cls):
         translations_dir = context.plugin_dir / "translations"
         if not translations_dir.exists():
             logger.error("Couldn't find the directory with the translation files.")
@@ -374,6 +376,9 @@ class Updater:
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
         if not loadpy_was_edited:
+            # после обновления могли измениться строки перевода и доступные языки
+            _Translation.read_translations()
+            _Translation.update_active_language(edmc_config.get_str("language"))
             context.status_label.clear()
             self.__use_local_version()
         else:
@@ -566,7 +571,8 @@ def plugin_start3(plugin_dir: str) -> str:
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError("This plugin requires EDMC version 5.11.0 or later.")
     context.plugin_dir = Path(plugin_dir)
-    _Translation.setup()
+    _Translation.read_system_language()
+    _Translation.read_translations()
     _Translation.update_active_language(edmc_config.get_str("language"))
     return context.plugin_name
 
