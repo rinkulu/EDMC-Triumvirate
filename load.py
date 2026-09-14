@@ -359,10 +359,17 @@ class Updater:
 
         # обновляем запись о локальной версии
         self.local_version = tag
-        if not self.version_file_path.exists():
+        if not (self.version_file_path.exists() and self.version_file_path.is_file()):
             logger.warning("New installed version doesn't include the `.version` file.")
-        elif (file_version := Version(self.version_file_path.read_text())) != tag:
-            logger.warning(f"New .version ({file_version}) doesn't match the tag ({tag}).")
+        else:
+            try:
+                file_version = Version(self.version_file_path.read_text())
+                if file_version != tag:
+                    logger.warning(f"New `.version` ({file_version}) doesn't match the tag ({tag}).")
+            except PermissionError as e:
+                logger.warning(f"Can't read the new `.version` file: {e}")
+            except ValueError as e:
+                logger.warning(f"Failed to parse the new `.version` file: {e}")
         logger.info(f"Done. Local version set to {tag}.")
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
@@ -551,14 +558,14 @@ def plugin_start(plugin_dir):
     raise EnvironmentError("This plugin requires EDMC version 5.11.0 or later.")
 
 
-def plugin_start3(plugin_dir_str: str) -> str:
+def plugin_start3(plugin_dir: str) -> str:
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError("This plugin requires EDMC version 5.11.0 or later.")
-    context.plugin_dir = Path(plugin_dir_str)
+    context.plugin_dir = Path(plugin_dir)
     _Translation.setup()
     _Translation.update_active_language(edmc_config.get_str("language"))
     return context.plugin_name
