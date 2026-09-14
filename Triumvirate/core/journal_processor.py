@@ -107,21 +107,11 @@ class JournalProcessor(Thread):
             state=state,
             coords=GameState.system_coords
         )
-
-        if entry["event"] in ('SendText', 'RecieveText'):
-            for mod in PluginContext.active_modules:
-                try:
-                    mod.on_chat_message(journal_entry)
-                except Exception as e:
-                    PluginContext.logger.error(f"Exception in module {mod} while processing a chat message.", exc_info=e)
-                    # TODO: убрать после тестирования 1.12.0
-                    PluginContext.notifier.display("Ошибка при обработке логов. Пожалуйста, сообщите @elcy.", 0)
-        else:
-            for mod in PluginContext.active_modules:
-                try:
-                    mod.on_journal_entry(journal_entry)
-                except Exception as e:
-                    PluginContext.logger.error(f"Exception in module {mod} while processing a journal entry.", exc_info=e)
+        for mod in PluginContext.active_modules:
+            try:
+                mod.on_journal_entry(journal_entry)
+            except Exception as e:
+                PluginContext.logger.error(f"Exception in module {mod} while processing a journal entry.", exc_info=e)
 
 
     def on_dashboard_entry(self, cmdr: str | None, is_beta: bool, entry: dict):

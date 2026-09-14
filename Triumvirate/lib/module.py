@@ -61,11 +61,6 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при обновлении игрой status.json
         """
 
-    def on_chat_message(self, entry: 'JournalEntry'):
-        """
-        Вызывается при появлении новой записи типа сообщения в логах.
-        """
-
     def on_close(self):
         """
         Вызывается в момент завершения работы плагина.
