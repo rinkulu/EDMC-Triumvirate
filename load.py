@@ -548,7 +548,7 @@ def plugin_start(plugin_dir):
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 2.
     """
-    raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
+    raise EnvironmentError("This plugin requires EDMC version 5.11.0 or later.")
 
 
 def plugin_start3(plugin_dir_str: str) -> str:
@@ -557,7 +557,7 @@ def plugin_start3(plugin_dir_str: str) -> str:
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
     if context.edmc_version < Version("5.11.0"):
-        raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
+        raise EnvironmentError("This plugin requires EDMC version 5.11.0 or later.")
     context.plugin_dir = Path(plugin_dir_str)
     _Translation.setup()
     _Translation.update_active_language(edmc_config.get_str("language"))
