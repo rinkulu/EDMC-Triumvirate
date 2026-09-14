@@ -210,7 +210,7 @@ class Updater:
 
     def __init__(self):
         self.updater_thread: UpdateCycle | None = None
-        self.version_file_path = Path(context.plugin_dir) / "Triumvirate" / self.VERSION_FILE_NAME
+        self.version_file_path = Path(context.plugin_dir) / context.plugin_name / self.VERSION_FILE_NAME
         try:
             self.local_version = Version(self.version_file_path.read_text())
         except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
@@ -389,7 +389,7 @@ class Updater:
 
         def __inner():
             logger.info(f"Loading local version {self.local_version} the in main thread...")
-            if not Path(context.plugin_dir, "Triumvirate", "plugin_init.py").exists():
+            if not Path(context.plugin_dir, context.plugin_name, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return

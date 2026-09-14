@@ -1,12 +1,14 @@
 from config import config as base_config  # type: ignore
 
+from Triumvirate.core.context import PluginContext
+
 
 class Config:
     """
     Обёртка над config, которая автоматически добавляет
     префикс к переменным.
     """
-    prefix = "Triumvirate"
+    prefix = PluginContext.plugin_name
 
     def getint(self, key):
         return base_config.get_int(f"{self.prefix}.{key}")

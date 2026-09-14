@@ -33,8 +33,8 @@ def initialize(
     PluginContext._tr_template = translation_fn
     PluginContext.paths = _PluginPaths(
         _loader_dir=plugin_root_dir,
-        plugin_dir=plugin_root_dir / "Triumvirate",
-        assets_dir=plugin_root_dir / "Triumvirate" / "assets",
+        plugin_dir=plugin_root_dir / plugin_name,
+        assets_dir=plugin_root_dir / plugin_name / "assets",
         userdata_dir=plugin_root_dir / "userdata",
     )
 
