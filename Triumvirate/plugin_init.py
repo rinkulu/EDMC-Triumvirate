@@ -41,13 +41,13 @@ def initialize(
     # 2) Создание объектов ядра
     from Triumvirate.core.journal_processor import JournalProcessor
     from Triumvirate.core.notifier import Notifier
-    from Triumvirate.core.sound_player import Player
+    from Triumvirate.core.sound_player import SoundPlayer
     from Triumvirate.core.systems import SystemsCache
     frame = tk.Frame(ui_parent)
-    PluginContext.journal_processor = JournalProcessor(event_queue)
-    PluginContext.sound_player = Player()
     PluginContext.notifier = Notifier(frame, 5)  # его надо инициализировать первым, но маппить в самый низ
+    PluginContext.sound_player = SoundPlayer()
     PluginContext.systems_cache = SystemsCache(frame, 0)
+    PluginContext.journal_processor = JournalProcessor(event_queue)
 
     # 3) Создание модулей
     from Triumvirate.modules.bgs import BGS

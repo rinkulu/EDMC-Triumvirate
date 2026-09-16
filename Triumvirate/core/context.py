@@ -14,7 +14,7 @@ from Triumvirate.lib.module import get_active_modules
 if TYPE_CHECKING:
     from Triumvirate.core.journal_processor import JournalProcessor
     from Triumvirate.core.notifier import Notifier
-    from Triumvirate.core.sound_player import Player
+    from Triumvirate.core.sound_player import SoundPlayer
     from Triumvirate.core.systems import SystemsCache
     from Triumvirate.lib.module import Module
     from Triumvirate.modules.bgs import BGS
@@ -73,7 +73,7 @@ class PluginContext:
     # объекты ядра
     journal_processor: 'JournalProcessor'
     notifier: 'Notifier'
-    sound_player: 'Player'
+    sound_player: 'SoundPlayer'
     systems_cache: 'SystemsCache'
 
     # модули
