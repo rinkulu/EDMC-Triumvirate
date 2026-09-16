@@ -153,7 +153,7 @@ class _Translation:
         if lang not in cls.available_languages:
             lang = cls.selected_language
 
-        relative_path = str(Path(filepath).relative_to(context.plugin_dir))
+        relative_path = str(Path(filepath).relative_to(context.plugin_dir).as_posix())
         translation = cls._strings.get(lang, {}).get(relative_path, {}).get(x)
         if not translation:
             logger.error(f"Missing translation: language '{lang}', file '{relative_path}', key \"{x}\".")
