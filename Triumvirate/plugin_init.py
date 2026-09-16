@@ -38,15 +38,18 @@ def initialize(
         userdata_dir=plugin_root_dir / "userdata",
     )
 
+    # 1.5) Подготовка UI
+    app_frame = tk.Frame(ui_parent)
+    modules_frame = tk.Frame(app_frame)
+
     # 2) Создание объектов ядра
     from Triumvirate.core.journal_processor import JournalProcessor
     from Triumvirate.core.notifier import Notifier
     from Triumvirate.core.sound_player import SoundPlayer
     from Triumvirate.core.systems import SystemsCache
-    frame = tk.Frame(ui_parent)
-    PluginContext.notifier = Notifier(frame, 5)  # его надо инициализировать первым, но маппить в самый низ
+    PluginContext.systems_cache = SystemsCache(app_frame, 0)
+    PluginContext.notifier = Notifier(app_frame, 2)  # на 1 ряду будут модули
     PluginContext.sound_player = SoundPlayer()
-    PluginContext.systems_cache = SystemsCache(frame, 0)
     PluginContext.journal_processor = JournalProcessor(event_queue)
 
     # 3) Создание модулей
@@ -58,10 +61,10 @@ def initialize(
     from Triumvirate.modules.fc_tracker import FC_Tracker
     from Triumvirate.modules.patrol import PatrolModule
     from Triumvirate.modules.squadron import SquadronTracker
-    PluginContext.exp_visualizer = Visualizer(frame, 1)
-    PluginContext.patrol_module = PatrolModule(frame, 2)
-    PluginContext.fc_tracker = FC_Tracker(frame, 3)
-    PluginContext.bgs_module = BGS(frame, 4)
+    PluginContext.exp_visualizer = Visualizer(modules_frame, 0)
+    PluginContext.patrol_module = PatrolModule(modules_frame, 1)
+    PluginContext.fc_tracker = FC_Tracker(modules_frame, 2)
+    PluginContext.bgs_module = BGS(modules_frame, 3)
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
     PluginContext.sq_tracker = SquadronTracker()
@@ -71,7 +74,8 @@ def initialize(
     clear_old_config_keys()
     PluginContext.journal_processor.start()
 
-    return frame
+    modules_frame.grid(column=0, row=1, sticky="NWSE")
+    return app_frame
 
 
 def clear_old_config_keys():
