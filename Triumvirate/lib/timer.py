@@ -2,7 +2,7 @@ import tkinter as tk
 from collections.abc import Callable
 from typing import Any
 
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.context import PluginContext
 from Triumvirate.lib.thread import Thread, ThreadExit
 
 
@@ -63,17 +63,19 @@ class Timer(Thread):
 
     def do_run(self):
         self.is_active = True
-        debug(f"New timer {self.name!r}: target {self.target!r} will be called in {self.duration} seconds.")
+        PluginContext.logger.debug(f"New timer {self.name!r}: target {self.target!r} will be called in {self.duration} seconds.")
         try:
             self.sleep(self.duration)
         except ThreadExit:      # бросается sleep-ом, если EDMC закрывается
             self.is_active = False
             if self.run_on_closing:
-                debug(f"Timer {self.name!r}: detected EDMC closing, calling target {self.target!r} ahead of schedule.")
+                PluginContext.logger.debug(
+                    f"Timer {self.name!r}: detected EDMC closing, calling target {self.target!r} ahead of schedule."
+                )
                 self.__execute()
         else:                   # а тут мы нормально дождались окончания таймера
             self.is_active = False
-            debug(f"Timer {self.name!r}: calling target {self.target!r}, delayed by {self.duration} seconds.")
+            PluginContext.logger.debug(f"Timer {self.name!r}: calling target {self.target!r}, delayed by {self.duration} seconds.")
             self.__execute()
 
 
@@ -82,7 +84,7 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False     # чтобы случайно дважды target не вызвать
             self.STOP = True
-            debug(f"Timer {self.name!r} has been stopped, calling target {self.target!r} ahead of schedule.")
+            PluginContext.logger.debug(f"Timer {self.name!r} has been stopped, calling target {self.target!r} ahead of schedule.")
             self.__execute()
 
 
@@ -91,7 +93,7 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False
             self.STOP = True
-            debug(f"Timer {self.name!r} has been cancelled.")
+            PluginContext.logger.debug(f"Timer {self.name!r} has been cancelled.")
 
 
     @property

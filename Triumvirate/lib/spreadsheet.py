@@ -2,7 +2,7 @@ import csv
 import requests
 from contextlib import closing
 
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.context import PluginContext
 
 
 class BytesDecoder:
@@ -25,8 +25,8 @@ class Spreadsheet:
     def download(self):
         with closing(requests.get(self.url, stream=True)) as resp:
             if not resp.ok:
-                debug(f"Original URL: {self.url}")
-                debug(f"Spreadsheets response: {resp}:\n{resp.text}")
+                PluginContext.logger.debug(f"Original URL: {self.url}")
+                PluginContext.logger.debug(f"Spreadsheets response: {resp}:\n{resp.text}")
                 raise AssertionError(f"Response from Google Spreadsheets ({resp.request.url!r}) is not OK.")
             self.response = resp
             self.process()

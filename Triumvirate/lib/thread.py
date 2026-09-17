@@ -2,7 +2,7 @@
 import threading
 import time
 
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.context import PluginContext
 
 
 class BasicThread(threading.Thread):
@@ -52,7 +52,7 @@ class Thread(BasicThread):
             # перехватываем ThreadExit, чтобы он не попадал в лог
         except ThreadExit:
             pass
-        debug(f"Thread {self.name!r} shutted down")
+        PluginContext.logger.debug(f"Thread {self.name!r} shutted down")
 
     def do_run(self):
         raise NotImplementedError()
