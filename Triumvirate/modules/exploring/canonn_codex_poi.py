@@ -28,6 +28,8 @@ class CanonnCodexPOI(Module):
     def on_journal_entry(self, entry: JournalEntry):
         if not PluginContext.exp_visualizer.display_enabled_for(self):
             return
+        if GameState.gamemode != 'MainGame':
+            return
 
         event = entry.data.get("event")
         if event == "StartJump" and entry.data.get("JumpType") == "Hyperspace":

@@ -1,7 +1,7 @@
 from queue import Empty, Queue
 from threading import Event, Thread
 
-from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.context import GameState, PluginContext, GameMode
 from Triumvirate.lib.journal import Coords, JournalEntry
 from Triumvirate.modules import legacy
 
@@ -16,6 +16,13 @@ class JournalProcessor(Thread):
         self._startup = True
         self._stop = Event()  # флаг остановки потока
 
+        # После выхода Operations фронтиры добавили ивент GameModeChange, который показывает,
+        # входит игрок в основную игру или операцию. Однако он прописывается после ивентов Commander и LoadGame,
+        # поэтому при получении Commander мы будем класть последующие ивенты во временную очередь до получения GameModeChange,
+        # чтобы выставить правильный режим в GameState, и только после этого обработаем накопившиеся ивенты.
+        self.awaiting_gamemode = False
+        self.gamemode_queue = Queue()
+
 
     def set_stop(self):
         self._stop.set()
@@ -28,17 +35,9 @@ class JournalProcessor(Thread):
             except Empty:
                 continue
             try:
-                match entry["type"]:
-                    case "journal_entry":
-                        self.on_journal_entry(*entry["data"])
-                    case "dashboard_entry":
-                        self.on_dashboard_entry(*entry["data"])
-                    case "cmdr_data":
-                        self.on_cmdr_data(*entry["data"])
-                    case _:
-                        raise ValueError("unknown entry type")
+                self.process_entry(entry)
             except Exception as e:
-                PluginContext.logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
+                PluginContext.logger.error("Uncaught exception in JournalProcessor internals!", exc_info=e)
                 # TODO: отправка логов
                 # TODO: убрать после тестирования 1.12.0
                 PluginContext.notifier.display(
@@ -52,6 +51,121 @@ class JournalProcessor(Thread):
 
         # log on exit
         PluginContext.logger.debug("Journal processor stopped.")
+
+
+    def process_entry(self, entry: dict):
+        # Здесь в основном расположена логика обработки GameMode, потому что она требует
+        # несколько нетривиального подхода, отличного от отслеживания локации, командира
+        # и других аспектов игрокого состояния.
+
+        if entry["type"] == "journal_entry":
+            data = entry["data"][4]
+            event = data["event"]
+
+            if event == "StartUp":
+                PluginContext.logger.debug(
+                    f"Detected synthesized StartUp event. Gamemode cannot be determined and is set to {GameMode.unknown}."
+                )
+                GameState.gamemode = GameMode.unknown
+                if self.awaiting_gamemode:
+                    # На самом деле, никогда не должно произойти, но вдруг...
+                    # Раз у нас уже был Commander, значит, баг EDMC? Короче, проигнорим.
+                    PluginContext.logger.warning("Unexpected StartUp event while awaiting for GameModeChange.")
+                    return
+                self.route_entry(entry)
+                return
+
+            elif (event in ('Shutdown', 'Died', 'SelfDestruct')
+                  or event == "Music" and data["MusicTrack"] == "MainMenu"):
+                text = "game" if event == 'Shutdown' else "session"
+                PluginContext.logger.debug(f"Detected exit from the {text} ({event} event).")
+                if self.awaiting_gamemode:
+                    # Реалистично только для для Shutdown, но вдруг (2)
+                    PluginContext.logger.warning(
+                        f"Unexpected {event} event while awaiting for GameModeChange. "
+                        "Processing the remaining queue with unknown gamemode."
+                    )
+                    self.awaiting_gamemode = False
+                    while not self.gamemode_queue.empty():
+                        self.route_entry(self.gamemode_queue.get_nowait())
+                self.route_entry(entry)
+                GameState.gamemode = GameMode.not_in_game
+                PluginContext.logger.debug(f"Gamemode set to {GameMode.not_in_game}.")
+                return
+
+            elif event == 'ShutDown':
+                # EDMC синтезирует этот ивент и при выходе в главное меню, и при закрытии игры,
+                # по сути дублируя соответствующие ивенты от самой Элиты. Нам оно такое нужно? Нет.
+                if GameState.gamemode == GameMode.not_in_game:
+                    return
+                # Однако ещё они посылают его плагинам, если замечают краш игры, и вот это нам уже полезно.
+                # Чтобы не заморачиваться в модулях, подменим его на обычный "Shutdown".
+                PluginContext.logger.debug(
+                    "Detected synthesized ShutDown event without an in-game pair. Game crashed? "
+                    "Passing it further as a regular `Shutdown`."
+                )
+                entry["data"][4]["event"] = "Shutdown"
+                if self.awaiting_gamemode:
+                    # А тут вполне возможный сценарий уже
+                    PluginContext.logger.warning(
+                        "Unexpected ShutDown event while awaiting for GameModeChange. "
+                        "Processing the remaining queue with unknown gamemode."
+                    )
+                    self.awaiting_gamemode = False
+                    while not self.gamemode_queue.empty():
+                        self.route_entry(self.gamemode_queue.get_nowait())
+                self.route_entry(entry)
+                GameState.gamemode = GameMode.not_in_game
+                PluginContext.logger.debug(f"Gamemode set to {GameMode.not_in_game}.")
+                return
+
+            elif event == "Commander":
+                if self.awaiting_gamemode:
+                    PluginContext.logger.warning(
+                        "Got Commander event, but `awaiting_gamemode` was already True. "
+                        "Processing the old queue with unknown gamemode."
+                    )
+                    while not self.gamemode_queue.empty():
+                        self.route_entry(self.gamemode_queue.get_nowait())
+                PluginContext.logger.debug("Got Commander event, delaying journal processing until GameModeChange is received.")
+                GameState.gamemode = GameMode.unknown
+                self.awaiting_gamemode = True
+                self.gamemode_queue.put_nowait(entry)
+                return
+
+            elif event == "GameModeChange":
+                if not self.awaiting_gamemode:
+                    PluginContext.logger.warning("Got GameModeChange event, but `awaiting_gamemode` was False.")
+                raw_gm = data["GameMode"]
+                match raw_gm:
+                    case "MainGame": gm = GameMode.MainGame
+                    case "Operation": gm = GameMode.Operation
+                    case _:
+                        PluginContext.logger.warning(f"Received GameModeChange event with unknown GameMode value: {raw_gm!r}!")
+                        gm = GameMode.unknown
+                GameState.gamemode = gm
+                PluginContext.logger.debug(f"Gamemode set to {gm}. Processing the delayed events.")
+                self.awaiting_gamemode = False
+                while not self.gamemode_queue.empty():
+                    self.route_entry(self.gamemode_queue.get_nowait())
+                self.route_entry(entry)  # process GameModeChange too
+                return
+
+        if self.awaiting_gamemode:
+            self.gamemode_queue.put_nowait(entry)
+        else:
+            self.route_entry(entry)
+
+
+    def route_entry(self, entry: dict):
+        try:
+            match entry["type"]:
+                case "journal_entry": self.on_journal_entry(*entry["data"])
+                case "dashboard_entry": self.on_dashboard_entry(*entry["data"])
+                case "cmdr_data": self.on_cmdr_data(*entry["data"])
+                case _: raise ValueError(f"unknown entry type: {entry['type']}")
+        except Exception as e:
+            PluginContext.logger.error(f"Uncaught exception while processing a journal entry:\n{entry}", exc_info=e)
 
 
     def on_journal_entry(self, cmdr: str | None, is_beta: bool, system: str | None, station: str | None, entry: dict, state: dict):

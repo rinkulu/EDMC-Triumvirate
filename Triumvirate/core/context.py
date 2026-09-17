@@ -197,6 +197,13 @@ class Flags2(_FlagsBase):
     NPC_CREW_ACTIVE         = _Flag(1 << 22)
 
 
+class GameMode(StrEnum):
+    MainGame = "MainGame"
+    Operation = "Operation"
+    not_in_game = "[not_in_game]"
+    unknown = "[unknown]"
+
+
 @dataclass
 class GameState:
     """
@@ -208,6 +215,7 @@ class GameState:
     legacy_sqid: str | None     = None
 
     odyssey: bool | None                = None
+    gamemode: GameMode                  = GameMode.unknown
     game_in_beta: bool | None           = None
     pips: tuple[int, int, int] | None   = None
     firegroup: int | None               = None

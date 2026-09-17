@@ -364,11 +364,13 @@ class CZTracker(Module, BGSSubmodule):
     def __init__(self, ui_row: int):
         self.__gui = ConflictInfoFrame(self.core.ui_frame, ui_row)
         self.conflict: Conflict | None = None
-        self.gamemode: Literal['Open', 'Group', 'Solo'] = 'Open'    # если наверняка не знаем, будем предполагать небезопасный вариант
+        self.gamemode: Literal['Open', 'Group', 'Solo'] = 'Open'  # если наверняка не знаем, будем предполагать небезопасный вариант
         self._on_foot_died: bool | None = None
 
 
     def on_journal_entry(self, entry: JournalEntry):
+        if GameState.gamemode != 'MainGame':
+            return
         raw = entry.data
         event = raw["event"]
         match event:
@@ -384,6 +386,8 @@ class CZTracker(Module, BGSSubmodule):
 
 
     def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
+        if GameState.gamemode != 'MainGame':
+            return
         if self.conflict is None or self.conflict.conflict_type != "OnFoot":
             return
         if GameState.health == 0.0 and not self._on_foot_died:  # флаг нужен, чтобы только один раз смерть засчитать

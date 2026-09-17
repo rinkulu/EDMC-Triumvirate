@@ -65,6 +65,9 @@ class HDDetector:
 
 
     def journal_entry(self, journal_entry: JournalEntry):
+        if GameState.gamemode != 'MainGame':
+            return
+
         entry = journal_entry.data
         event = entry["event"]
 
@@ -247,7 +250,7 @@ class CanonnRealtimeAPI(Module):
         if (
             len(self.fss_signals_batch) == self._batch_maxlen                               # 0
             or (event == "StartJump" and entry["JumpType"] == "Hyperspace")                 # 1
-            or event in ["Died", "SelfDestruct", "Resurrect"]                               # 1
+            or event in ("Died", "SelfDestruct", "Resurrect")                               # 1
             or event == "Shutdown"                                                          # 2
             or event == "Music" and entry["MusicTrack"] == "MainMenu"                       # 2
             or (event != "FSSSignalDiscovered" and timestamp_diff > timedelta(minutes=1))   # 4

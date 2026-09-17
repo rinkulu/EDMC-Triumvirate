@@ -41,6 +41,8 @@ class DeliveryTracker(Module):
                 return f"Planetary construction: {future_name}"
             return None
 
+        if GameState.gamemode != 'MainGame':
+            return
         event: str = entry.data["event"]
         if event in ("Location", "Docked"):
             self.construction_type = _get_construction_type()

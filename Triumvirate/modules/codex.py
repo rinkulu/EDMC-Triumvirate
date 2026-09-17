@@ -485,7 +485,8 @@ class CodexTypes(Frame):
                 self.grid_remove()
 
     def journal_entry(self, cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client):
-        #debug("CodeTypes journal_entry")
+        if GameState.gamemode != 'MainGame':
+            return
 
         if entry.get("event") == "StartJump" and entry.get("JumpType") == "Hyperspace":
             # go fetch some data.It will 

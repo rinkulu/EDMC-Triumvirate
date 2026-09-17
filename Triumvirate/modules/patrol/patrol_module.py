@@ -295,12 +295,9 @@ class PatrolModule(Frame, Module):
         )
 
     def on_journal_entry(self, entry: JournalEntry):
-        try:
-            self._on_journal(entry=entry)
-        except Exception as e:
-            PluginContext.logger.debug("error in patrol", exc_info=e)
+        if GameState.gamemode != 'MainGame':
+            return
 
-    def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
 
         if entry.cmdr:

@@ -78,6 +78,8 @@ def matches(d, field, value):
 
 last_body_with_biosignals = ""
 def GusonExpeditions(cmdr, is_beta, system, entry):  # noqa: E302
+    if GameState.gamemode != 'MainGame':
+        return
     # рекоды: количество тел
     if entry.get('event') == 'FSSDiscoveryScan':
         if entry.get('BodyCount') >= 150:
